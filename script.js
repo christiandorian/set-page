@@ -268,10 +268,10 @@ const elements = {
  */
 function init() {
     loadDesignVariant();
+    loadSavedState(); // Load state BEFORE content so progress view is applied correctly
     loadSavedContent();
     updateCard(false); // Don't auto-expand on initial load
     attachEventListeners();
-    loadSavedState();
     initPanelResize();
     initTableListToolbar();
     initStudyModeScreen();
