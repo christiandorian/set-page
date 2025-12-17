@@ -956,10 +956,10 @@ ul {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--ref-typography-size-subheading-four);
+    font-weight: 400;
     color: var(--text-secondary);
-    line-height: 20px;
+    line-height: var(--ref-typography-line-height-subheading-four);
 }
 
 /* Primary Actions (Study/Remix) */

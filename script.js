@@ -299,8 +299,8 @@ function updateCard() {
     // Trigger animation
     animateCardChange();
     
-    // Sync sidebar highlight with current card
-    updateActiveTocItem();
+    // Sync sidebar highlight with current card (auto-expand when navigating)
+    updateActiveTocItem(true);
 }
 
 /**
@@ -1850,7 +1850,7 @@ function updateTopicsList(cards) {
 /**
  * Update the active state in the TOC list
  */
-function updateActiveTocItem() {
+function updateActiveTocItem(autoExpand = false) {
     const termCards = elements.topicsContainer?.querySelectorAll('.term-card[data-index]');
     if (!termCards || !termCards.length) return;
     
@@ -1864,19 +1864,21 @@ function updateActiveTocItem() {
     if (activeItem) {
         activeItem.classList.add('active');
         
-        // Expand parent section if collapsed
-        const parentSection = activeItem.closest('.topic-section');
-        if (parentSection && parentSection.classList.contains('collapsed')) {
-            // Collapse all sections first
-            elements.topicsContainer.querySelectorAll('.topic-section').forEach(section => {
-                section.classList.add('collapsed');
-            });
-            // Expand the parent section
-            parentSection.classList.remove('collapsed');
+        // Expand parent section if collapsed (only if autoExpand is true)
+        if (autoExpand) {
+            const parentSection = activeItem.closest('.topic-section');
+            if (parentSection && parentSection.classList.contains('collapsed')) {
+                // Collapse all sections first
+                elements.topicsContainer.querySelectorAll('.topic-section').forEach(section => {
+                    section.classList.add('collapsed');
+                });
+                // Expand the parent section
+                parentSection.classList.remove('collapsed');
+            }
+            
+            // Scroll active item into view smoothly
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        
-        // Scroll active item into view smoothly
-        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     
     // Also update Journey view if active
@@ -1980,7 +1982,7 @@ function createTermCard(card, cardIndex) {
         e.stopPropagation();
         state.currentIndex = cardIndex;
         updateCard();
-        updateActiveTocItem();
+        updateActiveTocItem(true);
     });
     
     const termTitle = document.createElement('div');
