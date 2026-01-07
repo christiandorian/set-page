@@ -6050,7 +6050,7 @@ body.option-c .journey-sidebar {
 /* Journey Sidebar Term Card Active State */
 .journey-sidebar .term-card {
     margin: var(--spacing-xs) 0;
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 0;
     border-radius: var(--radius-lg);
     transition: background var(--transition-fast);
     width: 100%;
