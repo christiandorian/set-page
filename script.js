@@ -1301,30 +1301,40 @@ function attachEventListeners() {
         filterBtn.addEventListener('click', () => toggleFilterMenu(filterBtn));
     }
     
-    // More menu dropdown
-    const moreMenuBtn = document.getElementById('more-menu-btn');
-    const moreMenuDropdown = document.getElementById('more-menu-dropdown');
+    // More menu dropdowns (multiple instances)
+    const moreMenuWrappers = document.querySelectorAll('.more-menu-wrapper');
     
-    if (moreMenuBtn && moreMenuDropdown) {
-        moreMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            moreMenuDropdown.classList.toggle('active');
-        });
+    moreMenuWrappers.forEach(wrapper => {
+        const btn = wrapper.querySelector('.more-menu-trigger');
+        const dropdown = wrapper.querySelector('.more-menu-dropdown');
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!moreMenuDropdown.contains(e.target) && !moreMenuBtn.contains(e.target)) {
-                moreMenuDropdown.classList.remove('active');
-            }
-        });
-        
-        // Close dropdown when clicking a menu item
-        moreMenuDropdown.querySelectorAll('.more-menu-item').forEach(item => {
-            item.addEventListener('click', () => {
-                moreMenuDropdown.classList.remove('active');
+        if (btn && dropdown) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close all other dropdowns first
+                document.querySelectorAll('.more-menu-dropdown.active').forEach(d => {
+                    if (d !== dropdown) d.classList.remove('active');
+                });
+                dropdown.classList.toggle('active');
             });
-        });
-    }
+            
+            // Close dropdown when clicking a menu item
+            dropdown.querySelectorAll('.more-menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    dropdown.classList.remove('active');
+                });
+            });
+        }
+    });
+    
+    // Close all more menu dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.more-menu-wrapper')) {
+            document.querySelectorAll('.more-menu-dropdown.active').forEach(dropdown => {
+                dropdown.classList.remove('active');
+            });
+        }
+    });
 }
 
 // ============================================
