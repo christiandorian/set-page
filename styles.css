@@ -1605,7 +1605,7 @@ button.starred .material-symbols-rounded,
 
 .sidebar .metadata-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-lg) 0;
     border-top: 1px solid var(--border-default);
@@ -1616,18 +1616,18 @@ button.starred .material-symbols-rounded,
 }
 
 .sidebar .metadata-icon {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
     flex-shrink: 0;
-    font-size: 22px;
+    font-size: 28px;
 }
 
 .sidebar .metadata-icon.metadata-icon-text {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-secondary);
 }
