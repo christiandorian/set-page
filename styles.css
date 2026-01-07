@@ -3406,10 +3406,10 @@ body.option-b .discovery-card {
 }
 
 body.option-b .discovery-list {
-    padding-right: var(--spacing-md);
-    margin-right: calc(var(--spacing-md) * -1);
+    padding: var(--spacing-md);
+    margin: calc(var(--spacing-md) * -1);
     overflow-y: auto;
-    overflow-x: visible;
+    overflow-x: hidden;
 }
 
 /* Style panel-main to look like Option A sidebar */
