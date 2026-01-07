@@ -1056,6 +1056,59 @@ button.starred .material-symbols-rounded,
     color: var(--text-secondary);
 }
 
+/* More Menu Dropdown */
+.more-menu-wrapper {
+    position: relative;
+}
+
+.more-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    padding: var(--spacing-sm);
+    min-width: 200px;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.more-menu-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.more-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-align: left;
+}
+
+.more-menu-item:hover {
+    background: var(--color-gray-100);
+}
+
+.more-menu-item .material-symbols-rounded {
+    font-size: 22px;
+    color: var(--text-secondary);
+}
+
 /* Sort & Filter Controls */
 .toc-controls {
     display: flex;
