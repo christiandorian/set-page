@@ -3495,6 +3495,30 @@ body.option-b .panel-terms-list {
     padding-right: 0;
 }
 
+/* Collapsible header on scroll */
+body.option-b .panel-main-header {
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    overflow: hidden;
+}
+
+body.option-b .panel-main.header-collapsed .panel-main-header {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+}
+
+body.option-b .panel-add-term-btn {
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+    overflow: hidden;
+}
+
+body.option-b .panel-main.header-collapsed .panel-add-term-btn {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+}
+
 /* Option E: 3 Panel - AI */
 
 body.option-e {
