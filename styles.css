@@ -3495,42 +3495,6 @@ body.option-b .panel-terms-list {
     padding-right: 0;
 }
 
-/* Collapsible header on scroll - using transforms for smooth animation */
-body.option-b .panel-main {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-body.option-b .panel-main-header {
-    transition: transform 0.25s ease, opacity 0.25s ease;
-    transform-origin: top;
-}
-
-body.option-b .panel-main.header-collapsed .panel-main-header {
-    transform: translateY(-100%);
-    opacity: 0;
-    position: absolute;
-    pointer-events: none;
-}
-
-body.option-b .panel-add-term-btn {
-    transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-body.option-b .panel-main.header-collapsed .panel-add-term-btn {
-    transform: translateY(100%);
-    opacity: 0;
-    position: absolute;
-    bottom: 0;
-    pointer-events: none;
-}
-
-body.option-b .panel-main.header-collapsed .panel-terms-list {
-    flex: 1;
-    margin-top: 0;
-}
-
 /* Option E: 3 Panel - AI */
 
 body.option-e {
@@ -6089,6 +6053,8 @@ body.option-c .journey-sidebar {
     padding: var(--spacing-md);
     border-radius: var(--radius-lg);
     transition: background var(--transition-fast);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .journey-sidebar .term-card.active {

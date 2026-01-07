@@ -1335,29 +1335,6 @@ function attachEventListeners() {
             });
         }
     });
-    
-    // Panel terms list scroll - collapse/expand header
-    const panelTermsList = document.getElementById('panel-terms-list');
-    const panelMain = document.getElementById('panel-main');
-    
-    if (panelTermsList && panelMain) {
-        let lastScrollTop = 0;
-        let scrollThreshold = 50; // Minimum scroll before triggering
-        
-        panelTermsList.addEventListener('scroll', () => {
-            const currentScrollTop = panelTermsList.scrollTop;
-            
-            if (currentScrollTop > lastScrollTop && currentScrollTop > scrollThreshold) {
-                // Scrolling down - collapse header
-                panelMain.classList.add('header-collapsed');
-            } else if (currentScrollTop < lastScrollTop) {
-                // Scrolling up - expand header
-                panelMain.classList.remove('header-collapsed');
-            }
-            
-            lastScrollTop = currentScrollTop;
-        });
-    }
 }
 
 // ============================================
