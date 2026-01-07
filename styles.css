@@ -5946,10 +5946,10 @@ body.option-c .journey-sidebar {
 /* Journey Action Buttons Layout */
 .journey-action-buttons {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     width: 100%;
     margin-bottom: var(--spacing-lg);
+    gap: var(--spacing-sm);
 }
 
 .journey-action-buttons .action-buttons-left {
@@ -5966,7 +5966,7 @@ body.option-c .journey-sidebar {
 
 .journey-action-buttons .action-buttons-right {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm);
 }
 
 /* Journey Sidebar Metadata List (mirrors Variant A) */
