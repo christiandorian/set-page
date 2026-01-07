@@ -886,14 +886,14 @@ button.starred .material-symbols-rounded,
     margin: 0 auto;
     padding: 24px 100px 0;
     height: calc(100vh - 64px); /* Viewport height minus header */
-    overflow: visible;
+    overflow: hidden;
 }
 
 /* ============================================
    Sidebar
    ============================================ */
 .sidebar {
-    flex: 1;
+    flex: 0 0 400px;
     max-width: 400px;
     overflow-y: auto;
     height: 100%;
