@@ -6046,17 +6046,14 @@ body.option-c .journey-sidebar {
 
 /* Journey Sidebar Term Card Active State */
 .journey-sidebar .term-card {
-    margin: 0;
-    padding-left: 0;
-    padding-right: 0;
+    margin: var(--spacing-xs) 0;
+    padding: var(--spacing-md);
     border-radius: var(--radius-lg);
-    transition: background var(--transition-fast), padding var(--transition-fast);
+    transition: background var(--transition-fast);
 }
 
 .journey-sidebar .term-card.active {
     background: var(--color-gray-200);
-    padding: var(--spacing-md);
-    margin: var(--spacing-xs) 0;
     border-bottom: 1px solid transparent;
 }
 
