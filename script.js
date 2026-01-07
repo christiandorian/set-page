@@ -3313,13 +3313,13 @@ function updateStudyButtonsState() {
         // Add class to body for CSS styling
         document.body.classList.add('has-study-progress');
         
-        // Update all study button text to "Continue studying"
+        // Update all study button text to "Continue flashcards"
         document.querySelectorAll('.sidebar-study-btn, .panel-study-btn, .journey-sidebar-study-btn').forEach(btn => {
             const icon = btn.querySelector('.material-symbols-rounded');
             if (icon) {
                 btn.innerHTML = '';
                 btn.appendChild(icon);
-                btn.appendChild(document.createTextNode(' Continue studying'));
+                btn.appendChild(document.createTextNode(' Continue flashcards'));
             }
         });
     } else {
