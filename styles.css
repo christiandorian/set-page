@@ -6602,7 +6602,8 @@ body.option-c .journey-sidebar {
     left: 100px;
     top: 35px;
     transform: translateY(-50%);
-    width: 200px;
+    width: max-content;
+    max-width: 200px;
     line-height: 1.3;
     text-align: left;
     z-index: 10;
