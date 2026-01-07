@@ -616,7 +616,7 @@ async function saveToContentList(title, cards, grouping, description, testerName
     // Save to Supabase
     if (supabaseClient) {
         try {
-            const { error } = await supabaseClientClient.from('study_sets').insert({
+            const { error } = await supabaseClient.from('study_sets').insert({
                 id: contentId,
                 title: title,
                 tester_name: testerName,
@@ -1207,7 +1207,7 @@ function attachEventListeners() {
     
     // Import modal event listeners
     if (elements.menuBtn) {
-        elements.menuBtn.addEventListener('click', openImportModal);
+    elements.menuBtn.addEventListener('click', openImportModal);
     } else {
         console.error('Menu button not found');
     }
@@ -1315,13 +1315,13 @@ async function openImportModal() {
             console.error('Import modal overlay not found');
             return;
         }
-        elements.importModalOverlay.classList.add('active');
-        document.body.classList.add('modal-open');
+    elements.importModalOverlay.classList.add('active');
+    document.body.classList.add('modal-open');
         if (elements.importTitleInput) elements.importTitleInput.value = '';
         if (elements.importTextarea) elements.importTextarea.value = '';
         const testerInput = document.getElementById('import-tester-name');
         if (testerInput) testerInput.value = '';
-        updateVariantButtonStates();
+    updateVariantButtonStates();
         await renderContentList();
     } catch (error) {
         console.error('Error opening import modal:', error);
