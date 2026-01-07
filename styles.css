@@ -6032,7 +6032,7 @@ body.option-c .journey-sidebar {
 
 /* Journey Sidebar Term Card Active State */
 .journey-sidebar .term-card {
-    margin: 0 calc(var(--spacing-sm) * -1);
+    margin: 0;
     padding-left: var(--spacing-sm);
     padding-right: var(--spacing-sm);
     border-radius: var(--radius-lg);
@@ -6042,7 +6042,7 @@ body.option-c .journey-sidebar {
 .journey-sidebar .term-card.active {
     background: var(--color-gray-200);
     padding: var(--spacing-md);
-    margin: var(--spacing-xs) calc(var(--spacing-md) * -1);
+    margin: var(--spacing-xs) 0;
     border-bottom: 1px solid transparent;
 }
 
