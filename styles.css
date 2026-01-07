@@ -6508,7 +6508,7 @@ body.option-c .journey-sidebar {
 
 .journey-node-progress-ring .progress-ring-fill {
     fill: none;
-    stroke: var(--color-mint-200);
+    stroke: var(--color-mint-500);
     stroke-width: 4;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.3s ease;
