@@ -1988,6 +1988,15 @@ async function loadRelatedSets() {
     
     if (!discoveryList) return;
     
+    // Show loading state with shimmer skeletons for tabs
+    if (tabsContainer) {
+        tabsContainer.innerHTML = `
+            <button class="discovery-tab loading" disabled>All</button>
+            <button class="discovery-tab loading" disabled>Loading</button>
+            <button class="discovery-tab loading" disabled>Loading</button>
+        `;
+    }
+    
     // Show loading state with shimmer skeletons
     refreshBtn?.classList.add('loading');
     discoveryList.innerHTML = `
