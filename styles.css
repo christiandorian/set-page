@@ -1028,6 +1028,17 @@ button.starred .material-symbols-rounded,
     font-size: 20px;
 }
 
+/* Hide remix button when user has study progress */
+body.has-study-progress .sidebar-remix-btn,
+body.has-study-progress .panel-remix-btn {
+    display: none;
+}
+
+body.has-study-progress .sidebar-study-btn,
+body.has-study-progress .panel-study-btn {
+    flex: 1;
+}
+
 .action-buttons {
     display: flex;
     gap: var(--spacing-xs);

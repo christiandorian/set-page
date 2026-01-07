@@ -3299,6 +3299,42 @@ function updateSidebarProgressView() {
         setMeta.style.display = 'flex';
         progressView.style.display = 'none';
     }
+    
+    // Update study buttons state
+    updateStudyButtonsState();
+}
+
+/**
+ * Update study/remix buttons based on progress state
+ */
+function updateStudyButtonsState() {
+    if (state.hasEngagedWithStudy) {
+        // Add class to body for CSS styling
+        document.body.classList.add('has-study-progress');
+        
+        // Update all study button text to "Continue studying"
+        document.querySelectorAll('.sidebar-study-btn, .panel-study-btn, .journey-sidebar-study-btn').forEach(btn => {
+            const icon = btn.querySelector('.material-symbols-rounded');
+            if (icon) {
+                btn.innerHTML = '';
+                btn.appendChild(icon);
+                btn.appendChild(document.createTextNode(' Continue studying'));
+            }
+        });
+    } else {
+        // Remove class from body
+        document.body.classList.remove('has-study-progress');
+        
+        // Reset button text to "Study"
+        document.querySelectorAll('.sidebar-study-btn, .panel-study-btn, .journey-sidebar-study-btn').forEach(btn => {
+            const icon = btn.querySelector('.material-symbols-rounded');
+            if (icon) {
+                btn.innerHTML = '';
+                btn.appendChild(icon);
+                btn.appendChild(document.createTextNode(' Study'));
+            }
+        });
+    }
 }
 
 /**
