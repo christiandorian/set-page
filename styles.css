@@ -1086,7 +1086,7 @@ button.starred .material-symbols-rounded,
 }
 
 .toc-control-btn.active {
-    background: var(--ref-color-twilight-100);
+    background: transparent;
     color: var(--color-primary);
 }
 
