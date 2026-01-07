@@ -616,7 +616,7 @@ async function saveToContentList(title, cards, grouping, description, testerName
     // Save to Supabase
     if (supabaseClient) {
         try {
-            const { error } = await supabaseClient.from('study_sets').insert({
+            const { error } = await supabaseClientClient.from('study_sets').insert({
                 id: contentId,
                 title: title,
                 tester_name: testerName,
@@ -673,7 +673,7 @@ async function getSavedContentList() {
     // Try Supabase first
     if (supabaseClient) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('study_sets')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -743,7 +743,7 @@ async function updateContentInList(contentId, title, cards, grouping, descriptio
     // Update in Supabase
     if (supabaseClient) {
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('study_sets')
                 .update({
                     title: title,
@@ -975,7 +975,7 @@ async function deleteSavedContent(contentId) {
     // Delete from Supabase
     if (supabaseClient) {
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('study_sets')
                 .delete()
                 .eq('id', contentId);
