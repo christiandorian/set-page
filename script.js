@@ -23,6 +23,15 @@ function debounce(func, wait) {
 }
 
 // ============================================
+// Supabase Configuration
+// ============================================
+const SUPABASE_URL = 'https://oonbbsigbcstpwkiwygl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vbmJic2lnYmNzdHB3a2l3eWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MTAyNTYsImV4cCI6MjA4MzM4NjI1Nn0.VxQ5mLDr39lHxKiXsISsJPEn1mdT9Akh3o1FD_m8aI4';
+
+// Initialize Supabase client
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// ============================================
 // AI API Service
 // ============================================
 const API_BASE = '/api';
@@ -297,7 +306,7 @@ async function init() {
     await initializeContentList();
     
     loadSavedContent();
-    renderContentList(); // Populate the saved content list in modal
+    await renderContentList(); // Populate the saved content list in modal
     updateCard(false); // Don't auto-expand on initial load
     attachEventListeners();
     initPanelResize();
@@ -604,8 +613,43 @@ function saveContent(title, cards, grouping, description, testerName = '') {
 /**
  * Save content to the saved content list
  */
-function saveToContentList(title, cards, grouping, description, testerName = '') {
+async function saveToContentList(title, cards, grouping, description, testerName = '') {
     const contentId = Date.now().toString();
+    
+    // Save to Supabase
+    if (supabase) {
+        try {
+            const { error } = await supabase.from('study_sets').insert({
+                id: contentId,
+                title: title,
+                tester_name: testerName,
+                card_count: cards.length,
+                flashcards: cards,
+                grouping: grouping,
+                description: description
+            });
+            
+            if (error) throw error;
+            console.log('✅ Saved to Supabase:', title);
+        } catch (error) {
+            console.error('Supabase save error:', error);
+            // Fall back to localStorage
+            saveToLocalStorage(contentId, title, cards, grouping, description, testerName);
+        }
+    } else {
+        saveToLocalStorage(contentId, title, cards, grouping, description, testerName);
+    }
+    
+    // Update the UI
+    await renderContentList();
+    
+    return contentId;
+}
+
+/**
+ * Fallback: Save to localStorage
+ */
+function saveToLocalStorage(contentId, title, cards, grouping, description, testerName) {
     const contentItem = {
         id: contentId,
         title: title,
@@ -617,26 +661,56 @@ function saveToContentList(title, cards, grouping, description, testerName = '')
         savedAt: new Date().toISOString()
     };
     
-    // Get existing list
     const existingList = JSON.parse(localStorage.getItem('savedContentList') || '[]');
-    
-    // Add new item to the beginning
     existingList.unshift(contentItem);
-    
-    // Save updated list
     localStorage.setItem('savedContentList', JSON.stringify(existingList));
-    
-    // Update the UI
-    renderContentList();
-    
-    return contentId;
 }
 
 /**
  * Get saved content list from localStorage
  */
-function getSavedContentList() {
+/**
+ * Get saved content list from Supabase (with localStorage fallback)
+ */
+async function getSavedContentList() {
+    // Try Supabase first
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('study_sets')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            // Transform from DB format to app format
+            return (data || []).map(item => ({
+                id: item.id,
+                title: item.title,
+                testerName: item.tester_name,
+                cardCount: item.card_count,
+                flashcards: item.flashcards,
+                grouping: item.grouping,
+                description: item.description,
+                savedAt: item.created_at
+            }));
+        } catch (error) {
+            console.error('Supabase fetch error:', error);
+            // Fall back to localStorage
+            return JSON.parse(localStorage.getItem('savedContentList') || '[]');
+        }
+    }
+    
+    // Fallback to localStorage if Supabase not available
     return JSON.parse(localStorage.getItem('savedContentList') || '[]');
+}
+
+/**
+ * Sync version for backwards compatibility (uses cached data)
+ */
+let cachedContentList = [];
+function getSavedContentListSync() {
+    return cachedContentList;
 }
 
 /**
@@ -655,36 +729,64 @@ async function loadSeedContent() {
 }
 
 /**
- * Initialize content list with seed data if empty
+ * Initialize content list with seed data if Supabase is empty
  */
 async function initializeContentList() {
-    const existingList = getSavedContentList();
-    
-    // If there's already content, don't override
-    if (existingList.length > 0) {
+    if (!supabase) {
+        console.warn('Supabase not available, using localStorage only');
         return;
     }
     
-    // Load seed content
-    const seedContent = await loadSeedContent();
-    if (seedContent && seedContent.length > 0) {
-        localStorage.setItem('savedContentList', JSON.stringify(seedContent));
+    try {
+        // Check if Supabase has any content
+        const { data, error } = await supabase
+            .from('study_sets')
+            .select('id')
+            .limit(1);
         
-        // Also load the first item as the current content
-        const firstItem = seedContent[0];
-        if (firstItem) {
-            const currentContent = {
-                title: firstItem.title,
-                flashcards: firstItem.flashcards,
-                grouping: firstItem.grouping,
-                description: firstItem.description,
-                testerName: firstItem.testerName,
-                savedAt: firstItem.savedAt
-            };
-            localStorage.setItem('flashcardContent', JSON.stringify(currentContent));
+        if (error) throw error;
+        
+        // If there's already content in Supabase, we're done
+        if (data && data.length > 0) {
+            console.log('✅ Supabase has existing content');
+            return;
         }
         
-        console.log('✅ Loaded seed content:', seedContent.length, 'sets');
+        // Load seed content and insert into Supabase
+        const seedContent = await loadSeedContent();
+        if (seedContent && seedContent.length > 0) {
+            console.log('📦 Seeding Supabase with', seedContent.length, 'sets...');
+            
+            for (const item of seedContent) {
+                await supabase.from('study_sets').insert({
+                    id: item.id,
+                    title: item.title,
+                    tester_name: item.testerName,
+                    card_count: item.cardCount,
+                    flashcards: item.flashcards,
+                    grouping: item.grouping,
+                    description: item.description
+                });
+            }
+            
+            console.log('✅ Seeded Supabase with', seedContent.length, 'sets');
+            
+            // Load the first item as current content
+            const firstItem = seedContent[0];
+            if (firstItem) {
+                const currentContent = {
+                    title: firstItem.title,
+                    flashcards: firstItem.flashcards,
+                    grouping: firstItem.grouping,
+                    description: firstItem.description,
+                    testerName: firstItem.testerName,
+                    savedAt: firstItem.savedAt
+                };
+                localStorage.setItem('flashcardContent', JSON.stringify(currentContent));
+            }
+        }
+    } catch (error) {
+        console.error('Failed to initialize content list:', error);
     }
 }
 
@@ -716,17 +818,48 @@ function showContentLoading() {
 /**
  * Update an existing content item in the list
  */
-function updateContentInList(contentId, title, cards, grouping, description, testerName = '') {
-    let contentList = getSavedContentList();
+async function updateContentInList(contentId, title, cards, grouping, description, testerName = '') {
+    // Update in Supabase
+    if (supabase) {
+        try {
+            const { error } = await supabase
+                .from('study_sets')
+                .update({
+                    title: title,
+                    tester_name: testerName,
+                    card_count: cards.length,
+                    flashcards: cards,
+                    grouping: grouping,
+                    description: description
+                })
+                .eq('id', contentId);
+            
+            if (error) throw error;
+            console.log('✅ Updated in Supabase:', title);
+        } catch (error) {
+            console.error('Supabase update error:', error);
+            // Fall back to localStorage update
+            updateInLocalStorage(contentId, title, cards, grouping, description, testerName);
+        }
+    } else {
+        updateInLocalStorage(contentId, title, cards, grouping, description, testerName);
+    }
+    
+    await renderContentList(true); // Skip migration to avoid duplicates
+}
+
+/**
+ * Fallback: Update in localStorage
+ */
+function updateInLocalStorage(contentId, title, cards, grouping, description, testerName) {
+    let contentList = JSON.parse(localStorage.getItem('savedContentList') || '[]');
     const index = contentList.findIndex(item => item.id === contentId);
     
     if (index === -1) {
-        // If not found, save as new
-        saveToContentList(title, cards, grouping, description, testerName);
+        saveToLocalStorage(contentId, title, cards, grouping, description, testerName);
         return;
     }
     
-    // Update the existing item
     contentList[index] = {
         ...contentList[index],
         title: title,
@@ -739,18 +872,20 @@ function updateContentInList(contentId, title, cards, grouping, description, tes
     };
     
     localStorage.setItem('savedContentList', JSON.stringify(contentList));
-    renderContentList(true); // Skip migration to avoid duplicates
 }
 
 /**
  * Render the saved content list in the modal
  */
-function renderContentList(skipMigration = false) {
+async function renderContentList(skipMigration = false) {
     const container = document.getElementById('content-selector');
     if (!container) return;
     
-    let contentList = getSavedContentList();
+    let contentList = await getSavedContentList();
     const currentContent = JSON.parse(localStorage.getItem('flashcardContent') || '{}');
+    
+    // Update cached list for sync access
+    cachedContentList = contentList;
     
     // Deduplicate list by ID (keep first occurrence of each ID)
     const seenIds = new Set();
@@ -772,26 +907,6 @@ function renderContentList(skipMigration = false) {
         seenKeys.add(key);
         return true;
     });
-    
-    // Save deduplicated list
-    localStorage.setItem('savedContentList', JSON.stringify(contentList));
-    
-    // Migrate existing content if it's not in the list yet (skip during updates)
-    if (!skipMigration && currentContent.flashcards && currentContent.flashcards.length > 0 && contentList.length === 0) {
-        // Only migrate if the list is completely empty (first time setup)
-        const migratedItem = {
-            id: Date.now().toString(),
-            title: currentContent.title || 'Imported Set',
-            testerName: currentContent.testerName || '',
-            cardCount: currentContent.flashcards.length,
-            flashcards: currentContent.flashcards,
-            grouping: currentContent.grouping,
-            description: currentContent.description,
-            savedAt: currentContent.savedAt || new Date().toISOString()
-        };
-        contentList.unshift(migratedItem);
-        localStorage.setItem('savedContentList', JSON.stringify(contentList));
-    }
     
     if (contentList.length === 0) {
         container.innerHTML = '<p class="content-empty-state">No saved content yet. Import a set to get started.</p>';
@@ -858,7 +973,8 @@ function renderContentList(skipMigration = false) {
  * Edit a saved content item - opens import screen with pre-filled fields
  */
 function editSavedContent(contentId) {
-    const contentList = getSavedContentList();
+    // Use cached list for sync access (list was already fetched when modal opened)
+    const contentList = getSavedContentListSync();
     const contentItem = contentList.find(item => item.id === contentId);
     
     if (!contentItem) {
@@ -920,15 +1036,33 @@ function resetImportStepUI() {
 /**
  * Delete a saved content item
  */
-function deleteSavedContent(contentId) {
+async function deleteSavedContent(contentId) {
     if (!confirm('Are you sure you want to delete this set?')) {
         return;
     }
     
-    let contentList = getSavedContentList();
+    // Get the item before deleting (for checking current content)
+    const contentList = await getSavedContentList();
     const deletedItem = contentList.find(item => item.id === contentId);
-    contentList = contentList.filter(item => item.id !== contentId);
-    localStorage.setItem('savedContentList', JSON.stringify(contentList));
+    
+    // Delete from Supabase
+    if (supabase) {
+        try {
+            const { error } = await supabase
+                .from('study_sets')
+                .delete()
+                .eq('id', contentId);
+            
+            if (error) throw error;
+            console.log('✅ Deleted from Supabase:', contentId);
+        } catch (error) {
+            console.error('Supabase delete error:', error);
+            // Fall back to localStorage delete
+            deleteFromLocalStorage(contentId);
+        }
+    } else {
+        deleteFromLocalStorage(contentId);
+    }
     
     // If the deleted item matches the current loaded content, clear it too
     const currentContent = JSON.parse(localStorage.getItem('flashcardContent') || '{}');
@@ -937,14 +1071,23 @@ function deleteSavedContent(contentId) {
     }
     
     // Re-render the list (skip migration to prevent re-adding the deleted item)
-    renderContentList(true);
+    await renderContentList(true);
+}
+
+/**
+ * Fallback: Delete from localStorage
+ */
+function deleteFromLocalStorage(contentId) {
+    let contentList = JSON.parse(localStorage.getItem('savedContentList') || '[]');
+    contentList = contentList.filter(item => item.id !== contentId);
+    localStorage.setItem('savedContentList', JSON.stringify(contentList));
 }
 
 /**
  * Load a saved content item by ID
  */
-function loadSavedContentById(contentId) {
-    const contentList = getSavedContentList();
+async function loadSavedContentById(contentId) {
+    const contentList = await getSavedContentList();
     const contentItem = contentList.find(item => item.id === contentId);
     
     if (!contentItem) {
@@ -997,7 +1140,7 @@ function loadSavedContentById(contentId) {
     }
     
     // Update content list to show active state
-    renderContentList();
+    await renderContentList();
 }
 
 /**
@@ -1235,7 +1378,7 @@ function attachEventListeners() {
 /**
  * Open the import modal
  */
-function openImportModal() {
+async function openImportModal() {
     elements.importModalOverlay.classList.add('active');
     document.body.classList.add('modal-open');
     elements.importTitleInput.value = '';
@@ -1243,7 +1386,7 @@ function openImportModal() {
     const testerInput = document.getElementById('import-tester-name');
     if (testerInput) testerInput.value = '';
     updateVariantButtonStates();
-    renderContentList();
+    await renderContentList();
 }
 
 // ============================================
