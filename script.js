@@ -802,7 +802,13 @@ async function renderContentList(skipMigration = false) {
     const container = document.getElementById('content-selector');
     if (!container) return;
     
-    let contentList = await getSavedContentList();
+    let contentList;
+    try {
+        contentList = await getSavedContentList();
+    } catch (error) {
+        console.error('Error fetching content list:', error);
+        contentList = [];
+    }
     const currentContent = JSON.parse(localStorage.getItem('flashcardContent') || '{}');
     
     // Update cached list for sync access
@@ -1200,7 +1206,11 @@ function attachEventListeners() {
     });
     
     // Import modal event listeners
-    elements.menuBtn.addEventListener('click', openImportModal);
+    if (elements.menuBtn) {
+        elements.menuBtn.addEventListener('click', openImportModal);
+    } else {
+        console.error('Menu button not found');
+    }
     elements.importCloseBtn.addEventListener('click', closeImportModal);
     elements.importModalOverlay.addEventListener('click', (event) => {
         if (event.target === elements.importModalOverlay) {
@@ -1300,14 +1310,22 @@ function attachEventListeners() {
  * Open the import modal
  */
 async function openImportModal() {
-    elements.importModalOverlay.classList.add('active');
-    document.body.classList.add('modal-open');
-    elements.importTitleInput.value = '';
-    elements.importTextarea.value = '';
-    const testerInput = document.getElementById('import-tester-name');
-    if (testerInput) testerInput.value = '';
-    updateVariantButtonStates();
-    await renderContentList();
+    try {
+        if (!elements.importModalOverlay) {
+            console.error('Import modal overlay not found');
+            return;
+        }
+        elements.importModalOverlay.classList.add('active');
+        document.body.classList.add('modal-open');
+        if (elements.importTitleInput) elements.importTitleInput.value = '';
+        if (elements.importTextarea) elements.importTextarea.value = '';
+        const testerInput = document.getElementById('import-tester-name');
+        if (testerInput) testerInput.value = '';
+        updateVariantButtonStates();
+        await renderContentList();
+    } catch (error) {
+        console.error('Error opening import modal:', error);
+    }
 }
 
 // ============================================
