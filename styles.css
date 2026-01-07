@@ -1033,6 +1033,7 @@ button.starred .material-symbols-rounded,
     display: flex;
     gap: var(--spacing-xs);
     margin-top: var(--spacing-sm);
+    width: 100%;
 }
 
 .action-btn {
