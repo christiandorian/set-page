@@ -5943,6 +5943,7 @@ body.option-c .journey-sidebar {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    margin-bottom: var(--spacing-lg);
 }
 
 .journey-action-buttons .action-buttons-left {
