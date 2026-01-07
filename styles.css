@@ -6047,8 +6047,8 @@ body.option-c .journey-sidebar {
 /* Journey Sidebar Term Card Active State */
 .journey-sidebar .term-card {
     margin: 0;
-    padding-left: var(--spacing-sm);
-    padding-right: var(--spacing-sm);
+    padding-left: 0;
+    padding-right: 0;
     border-radius: var(--radius-lg);
     transition: background var(--transition-fast), padding var(--transition-fast);
 }
