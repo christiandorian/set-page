@@ -3402,7 +3402,7 @@ body.option-b .discovery-list {
 /* Style panel-main to look like Option A sidebar */
 body.option-b .panel-main {
     background: var(--surface);
-    border-radius: var(--radius-xl);
+    border-radius: 0;
     padding: 0;
 }
 
