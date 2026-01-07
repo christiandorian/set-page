@@ -2759,14 +2759,18 @@ body.modal-open {
     color: var(--ref-color-gray-100);
 }
 
-.import-open-btn .content-name,
-.import-open-btn .content-desc {
+.import-open-btn .content-name {
     color: var(--ref-color-gray-100);
 }
 
 .import-open-btn:hover {
     background: var(--ref-color-twilight-600) !important;
     border-color: var(--ref-color-twilight-600) !important;
+}
+
+.import-open-btn:hover .content-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--ref-color-gray-100);
 }
 
 /* Import Actions Group */

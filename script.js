@@ -777,6 +777,7 @@ function renderContentList(skipMigration = false) {
     // Add click handlers for selecting content
     container.querySelectorAll('.content-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             // Don't trigger if clicking action buttons
             if (e.target.closest('.content-action-btn')) return;
             loadSavedContentById(btn.dataset.contentId);
