@@ -5857,7 +5857,7 @@ body.option-c .journey-sidebar {
     flex: 0 0 auto;
     width: 546px;
     max-width: 900px;
-    overflow-y: auto;
+    overflow-y: scroll;
     height: 100%;
     background: var(--surface);
     padding: 40px 56px;
