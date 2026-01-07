@@ -287,11 +287,15 @@ const elements = {
 /**
  * Initialize the application
  */
-function init() {
+async function init() {
     loadDesignVariant();
     loadSavedState(); // Load state BEFORE content so progress view is applied correctly
     loadSortFilterState(); // Load sort/filter preferences for Variant A
     loadPanelViewState(); // Load panel view preferences for Variants B and E
+    
+    // Initialize with seed content if localStorage is empty
+    await initializeContentList();
+    
     loadSavedContent();
     renderContentList(); // Populate the saved content list in modal
     updateCard(false); // Don't auto-expand on initial load
@@ -633,6 +637,55 @@ function saveToContentList(title, cards, grouping, description, testerName = '')
  */
 function getSavedContentList() {
     return JSON.parse(localStorage.getItem('savedContentList') || '[]');
+}
+
+/**
+ * Load seed content from the server
+ */
+async function loadSeedContent() {
+    try {
+        const response = await fetch('/data/seed-content.json');
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.savedContentList || [];
+    } catch (error) {
+        console.error('Failed to load seed content:', error);
+        return null;
+    }
+}
+
+/**
+ * Initialize content list with seed data if empty
+ */
+async function initializeContentList() {
+    const existingList = getSavedContentList();
+    
+    // If there's already content, don't override
+    if (existingList.length > 0) {
+        return;
+    }
+    
+    // Load seed content
+    const seedContent = await loadSeedContent();
+    if (seedContent && seedContent.length > 0) {
+        localStorage.setItem('savedContentList', JSON.stringify(seedContent));
+        
+        // Also load the first item as the current content
+        const firstItem = seedContent[0];
+        if (firstItem) {
+            const currentContent = {
+                title: firstItem.title,
+                flashcards: firstItem.flashcards,
+                grouping: firstItem.grouping,
+                description: firstItem.description,
+                testerName: firstItem.testerName,
+                savedAt: firstItem.savedAt
+            };
+            localStorage.setItem('flashcardContent', JSON.stringify(currentContent));
+        }
+        
+        console.log('✅ Loaded seed content:', seedContent.length, 'sets');
+    }
 }
 
 /**

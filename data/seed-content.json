@@ -1,0 +1,117 @@
+{
+  "savedContentList": [
+    {
+      "id": "seed-1",
+      "title": "BIO 110 - Cell Biology",
+      "testerName": "Sarah Johnson",
+      "cardCount": 22,
+      "flashcards": [
+        {"term": "Cell", "definition": "The basic structural and functional unit of all living organisms"},
+        {"term": "Nucleus", "definition": "The membrane-bound organelle that contains the cell's genetic material"},
+        {"term": "Mitochondria", "definition": "The powerhouse of the cell, responsible for producing ATP through cellular respiration"},
+        {"term": "Ribosomes", "definition": "Cellular structures responsible for protein synthesis"},
+        {"term": "Endoplasmic Reticulum", "definition": "A network of membranes involved in protein and lipid synthesis"},
+        {"term": "Golgi Apparatus", "definition": "Organelle that modifies, packages, and ships proteins"},
+        {"term": "Lysosomes", "definition": "Organelles containing digestive enzymes that break down waste materials"},
+        {"term": "Cell Membrane", "definition": "The selectively permeable barrier that surrounds all cells"},
+        {"term": "Cytoplasm", "definition": "The gel-like substance inside the cell membrane that contains organelles"},
+        {"term": "Chloroplast", "definition": "Organelle in plant cells that conducts photosynthesis"},
+        {"term": "Vacuole", "definition": "Storage organelle that holds water, nutrients, and waste products"},
+        {"term": "Cell Wall", "definition": "Rigid outer layer in plant cells that provides structural support"},
+        {"term": "ATP", "definition": "Adenosine triphosphate - the primary energy currency of cells"},
+        {"term": "DNA", "definition": "Deoxyribonucleic acid - the molecule carrying genetic instructions"},
+        {"term": "RNA", "definition": "Ribonucleic acid - involved in protein synthesis and gene expression"},
+        {"term": "Osmosis", "definition": "The movement of water across a semipermeable membrane"},
+        {"term": "Diffusion", "definition": "The passive movement of molecules from high to low concentration"},
+        {"term": "Active Transport", "definition": "Movement of molecules against concentration gradient using energy"},
+        {"term": "Mitosis", "definition": "Cell division resulting in two identical daughter cells"},
+        {"term": "Meiosis", "definition": "Cell division that produces four genetically different gametes"},
+        {"term": "Photosynthesis", "definition": "Process by which plants convert light energy into chemical energy"},
+        {"term": "Cellular Respiration", "definition": "Process of breaking down glucose to produce ATP"}
+      ],
+      "grouping": {
+        "groups": [
+          {"title": "Cell Structure", "description": "Basic components of cells", "cardIndices": [0, 1, 7, 8]},
+          {"title": "Organelles", "description": "Specialized cell structures", "cardIndices": [2, 3, 4, 5, 6, 9, 10, 11]},
+          {"title": "Molecular Biology", "description": "DNA, RNA, and proteins", "cardIndices": [12, 13, 14]},
+          {"title": "Cell Transport", "description": "Movement of materials", "cardIndices": [15, 16, 17]},
+          {"title": "Cell Division & Energy", "description": "Reproduction and metabolism", "cardIndices": [18, 19, 20, 21]}
+        ]
+      },
+      "description": "A comprehensive study set covering fundamental cell biology concepts including cell structure, organelles, molecular biology, and cellular processes.",
+      "savedAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": "seed-2",
+      "title": "Spanish Verbs - Present Tense",
+      "testerName": "Michael Chen",
+      "cardCount": 15,
+      "flashcards": [
+        {"term": "hablar", "definition": "to speak"},
+        {"term": "comer", "definition": "to eat"},
+        {"term": "vivir", "definition": "to live"},
+        {"term": "ser", "definition": "to be (permanent)"},
+        {"term": "estar", "definition": "to be (temporary)"},
+        {"term": "tener", "definition": "to have"},
+        {"term": "hacer", "definition": "to do/make"},
+        {"term": "ir", "definition": "to go"},
+        {"term": "poder", "definition": "to be able to"},
+        {"term": "querer", "definition": "to want"},
+        {"term": "saber", "definition": "to know (facts)"},
+        {"term": "conocer", "definition": "to know (people/places)"},
+        {"term": "dar", "definition": "to give"},
+        {"term": "ver", "definition": "to see"},
+        {"term": "decir", "definition": "to say/tell"}
+      ],
+      "grouping": {
+        "groups": [
+          {"title": "Regular Verbs", "description": "-ar, -er, -ir endings", "cardIndices": [0, 1, 2]},
+          {"title": "To Be Verbs", "description": "Ser vs Estar", "cardIndices": [3, 4]},
+          {"title": "Common Irregular Verbs", "description": "Frequently used irregular verbs", "cardIndices": [5, 6, 7, 8, 9]},
+          {"title": "Knowledge Verbs", "description": "Saber vs Conocer", "cardIndices": [10, 11]},
+          {"title": "Other Essential Verbs", "description": "Important everyday verbs", "cardIndices": [12, 13, 14]}
+        ]
+      },
+      "description": "Essential Spanish verbs for beginners, covering regular and irregular present tense conjugations.",
+      "savedAt": "2024-01-14T14:20:00.000Z"
+    },
+    {
+      "id": "seed-3",
+      "title": "Psychology 101 - Key Concepts",
+      "testerName": "Emily Rodriguez",
+      "cardCount": 18,
+      "flashcards": [
+        {"term": "Psychology", "definition": "The scientific study of behavior and mental processes"},
+        {"term": "Behaviorism", "definition": "School of thought focusing on observable behaviors"},
+        {"term": "Cognitive Psychology", "definition": "Study of mental processes like thinking, memory, and problem-solving"},
+        {"term": "Classical Conditioning", "definition": "Learning through association between stimuli (Pavlov)"},
+        {"term": "Operant Conditioning", "definition": "Learning through consequences - rewards and punishments (Skinner)"},
+        {"term": "Nature vs Nurture", "definition": "Debate over genetic vs environmental influences on behavior"},
+        {"term": "Neurotransmitters", "definition": "Chemical messengers that transmit signals between neurons"},
+        {"term": "Hippocampus", "definition": "Brain region crucial for memory formation"},
+        {"term": "Amygdala", "definition": "Brain structure involved in emotional processing, especially fear"},
+        {"term": "Freud's Id", "definition": "The primitive, instinctual part of personality seeking pleasure"},
+        {"term": "Freud's Ego", "definition": "The rational part of personality that mediates between id and superego"},
+        {"term": "Freud's Superego", "definition": "The moral conscience that internalizes societal rules"},
+        {"term": "Maslow's Hierarchy", "definition": "Theory of human motivation from basic needs to self-actualization"},
+        {"term": "Confirmation Bias", "definition": "Tendency to seek information that confirms existing beliefs"},
+        {"term": "Cognitive Dissonance", "definition": "Mental discomfort from holding contradictory beliefs"},
+        {"term": "Attachment Theory", "definition": "Bowlby's theory about the importance of early emotional bonds"},
+        {"term": "Stanford Prison Experiment", "definition": "Zimbardo's study on situational factors affecting behavior"},
+        {"term": "Milgram Experiment", "definition": "Study on obedience to authority figures"}
+      ],
+      "grouping": {
+        "groups": [
+          {"title": "Foundations", "description": "Basic concepts and schools of thought", "cardIndices": [0, 1, 2, 5]},
+          {"title": "Learning Theories", "description": "How behavior is learned", "cardIndices": [3, 4]},
+          {"title": "Brain & Neuroscience", "description": "Biological basis of behavior", "cardIndices": [6, 7, 8]},
+          {"title": "Personality Theories", "description": "Freud and motivation", "cardIndices": [9, 10, 11, 12]},
+          {"title": "Social Psychology", "description": "Biases and social behavior", "cardIndices": [13, 14, 15, 16, 17]}
+        ]
+      },
+      "description": "Introduction to psychology covering major theories, brain structures, learning, and social psychology experiments.",
+      "savedAt": "2024-01-13T09:15:00.000Z"
+    }
+  ]
+}
+
