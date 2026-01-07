@@ -3383,6 +3383,7 @@ body.option-b .panel-discovery {
     flex: 1 1 33.333%;
     min-width: 200px;
     max-width: none;
+    overflow: hidden;
 }
 
 body.option-b .discovery-header {
@@ -3396,7 +3397,8 @@ body.option-b .discovery-card {
 body.option-b .discovery-list {
     padding-right: var(--spacing-md);
     margin-right: calc(var(--spacing-md) * -1);
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: visible;
 }
 
 /* Style panel-main to look like Option A sidebar */
