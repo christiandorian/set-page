@@ -302,9 +302,6 @@ async function init() {
     loadSortFilterState(); // Load sort/filter preferences for Variant A
     loadPanelViewState(); // Load panel view preferences for Variants B and E
     
-    // Initialize with seed content if localStorage is empty
-    await initializeContentList();
-    
     loadSavedContent();
     await renderContentList(); // Populate the saved content list in modal
     updateCard(false); // Don't auto-expand on initial load
@@ -713,82 +710,6 @@ function getSavedContentListSync() {
     return cachedContentList;
 }
 
-/**
- * Load seed content from the server
- */
-async function loadSeedContent() {
-    try {
-        const response = await fetch('/data/seed-content.json');
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data.savedContentList || [];
-    } catch (error) {
-        console.error('Failed to load seed content:', error);
-        return null;
-    }
-}
-
-/**
- * Initialize content list with seed data if Supabase is empty
- */
-async function initializeContentList() {
-    if (!supabase) {
-        console.warn('Supabase not available, using localStorage only');
-        return;
-    }
-    
-    try {
-        // Check if Supabase has any content
-        const { data, error } = await supabase
-            .from('study_sets')
-            .select('id')
-            .limit(1);
-        
-        if (error) throw error;
-        
-        // If there's already content in Supabase, we're done
-        if (data && data.length > 0) {
-            console.log('✅ Supabase has existing content');
-            return;
-        }
-        
-        // Load seed content and insert into Supabase
-        const seedContent = await loadSeedContent();
-        if (seedContent && seedContent.length > 0) {
-            console.log('📦 Seeding Supabase with', seedContent.length, 'sets...');
-            
-            for (const item of seedContent) {
-                await supabase.from('study_sets').insert({
-                    id: item.id,
-                    title: item.title,
-                    tester_name: item.testerName,
-                    card_count: item.cardCount,
-                    flashcards: item.flashcards,
-                    grouping: item.grouping,
-                    description: item.description
-                });
-            }
-            
-            console.log('✅ Seeded Supabase with', seedContent.length, 'sets');
-            
-            // Load the first item as current content
-            const firstItem = seedContent[0];
-            if (firstItem) {
-                const currentContent = {
-                    title: firstItem.title,
-                    flashcards: firstItem.flashcards,
-                    grouping: firstItem.grouping,
-                    description: firstItem.description,
-                    testerName: firstItem.testerName,
-                    savedAt: firstItem.savedAt
-                };
-                localStorage.setItem('flashcardContent', JSON.stringify(currentContent));
-            }
-        }
-    } catch (error) {
-        console.error('Failed to initialize content list:', error);
-    }
-}
 
 /**
  * Show loading state in content selector
