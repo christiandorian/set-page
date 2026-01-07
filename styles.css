@@ -6349,14 +6349,14 @@ body.option-c .journey-sidebar {
 /* Journey Map Panel (Right) */
 .journey-map-panel {
     flex: 1;
-    max-width: 620px;
+    max-width: none;
     display: flex;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: stretch;
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
-    padding: var(--spacing-xl) 60px var(--spacing-xl) var(--spacing-xl);
+    padding: var(--spacing-xl);
 }
 
 .journey-map {
@@ -6368,6 +6368,7 @@ body.option-c .journey-sidebar {
     width: 100%;
     max-width: none;
     overflow: visible;
+    flex: 1;
 }
 
 /* Journey Node */
