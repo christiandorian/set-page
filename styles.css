@@ -1083,7 +1083,6 @@ button.starred .material-symbols-rounded,
 .toc-control-btn:hover {
     background: transparent;
     color: var(--text-primary);
-    text-decoration: underline;
 }
 
 .toc-control-btn.active {
