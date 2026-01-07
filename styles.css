@@ -6345,7 +6345,8 @@ body.option-c .journey-sidebar {
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    overflow: visible;
+    overflow-y: auto;
+    height: 100%;
     padding: var(--spacing-xl) var(--spacing-xl) 0;
 }
 
