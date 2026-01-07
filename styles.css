@@ -5948,6 +5948,13 @@ body.option-c .journey-sidebar {
 .journey-action-buttons .action-buttons-left {
     display: flex;
     gap: var(--spacing-sm);
+    flex: 1;
+}
+
+.journey-action-buttons .action-buttons-left .sidebar-study-btn,
+.journey-action-buttons .action-buttons-left .sidebar-remix-btn {
+    flex: 1;
+    justify-content: center;
 }
 
 .journey-action-buttons .action-buttons-right {
