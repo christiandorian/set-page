@@ -53,9 +53,10 @@
             </div>
             <div class="discovery-list" id="discovery-list">
                 <!-- Discovery cards will be populated dynamically -->
-                <div class="discovery-loading">
-                    <div class="discovery-loading-spinner"></div>
-                    <span>Finding related sets...</span>
+                <div class="discovery-loading-skeleton">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
                 </div>
             </div>
         </aside>
@@ -73,7 +74,7 @@
                             <span class="material-symbols-rounded">bookmark</span>
                         </button>
                         <button class="panel-action-btn">
-                            <span class="material-symbols-rounded">share</span>
+                            <span class="material-symbols-rounded">ios_share</span>
                         </button>
                         <button class="panel-action-btn">
                             <span class="material-symbols-rounded">more_horiz</span>
@@ -81,9 +82,9 @@
                     </div>
                 </div>
                 <!-- Default meta (hidden in progress view) -->
-                <div class="panel-main-meta hide-in-progress">
+                <div class="panel-main-meta hide-in-progress" id="panel-meta">
                     <span class="panel-meta-item">
-                        <span class="material-symbols-rounded">person</span>
+                        <img src="images/Avatar-photo.png" alt="User avatar" class="panel-meta-avatar">
                         thisismyname
                     </span>
                     <span class="panel-meta-item">
@@ -96,7 +97,7 @@
                     </span>
                 </div>
                 <!-- Progress bar (shown in progress view) -->
-                <div class="panel-progress-view show-in-progress">
+                <div class="panel-progress-view show-in-progress" id="panel-progress-view">
                     <div class="panel-progress-bar">
                         <div class="panel-progress-fill" id="panel-progress-fill"></div>
                     </div>
@@ -108,7 +109,7 @@
                         Study
                     </button>
                     <button class="panel-remix-btn" id="panel-remix-btn">
-                        <span class="material-symbols-rounded">shuffle</span>
+                        <span class="material-symbols-rounded">wand_stars</span>
                         Remix
                     </button>
                 </div>
@@ -131,6 +132,114 @@
                 <span>Add cards or upload notes</span>
             </button>
         </main>
+
+        <!-- Resize Handle for Variant E (between terms and AI chat) -->
+        <div class="panel-resize-handle" data-resize="center"></div>
+
+        <!-- AI Chat Panel (Variant E only) -->
+        <div class="ai-chat-panel" id="ai-chat-panel">
+            <!-- Top action buttons -->
+            <div class="ai-chat-top-bar">
+                <div class="ai-chat-menu-wrapper">
+                    <button class="ai-chat-menu-btn" id="ai-chat-menu-btn">
+                        <span class="material-symbols-rounded">more_horiz</span>
+                    </button>
+                    <div class="ai-chat-menu-dropdown" id="ai-chat-menu-dropdown">
+                        <button class="ai-chat-menu-item" id="ai-chat-clear-history">
+                            <span class="material-symbols-rounded">delete_sweep</span>
+                            <span>Clear chat history</span>
+                        </button>
+                        <button class="ai-chat-menu-item" id="ai-chat-new-conversation">
+                            <span class="material-symbols-rounded">add_comment</span>
+                            <span>Start new conversation</span>
+                        </button>
+                    </div>
+                </div>
+                <button class="ai-chat-collapse-btn">
+                    <span class="material-symbols-rounded">expand_more</span>
+                </button>
+            </div>
+            
+            <!-- Messages area -->
+            <div class="ai-chat-messages" id="ai-chat-messages">
+                <!-- Welcome state -->
+                <div class="ai-chat-welcome">
+                    <!-- Gradient blur decoration -->
+                    <div class="ai-chat-gradient-bg"></div>
+                    
+                    <div class="ai-chat-welcome-content">
+                        <h2 class="ai-chat-welcome-title">Let's get ready for exam day</h2>
+                        
+                        <div class="ai-chat-action-pills">
+                            <button class="ai-action-pill" data-prompt="Help me cram for my exam on these flashcards">
+                                Help me cram
+                            </button>
+                            <button class="ai-action-pill" data-prompt="Quiz me on these flashcards">
+                                Quiz me
+                            </button>
+                            <button class="ai-action-pill" data-prompt="Help me prep for an exam on this material">
+                                Prep for an exam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input area -->
+            <div class="ai-chat-input-area">
+                <div class="ai-chat-input-wrapper">
+                    <div class="ai-chat-input-row">
+                        <button class="ai-chat-add-btn">
+                            <span class="material-symbols-rounded">add</span>
+                        </button>
+                        <input 
+                            type="text"
+                            class="ai-chat-input" 
+                            id="ai-chat-input" 
+                            placeholder="Ask me anything"
+                        />
+                        <button class="ai-chat-send-btn" id="ai-chat-send-btn" disabled>
+                            <span class="material-symbols-rounded">arrow_upward</span>
+                        </button>
+                    </div>
+                    
+                    <!-- LLM Model Selector -->
+                    <div class="llm-selector-wrapper">
+                        <button class="llm-selector-btn" id="llm-selector-btn">
+                            <span class="llm-selected-name">claude-4.5-sonnet</span>
+                            <span class="material-symbols-rounded">expand_more</span>
+                        </button>
+                        <div class="llm-dropdown" id="llm-dropdown">
+                            <div class="llm-dropdown-header">
+                                <span>Search models</span>
+                            </div>
+                            <div class="llm-dropdown-toggles">
+                                <label class="llm-toggle-item">
+                                    <span>Auto</span>
+                                    <input type="checkbox" class="llm-toggle" id="llm-auto">
+                                    <span class="llm-toggle-slider"></span>
+                                </label>
+                                <label class="llm-toggle-item">
+                                    <span>MAX Mode</span>
+                                    <input type="checkbox" class="llm-toggle" id="llm-max-mode" checked>
+                                    <span class="llm-toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="llm-dropdown-list">
+                                <button class="llm-option" data-model="composer-1">composer-1</button>
+                                <button class="llm-option" data-model="claude-4.5-opus-high">claude-4.5-opus-high</button>
+                                <button class="llm-option active" data-model="claude-4.5-sonnet">claude-4.5-sonnet</button>
+                                <button class="llm-option" data-model="gpt-5.1-codex-max">gpt-5.1-codex-max</button>
+                                <button class="llm-option" data-model="gpt-5.2">gpt-5.2</button>
+                                <button class="llm-option" data-model="gemini-3-flash">gemini-3-flash</button>
+                                <button class="llm-option" data-model="gpt-5.1-codex-mini">gpt-5.1-codex-mini</button>
+                                <button class="llm-option" data-model="grok-code-fast-1">grok-code-fast-1</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Resize Handle 2 -->
         <div class="panel-resize-handle" data-resize="right"></div>
@@ -325,7 +434,126 @@
 
     <!-- Journey Layout (Variant C) -->
     <div class="journey-layout">
-        <!-- Left Panel: Set Info & Terms -->
+        <!-- Sidebar (exact mirror of Variant A sidebar) -->
+        <aside class="journey-sidebar">
+            <div class="set-info">
+                <h1 class="set-title journey-set-title-sync">BIO 110, Exam 1</h1>
+                
+                <!-- Default metadata (shown before engagement) -->
+                <div class="set-meta" id="journey-sidebar-set-meta">
+                    <div class="stat-item">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M2.5 11.5L5.5 8.5L8.5 10.5L13.5 4.5" stroke="#D62381" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 4.5H13.5V8" stroke="#D62381" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>32 studiers today</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 1.5L9.79 5.13L13.81 5.72L10.9 8.53L11.58 12.51L8 10.63L4.42 12.51L5.1 8.53L2.19 5.72L6.21 5.13L8 1.5Z" fill="#FFCD1F"/>
+                        </svg>
+                        <span>4.8 (32 reviews)</span>
+                    </div>
+                </div>
+                
+                <!-- Progress view (shown after engagement) -->
+                <div class="sidebar-progress-view" id="journey-sidebar-progress-view">
+                    <div class="sidebar-progress-bar">
+                        <div class="sidebar-progress-fill" id="journey-sidebar-progress-fill"></div>
+                    </div>
+                    <span class="sidebar-progress-text" id="journey-sidebar-progress-text">0% complete</span>
+                </div>
+                
+                <div class="action-buttons journey-action-buttons">
+                    <div class="action-buttons-left">
+                        <button class="sidebar-study-btn journey-sidebar-study-btn">
+                            <span class="material-symbols-rounded">play_arrow</span>
+                            Study
+                        </button>
+                        <button class="sidebar-remix-btn">
+                            <span class="material-symbols-rounded">wand_stars</span>
+                            Remix
+                        </button>
+                    </div>
+                    <div class="action-buttons-right">
+                        <button class="action-btn" aria-label="Bookmark">
+                            <span class="material-symbols-rounded">bookmark</span>
+                        </button>
+                        <button class="action-btn" aria-label="Share">
+                            <span class="material-symbols-rounded">ios_share</span>
+                        </button>
+                        <button class="action-btn" aria-label="More options">
+                            <span class="material-symbols-rounded">more_horiz</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sort & Filter Controls -->
+            <div class="toc-controls">
+                <button class="toc-control-btn" id="journey-sort-btn">
+                    <span>Sort</span>
+                    <span class="material-symbols-rounded">unfold_more</span>
+                </button>
+                <button class="toc-control-btn" id="journey-filter-btn">
+                    <span>Filter</span>
+                    <span class="material-symbols-rounded">filter_list</span>
+                </button>
+            </div>
+
+            <div class="journey-topics-container" id="journey-topics-container">
+                <!-- Dynamic content will be populated here -->
+            </div>
+
+            <!-- About Section -->
+            <div class="about-section">
+                <h3 class="about-title">About this set</h3>
+                <p class="about-description" id="journey-about-description">
+                    This part should be an AI generated description of this study set based on the set content (set title + terms and definitions)
+                </p>
+
+                <!-- Creator Info -->
+                <div class="creator-info">
+                    <div class="creator-avatar">
+                        <img src="images/Avatar.png" alt="Creator">
+                    </div>
+                    <div class="creator-details">
+                        <span class="creator-name">Created by <strong>AllStudyNoSleep</strong></span>
+                        <span class="creator-badge">Power creator · 2 years creating</span>
+                    </div>
+                </div>
+
+                <!-- Metadata Items (same as Variant A) -->
+                <div class="metadata-list">
+                    <div class="metadata-item">
+                        <span class="material-symbols-rounded metadata-icon">school</span>
+                        <div class="metadata-content">
+                            <span class="metadata-label">Course member</span>
+                            <span class="metadata-value">Enrolled in Biology 110, Chemistry 2200</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <span class="material-symbols-rounded metadata-icon">bolt</span>
+                        <div class="metadata-content">
+                            <span class="metadata-label">Power creator</span>
+                            <span class="metadata-value">Has created 1000+ terms on Quizlet</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <span class="metadata-icon metadata-icon-text">Q+</span>
+                        <div class="metadata-content">
+                            <span class="metadata-label">Quizlet Plus subscriber</span>
+                            <span class="metadata-value">Power creator · 2 years creating</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Old Left Panel: Set Info & Terms (hidden, kept for backwards compatibility) -->
         <div class="journey-terms-panel">
             <div class="journey-header">
                 <h1 class="journey-title" id="journey-set-title">BIO 110, Exam 1</h1>
@@ -360,11 +588,11 @@
             
             <!-- Sort/Filter -->
             <div class="journey-controls">
-                <button class="journey-sort-btn" id="journey-sort-btn">
+                <button class="journey-sort-btn" id="journey-sort-btn-old">
                     <span>Sort</span>
                     <span class="material-symbols-rounded">unfold_more</span>
                 </button>
-                <button class="journey-filter-btn" id="journey-filter-btn">
+                <button class="journey-filter-btn" id="journey-filter-btn-old">
                     <span>Filter</span>
                     <span class="material-symbols-rounded">filter_list</span>
                 </button>
@@ -389,62 +617,46 @@
 
     <!-- Table Layout (Variant D) -->
     <div class="table-layout">
-        <!-- Top Centered Segmented Control -->
-        <div class="table-mode-bar">
-            <div class="table-mode-control" id="table-mode-control">
-                <button class="table-mode-btn active" data-mode="list">
-                    <span class="material-symbols-rounded">view_list</span>
-                    <span>List</span>
-                </button>
-                <button class="table-mode-btn" data-mode="flashcards">
-                    <span class="material-symbols-rounded">style</span>
-                    <span>Flashcards</span>
-                </button>
-                <button class="table-mode-btn" data-mode="learn">
-                    <span class="material-symbols-rounded">school</span>
-                    <span>Learn</span>
-                </button>
-                <button class="table-mode-btn" data-mode="test">
-                    <span class="material-symbols-rounded">quiz</span>
-                    <span>Test</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Two Column Layout -->
-        <div class="table-columns">
-            <!-- Left Rail - Set Info -->
+        <!-- Left Rail - Set Info (matches study-mode-sidebar) -->
             <aside class="table-rail">
                 <div class="rail-content">
                     <!-- Title & Meta -->
                     <div class="rail-header">
                         <h1 class="rail-title" id="table-set-title">BIO 110, Exam 1</h1>
-                        <div class="rail-meta">
-                            <span class="rail-meta-item trending">
-                                <span class="material-symbols-rounded">trending_up</span>
+                        <div class="rail-meta" id="rail-meta">
+                            <span class="rail-meta-item">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M2.5 11.5L5.5 8.5L8.5 10.5L13.5 4.5" stroke="#D62381" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 4.5H13.5V8" stroke="#D62381" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                                 32 studiers today
                             </span>
-                            <span class="rail-meta-item rating">
-                                <span class="material-symbols-rounded filled star-icon">star</span>
+                            <span class="rail-meta-item">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 1.5L9.79 5.13L13.81 5.72L10.9 8.53L11.58 12.51L8 10.63L4.42 12.51L5.1 8.53L2.19 5.72L6.21 5.13L8 1.5Z" fill="#FFCD1F"/>
+                                </svg>
                                 4.8 (32 reviews)
                             </span>
                         </div>
+                        <!-- Progress bar (shown when user has study progress) -->
+                        <div class="rail-progress-view" id="rail-progress-view">
+                            <div class="rail-progress-bar">
+                                <div class="rail-progress-fill" id="rail-progress-fill"></div>
+                            </div>
+                            <span class="rail-progress-text" id="rail-progress-text">0% complete</span>
+                        </div>
                     </div>
 
-                    <!-- Primary Actions -->
+                    <!-- Primary Actions with Secondary Actions inline -->
                     <div class="rail-primary-actions">
                         <button class="rail-study-btn" id="rail-study-btn">
                             <span class="material-symbols-rounded">play_arrow</span>
                             Study
                         </button>
                         <button class="rail-remix-btn" id="rail-remix-btn">
-                            <span class="material-symbols-rounded">auto_fix_high</span>
+                            <span class="material-symbols-rounded">wand_stars</span>
                             Remix
                         </button>
-                    </div>
-
-                    <!-- Secondary Actions -->
-                    <div class="rail-actions">
                         <button class="rail-action-btn" title="Save">
                             <span class="material-symbols-rounded">bookmark</span>
                         </button>
@@ -507,8 +719,44 @@
                 </div>
             </aside>
 
-            <!-- Main Section (Right) - Terms List with Excel functionality -->
+        <!-- Main Section (Right) - Study Area (matches study-mode-main) -->
             <main class="table-main">
+            <!-- Mode Tabs & Actions Header (matches study-mode-header) -->
+            <div class="table-header">
+                <div class="table-mode-control" id="table-mode-control">
+                    <button class="table-mode-btn active" data-mode="list">
+                        <span class="material-symbols-rounded">list</span>
+                        <span>List</span>
+                    </button>
+                    <button class="table-mode-btn" data-mode="flashcards">
+                        <span class="material-symbols-rounded">style</span>
+                        <span>Flashcards</span>
+                    </button>
+                    <button class="table-mode-btn" data-mode="learn">
+                        <span class="material-symbols-rounded">sync</span>
+                        <span>Learn</span>
+                    </button>
+                    <button class="table-mode-btn" data-mode="games">
+                        <span class="material-symbols-rounded">grid_view</span>
+                        <span>Games</span>
+                    </button>
+                    <button class="table-mode-btn" data-mode="test">
+                        <span class="material-symbols-rounded">description</span>
+                        <span>Test</span>
+                    </button>
+                </div>
+                <div class="table-header-actions">
+                    <button class="table-action-btn" id="table-header-search-btn" aria-label="Search">
+                        <span class="material-symbols-rounded">search</span>
+                    </button>
+                    <button class="table-action-btn" aria-label="More options">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Terms Content Area -->
+            <div class="table-content-area">
                 <!-- Unified Toolbar -->
                 <div class="table-list-toolbar">
                     <div class="toolbar-left">
@@ -525,22 +773,6 @@
                             <span class="material-symbols-rounded">filter_list</span>
                         </button>
                     </div>
-                    <div class="toolbar-right">
-                        <div class="expandable-search" id="expandable-search">
-                            <button class="search-toggle-btn" id="search-toggle-btn" title="Search">
-                                <span class="material-symbols-rounded">search</span>
-                            </button>
-                            <div class="search-input-wrapper">
-                                <input type="text" placeholder="Search terms..." id="table-list-search">
-                                <button class="search-close-btn" id="search-close-btn">
-                                    <span class="material-symbols-rounded">close</span>
-                                </button>
-                            </div>
-                        </div>
-                        <button class="toolbar-icon-btn" id="table-list-more-btn" title="More options">
-                            <span class="material-symbols-rounded">more_vert</span>
-                        </button>
-                    </div>
                 </div>
                 
                 <!-- Terms List -->
@@ -549,8 +781,8 @@
                         <!-- Terms will be populated by JavaScript -->
                     </div>
                 </div>
-            </main>
         </div>
+        </main>
 
         <!-- Selection Action Bar (hidden by default) -->
         <div class="table-action-bar" id="table-action-bar">
@@ -619,11 +851,15 @@
                         <span class="material-symbols-rounded">play_arrow</span>
                         Study
                     </button>
+                    <button class="sidebar-remix-btn">
+                        <span class="material-symbols-rounded">wand_stars</span>
+                        Remix
+                    </button>
                     <button class="action-btn" aria-label="Bookmark">
                         <span class="material-symbols-rounded">bookmark</span>
                     </button>
                     <button class="action-btn" aria-label="Share">
-                        <span class="material-symbols-rounded">share</span>
+                        <span class="material-symbols-rounded">ios_share</span>
                     </button>
                     <button class="action-btn" aria-label="More options">
                         <span class="material-symbols-rounded">more_horiz</span>
@@ -638,7 +874,7 @@
                     <span class="material-symbols-rounded">unfold_more</span>
                 </button>
                 <button class="toc-control-btn" id="filter-btn">
-                    <span>Filter</span>
+                    <span>All</span>
                     <span class="material-symbols-rounded">filter_list</span>
                 </button>
             </div>
@@ -751,7 +987,7 @@
                     </button>
                 </div>
                 
-                <button class="control-btn" id="fullscreen-btn" aria-label="Fullscreen">
+                <button class="control-btn" id="fullscreen-btn" aria-label="Study" title="Launch Study Mode">
                     <span class="material-symbols-rounded">fullscreen</span>
                 </button>
             </div>
@@ -846,76 +1082,135 @@
         </section>
     </main>
 
-    <!-- Import Modal -->
+    <!-- Layout Selector Modal -->
     <div class="import-modal-overlay" id="import-modal-overlay">
-        <div class="import-modal">
+        <div class="import-modal layout-modal">
             <div class="import-modal-header">
-                <div class="import-title">
-                    <span class="material-symbols-rounded">bug_report</span>
-                    <span>Debug menu</span>
+                <!-- Main step header -->
+                <div class="import-title" id="header-main">
+                    <span class="material-symbols-rounded">dashboard</span>
+                    <span>Set page options</span>
                 </div>
-                <button class="import-close-btn" id="import-close-btn" aria-label="Close import modal">
+                <!-- Import step header -->
+                <div class="import-title hidden" id="header-import">
+                    <button class="import-back-btn" id="import-back-btn">
+                        <span class="material-symbols-rounded">arrow_back</span>
+                    </button>
+                    <span id="import-header-text">Import new set</span>
+                </div>
+                <button class="import-close-btn" id="import-close-btn" aria-label="Close modal">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                         <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                 </button>
             </div>
             <div class="import-modal-content">
-                <!-- Design Variant Selector -->
-                <div class="import-field">
-                    <label class="import-label">Design Variant</label>
-                    <div class="variant-selector" id="variant-selector">
-                        <button class="variant-btn active" data-variant="option-a">
-                            <span class="variant-letter">A</span>
-                            <span class="variant-name">Preview</span>
+                <!-- Step 1: Main Menu -->
+                <div class="modal-step" id="modal-step-main" data-step="main">
+                    <!-- Design Variant Selector -->
+                    <div class="import-field variant-field">
+                        <label class="import-label">Select layout</label>
+                        <div class="variant-selector" id="variant-selector">
+                            <button class="variant-btn active" data-variant="option-a">
+                                <span class="variant-icon">
+                                    <span class="material-symbols-rounded">view_carousel</span>
+                                </span>
+                                <span class="variant-btn-text">
+                                <span class="variant-name">Preview</span>
+                                    <span class="variant-desc">Card carousel with preview</span>
+                                </span>
+                            </button>
+                            <button class="variant-btn" data-variant="option-b">
+                                <span class="variant-icon">
+                                    <span class="material-symbols-rounded">view_column</span>
+                                </span>
+                                <span class="variant-btn-text">
+                                    <span class="variant-name">Panels</span>
+                                    <span class="variant-desc">Three-column layout</span>
+                                </span>
+                            </button>
+                            <button class="variant-btn" data-variant="option-c">
+                                <span class="variant-icon">
+                                    <span class="material-symbols-rounded">route</span>
+                                </span>
+                                <span class="variant-btn-text">
+                                <span class="variant-name">Journey</span>
+                                    <span class="variant-desc">Visual learning path</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Select Content Section -->
+                    <div class="modal-section-divider"></div>
+                    <div class="import-field content-field">
+                        <label class="import-label">Select content</label>
+                        <div class="content-selector" id="content-selector">
+                            <p class="content-empty-state">No saved content yet. Import a set to get started.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="import-actions-group">
+                        <button class="content-btn import-open-btn" id="import-open-btn">
+                            <span class="content-icon">
+                                <span class="material-symbols-rounded">upload</span>
+                            </span>
+                            <span class="content-btn-text">
+                                <span class="content-name">Import a new set</span>
+                                <span class="content-desc">Add an exported flashcards set from Quizlet</span>
+                            </span>
                         </button>
-                        <button class="variant-btn" data-variant="option-b">
-                            <span class="variant-letter">B</span>
-                            <span class="variant-name">3 Panel</span>
-                        </button>
-                        <button class="variant-btn" data-variant="option-c">
-                            <span class="variant-letter">C</span>
-                            <span class="variant-name">Journey</span>
-                        </button>
-                        <button class="variant-btn" data-variant="option-d">
-                            <span class="variant-letter">D</span>
-                            <span class="variant-name">Table</span>
+                    </div>
+                    
+                    <!-- Debug Options Section -->
+                    <div class="modal-section-divider"></div>
+                    <div class="import-field debug-field">
+                        <label class="import-label">Debug options</label>
+                        <button class="debug-reset-btn" id="debug-reset-progress-btn">
+                            Reset study progress
                         </button>
                     </div>
                 </div>
                 
-                <div class="import-divider"></div>
-                
-                <div class="import-field">
-                    <label class="import-label" for="import-title">Set Title</label>
-                    <input 
-                        type="text" 
-                        id="import-title" 
-                        class="import-title-input" 
-                        placeholder="e.g., PSY 101 - Chapter 1"
-                    >
+                <!-- Step 2: Import Set -->
+                <div class="modal-step hidden" id="modal-step-import" data-step="import">
+                    <div class="import-field">
+                        <label class="import-label" for="import-tester-name">Tester Name</label>
+                        <input 
+                            type="text" 
+                            id="import-tester-name" 
+                            class="import-title-input" 
+                            placeholder="e.g., John Smith"
+                        >
+                    </div>
+                    <div class="import-field">
+                        <label class="import-label" for="import-title">Set Title</label>
+                        <input 
+                            type="text" 
+                            id="import-title" 
+                            class="import-title-input" 
+                            placeholder="e.g., PSY 101 - Chapter 1"
+                        >
+                    </div>
+                    <div class="import-field">
+                        <label class="import-label" for="import-textarea">Flashcard Content</label>
+                        <p class="import-instructions">Paste your Quizlet export below (tab-separated format).</p>
+                        <textarea 
+                            id="import-textarea" 
+                            class="import-textarea" 
+                            placeholder="Question or term&#x9;Answer or definition&#x0a;What is psychology?&#x9;The scientific study of mind and behavior"
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+                    <div class="import-step-actions">
+                        <button class="import-submit-btn" id="import-submit-btn">
+                            <span id="import-submit-text">Import Set</span>
+                        </button>
+                        <button class="import-delete-btn hidden" id="import-delete-btn">
+                            Delete set
+                        </button>
+                    </div>
                 </div>
-                <div class="import-field">
-                    <label class="import-label" for="import-textarea">Flashcard Content</label>
-                    <p class="import-instructions">Paste your Quizlet export below (tab-separated format).</p>
-                    <textarea 
-                        id="import-textarea" 
-                        class="import-textarea" 
-                        placeholder="Question or term&#x9;Answer or definition&#x0a;What is psychology?&#x9;The scientific study of mind and behavior"
-                        spellcheck="false"
-                    ></textarea>
-                </div>
-                <button class="import-submit-btn" id="import-submit-btn">
-                    <span class="material-symbols-rounded">check</span>
-                    Import Set
-                </button>
-                
-                <div class="import-divider"></div>
-                
-                <button class="debug-reset-btn" id="debug-reset-progress-btn">
-                    <span class="material-symbols-rounded">restart_alt</span>
-                    Reset study progress
-                </button>
             </div>
         </div>
     </div>
@@ -927,23 +1222,6 @@
             <div class="study-mode-sidebar-header">
                 <div class="study-mode-title-row">
                     <h1 class="study-mode-title" id="study-mode-title">Cells & Tissues</h1>
-                    <button class="study-mode-title-dropdown" id="study-mode-group-dropdown-btn" aria-label="Change group">
-                        <span class="material-symbols-rounded">expand_more</span>
-                    </button>
-                    <!-- Group Selection Dropdown -->
-                    <div class="study-mode-group-dropdown" id="study-mode-group-dropdown">
-                        <div class="study-mode-group-dropdown-item" data-group="all">
-                            <label class="study-mode-group-checkbox">
-                                <input type="checkbox" id="study-mode-group-all" checked>
-                                <span class="study-mode-checkbox-mark"></span>
-                            </label>
-                            <span class="study-mode-group-name">All terms</span>
-                            <span class="study-mode-group-count" id="study-mode-all-count">0</span>
-                        </div>
-                        <div class="study-mode-group-dropdown-list" id="study-mode-group-list">
-                            <!-- Groups will be populated dynamically -->
-                        </div>
-                    </div>
                 </div>
                 <div class="study-mode-progress">
                     <div class="study-mode-progress-bar">
@@ -953,17 +1231,8 @@
                 <span class="study-mode-progress-text" id="study-mode-progress-text">12% Complete</span>
             </div>
             
-            <div class="study-mode-filters">
-                <button class="study-mode-filter-pill active" data-filter="all">All</button>
-                <button class="study-mode-filter-pill" data-filter="know">Know</button>
-                <button class="study-mode-filter-pill" data-filter="learning">Still learning</button>
-                <button class="study-mode-filter-pill study-mode-filter-star" data-filter="starred" aria-label="Starred">
-                    <span class="material-symbols-rounded">star</span>
-                </button>
-            </div>
-            
-            <div class="study-mode-terms-list" id="study-mode-terms-list">
-                <!-- Terms will be populated dynamically -->
+            <div class="study-mode-concepts-list" id="study-mode-concepts-list">
+                <!-- Concept progress items will be populated dynamically -->
             </div>
         </aside>
         
@@ -972,6 +1241,10 @@
             <!-- Mode Tabs & Actions -->
             <div class="study-mode-header">
                 <div class="study-mode-tabs-container">
+                    <button class="study-mode-tab" data-mode="list">
+                        <span class="material-symbols-rounded">format_list_bulleted</span>
+                        List
+                    </button>
                     <button class="study-mode-tab active" data-mode="flashcards">
                         <span class="material-symbols-rounded">style</span>
                         Flashcards
@@ -1011,7 +1284,7 @@
                                 </button>
                                 <div class="study-mode-card-content" id="study-mode-card-front">Isomers</div>
                                 <button class="study-mode-card-star" id="study-mode-card-star" aria-label="Star">
-                                    <span class="material-symbols-rounded">star_border</span>
+                                    <span class="material-symbols-rounded">star</span>
                                 </button>
                             </div>
                             <div class="study-mode-card-back">
@@ -1020,7 +1293,7 @@
                                 </button>
                                 <div class="study-mode-card-content" id="study-mode-card-back">Molecules with the same molecular formula but different structural arrangements</div>
                                 <button class="study-mode-card-star" aria-label="Star">
-                                    <span class="material-symbols-rounded">star_border</span>
+                                    <span class="material-symbols-rounded">star</span>
                                 </button>
                             </div>
                         </div>

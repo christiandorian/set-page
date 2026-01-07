@@ -4,6 +4,25 @@
  */
 
 // ============================================
+// Utility Functions
+// ============================================
+
+/**
+ * Debounce function to limit how often a function is called
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ============================================
 // AI API Service
 // ============================================
 const API_BASE = '/api';
@@ -229,6 +248,8 @@ const state = {
     currentIndex: 0,
     isFlipped: false,
     starredCards: new Set(),
+    knownCards: new Set(),
+    stillLearningCards: new Set(),
     showingTerm: true, // true = showing term (front), false = showing definition (back)
     hasEngagedWithStudy: false // Track if user has engaged with study experience
 };
@@ -255,7 +276,7 @@ const elements = {
     importSubmitBtn: document.getElementById('import-submit-btn'),
     variantSelector: document.getElementById('variant-selector'),
     // Page elements to update
-    setTitle: document.querySelector('.set-title'),
+    setTitle: document.querySelector('.sidebar .set-title'),
     topicsContainer: document.querySelector('.topics-container')
 };
 
@@ -269,7 +290,10 @@ const elements = {
 function init() {
     loadDesignVariant();
     loadSavedState(); // Load state BEFORE content so progress view is applied correctly
+    loadSortFilterState(); // Load sort/filter preferences for Variant A
+    loadPanelViewState(); // Load panel view preferences for Variants B and E
     loadSavedContent();
+    renderContentList(); // Populate the saved content list in modal
     updateCard(false); // Don't auto-expand on initial load
     attachEventListeners();
     initPanelResize();
@@ -555,12 +579,13 @@ function loadSavedState() {
 /**
  * Save imported content to localStorage
  */
-function saveContent(title, cards, grouping, description) {
+function saveContent(title, cards, grouping, description, testerName = '') {
     const content = {
         title: title,
         flashcards: cards,
         grouping: grouping,
         description: description,
+        testerName: testerName,
         savedAt: new Date().toISOString()
     };
     console.log('💾 Saving content to localStorage:', {
@@ -570,6 +595,355 @@ function saveContent(title, cards, grouping, description) {
         grouping: grouping
     });
     localStorage.setItem('flashcardContent', JSON.stringify(content));
+}
+
+/**
+ * Save content to the saved content list
+ */
+function saveToContentList(title, cards, grouping, description, testerName = '') {
+    const contentId = Date.now().toString();
+    const contentItem = {
+        id: contentId,
+        title: title,
+        testerName: testerName,
+        cardCount: cards.length,
+        flashcards: cards,
+        grouping: grouping,
+        description: description,
+        savedAt: new Date().toISOString()
+    };
+    
+    // Get existing list
+    const existingList = JSON.parse(localStorage.getItem('savedContentList') || '[]');
+    
+    // Add new item to the beginning
+    existingList.unshift(contentItem);
+    
+    // Save updated list
+    localStorage.setItem('savedContentList', JSON.stringify(existingList));
+    
+    // Update the UI
+    renderContentList();
+    
+    return contentId;
+}
+
+/**
+ * Get saved content list from localStorage
+ */
+function getSavedContentList() {
+    return JSON.parse(localStorage.getItem('savedContentList') || '[]');
+}
+
+/**
+ * Show loading state in content selector
+ */
+function showContentLoading() {
+    const container = document.getElementById('content-selector');
+    if (!container) return;
+    
+    // Remove any existing loading item first
+    const existingLoader = container.querySelector('.content-loading-item');
+    if (existingLoader) existingLoader.remove();
+    
+    // Create loading item and prepend it (keep existing items)
+    const loadingItem = document.createElement('div');
+    loadingItem.className = 'content-loading-item';
+    loadingItem.innerHTML = `
+        <div class="content-loading-icon"></div>
+        <div class="content-loading-text">
+            <div class="content-loading-title"></div>
+            <div class="content-loading-desc"></div>
+        </div>
+    `;
+    
+    container.prepend(loadingItem);
+}
+
+/**
+ * Update an existing content item in the list
+ */
+function updateContentInList(contentId, title, cards, grouping, description, testerName = '') {
+    let contentList = getSavedContentList();
+    const index = contentList.findIndex(item => item.id === contentId);
+    
+    if (index === -1) {
+        // If not found, save as new
+        saveToContentList(title, cards, grouping, description, testerName);
+        return;
+    }
+    
+    // Update the existing item
+    contentList[index] = {
+        ...contentList[index],
+        title: title,
+        testerName: testerName,
+        cardCount: cards.length,
+        flashcards: cards,
+        grouping: grouping,
+        description: description,
+        savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('savedContentList', JSON.stringify(contentList));
+    renderContentList(true); // Skip migration to avoid duplicates
+}
+
+/**
+ * Render the saved content list in the modal
+ */
+function renderContentList(skipMigration = false) {
+    const container = document.getElementById('content-selector');
+    if (!container) return;
+    
+    let contentList = getSavedContentList();
+    const currentContent = JSON.parse(localStorage.getItem('flashcardContent') || '{}');
+    
+    // Deduplicate list by ID (keep first occurrence of each ID)
+    const seenIds = new Set();
+    contentList = contentList.filter(item => {
+        if (seenIds.has(item.id)) {
+            return false;
+        }
+        seenIds.add(item.id);
+        return true;
+    });
+    
+    // Also deduplicate by title + cardCount (keep most recent)
+    const seenKeys = new Set();
+    contentList = contentList.filter(item => {
+        const key = `${item.title}-${item.cardCount}`;
+        if (seenKeys.has(key)) {
+            return false;
+        }
+        seenKeys.add(key);
+        return true;
+    });
+    
+    // Save deduplicated list
+    localStorage.setItem('savedContentList', JSON.stringify(contentList));
+    
+    // Migrate existing content if it's not in the list yet (skip during updates)
+    if (!skipMigration && currentContent.flashcards && currentContent.flashcards.length > 0 && contentList.length === 0) {
+        // Only migrate if the list is completely empty (first time setup)
+        const migratedItem = {
+            id: Date.now().toString(),
+            title: currentContent.title || 'Imported Set',
+            testerName: currentContent.testerName || '',
+            cardCount: currentContent.flashcards.length,
+            flashcards: currentContent.flashcards,
+            grouping: currentContent.grouping,
+            description: currentContent.description,
+            savedAt: currentContent.savedAt || new Date().toISOString()
+        };
+        contentList.unshift(migratedItem);
+        localStorage.setItem('savedContentList', JSON.stringify(contentList));
+    }
+    
+    if (contentList.length === 0) {
+        container.innerHTML = '<p class="content-empty-state">No saved content yet. Import a set to get started.</p>';
+        return;
+    }
+    
+    // Track which item is currently active (matches current loaded content)
+    const currentCardCount = currentContent.flashcards ? currentContent.flashcards.length : 0;
+    let activeFound = false;
+    
+    container.innerHTML = contentList.map(item => {
+        // Match by title and card count for active state (only first match)
+        const isActive = !activeFound && currentContent.title === item.title && currentCardCount === item.cardCount;
+        if (isActive) activeFound = true;
+        return `
+            <div class="content-btn ${isActive ? 'active' : ''}" data-content-id="${item.id}">
+                <span class="content-icon">
+                    <span class="material-symbols-rounded">description</span>
+                </span>
+                <span class="content-btn-text">
+                    <span class="content-name">${item.testerName || 'Anonymous'}</span>
+                    <span class="content-desc">${item.title || 'Untitled Set'} · ${item.cardCount} cards</span>
+                </span>
+                <span class="content-actions">
+                    <button class="content-action-btn" data-action="edit" data-content-id="${item.id}" title="Edit">
+                        <span class="material-symbols-rounded">edit</span>
+                    </button>
+                    <button class="content-action-btn" data-action="delete" data-content-id="${item.id}" title="Delete">
+                        <span class="material-symbols-rounded">delete</span>
+                    </button>
+                </span>
+            </div>
+        `;
+    }).join('');
+    
+    // Add click handlers for selecting content
+    container.querySelectorAll('.content-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Don't trigger if clicking action buttons
+            if (e.target.closest('.content-action-btn')) return;
+            loadSavedContentById(btn.dataset.contentId);
+        });
+    });
+    
+    // Add click handlers for edit buttons
+    container.querySelectorAll('.content-action-btn[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editSavedContent(btn.dataset.contentId);
+        });
+    });
+    
+    // Add click handlers for delete buttons
+    container.querySelectorAll('.content-action-btn[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteSavedContent(btn.dataset.contentId);
+        });
+    });
+}
+
+/**
+ * Edit a saved content item - opens import screen with pre-filled fields
+ */
+function editSavedContent(contentId) {
+    const contentList = getSavedContentList();
+    const contentItem = contentList.find(item => item.id === contentId);
+    
+    if (!contentItem) {
+        console.error('Content not found:', contentId);
+        return;
+    }
+    
+    // Store the ID being edited
+    window.editingContentId = contentId;
+    
+    // Switch to import step
+    const modalStepMain = document.getElementById('modal-step-main');
+    const modalStepImport = document.getElementById('modal-step-import');
+    const headerMain = document.getElementById('header-main');
+    const headerImport = document.getElementById('header-import');
+    
+    modalStepMain?.classList.add('hidden');
+    modalStepImport?.classList.remove('hidden');
+    headerMain?.classList.add('hidden');
+    headerImport?.classList.remove('hidden');
+    
+    // Update header and button text for edit mode
+    const headerText = document.getElementById('import-header-text');
+    const submitText = document.getElementById('import-submit-text');
+    const deleteBtn = document.getElementById('import-delete-btn');
+    
+    if (headerText) headerText.textContent = 'Edit set';
+    if (submitText) submitText.textContent = 'Save';
+    if (deleteBtn) deleteBtn.classList.remove('hidden');
+    
+    // Pre-fill the fields
+    const testerInput = document.getElementById('import-tester-name');
+    if (testerInput) testerInput.value = contentItem.testerName || '';
+    
+    elements.importTitleInput.value = contentItem.title || '';
+    
+    // Convert flashcards back to tab-separated format
+    const flashcardsText = contentItem.flashcards
+        .map(card => `${card.term}\t${card.definition}`)
+        .join('\n');
+    elements.importTextarea.value = flashcardsText;
+}
+
+/**
+ * Reset import step UI to default (import mode)
+ */
+function resetImportStepUI() {
+    const headerText = document.getElementById('import-header-text');
+    const submitText = document.getElementById('import-submit-text');
+    const deleteBtn = document.getElementById('import-delete-btn');
+    
+    if (headerText) headerText.textContent = 'Import new set';
+    if (submitText) submitText.textContent = 'Import Set';
+    if (deleteBtn) deleteBtn.classList.add('hidden');
+    
+    window.editingContentId = null;
+}
+
+/**
+ * Delete a saved content item
+ */
+function deleteSavedContent(contentId) {
+    if (!confirm('Are you sure you want to delete this set?')) {
+        return;
+    }
+    
+    let contentList = getSavedContentList();
+    const deletedItem = contentList.find(item => item.id === contentId);
+    contentList = contentList.filter(item => item.id !== contentId);
+    localStorage.setItem('savedContentList', JSON.stringify(contentList));
+    
+    // If the deleted item matches the current loaded content, clear it too
+    const currentContent = JSON.parse(localStorage.getItem('flashcardContent') || '{}');
+    if (deletedItem && currentContent.title === deletedItem.title) {
+        localStorage.removeItem('flashcardContent');
+    }
+    
+    // Re-render the list (skip migration to prevent re-adding the deleted item)
+    renderContentList(true);
+}
+
+/**
+ * Load a saved content item by ID
+ */
+function loadSavedContentById(contentId) {
+    const contentList = getSavedContentList();
+    const contentItem = contentList.find(item => item.id === contentId);
+    
+    if (!contentItem) {
+        console.error('Content not found:', contentId);
+        return;
+    }
+    
+    // Update flashcards array
+    flashcards.length = 0;
+    flashcards.push(...contentItem.flashcards);
+    
+    // Reset state
+    state.currentIndex = 0;
+    state.isFlipped = false;
+    state.starredCards.clear();
+    
+    // Update the set title
+    updateAllSetTitles(contentItem.title || 'Imported Set');
+    
+    // Update the flashcard display
+    updateCard();
+    
+    // Save as current content
+    saveContent(contentItem.title, contentItem.flashcards, contentItem.grouping, contentItem.description, contentItem.testerName);
+    
+    // Update topics list
+    if (contentItem.grouping && contentItem.grouping.groups) {
+        updateGroupedTopicsList(contentItem.flashcards, contentItem.grouping.groups);
+    } else {
+        updateTopicsList(contentItem.flashcards);
+    }
+    
+    // Update description
+    if (contentItem.description) {
+        updateAboutDescription(contentItem.description);
+    }
+    
+    // Update views based on variant
+    if (document.body.classList.contains('option-b') || document.body.classList.contains('option-e')) {
+        updatePanelTermsList();
+        updatePanelTitle();
+    }
+    
+    if (document.body.classList.contains('option-c')) {
+        updateJourneyView();
+    }
+    
+    if (document.body.classList.contains('option-d')) {
+        initTableView();
+    }
+    
+    // Update content list to show active state
+    renderContentList();
 }
 
 /**
@@ -605,9 +979,22 @@ function loadSavedContent() {
                 flashcards.length = 0;
                 flashcards.push(...content.flashcards);
                 
-                // Restore title
+                // Clean up viewedCards to remove indices outside current flashcards range
+                if (studyModeState.viewedCards && studyModeState.viewedCards.size > 0) {
+                    const validViewedCards = new Set();
+                    studyModeState.viewedCards.forEach(index => {
+                        if (index >= 0 && index < flashcards.length) {
+                            validViewedCards.add(index);
+                        }
+                    });
+                    studyModeState.viewedCards = validViewedCards;
+                    // Save cleaned up viewed cards
+                    localStorage.setItem('studyModeViewed', JSON.stringify([...validViewedCards]));
+                }
+                
+                // Restore title across all variants
                 if (content.title) {
-                    elements.setTitle.textContent = content.title;
+                    updateAllSetTitles(content.title);
                 }
                 
                 // Restore description
@@ -615,8 +1002,11 @@ function loadSavedContent() {
                     updateAboutDescription(content.description);
                 }
                 
-                // Restore grouping or fallback to simple list
-                if (content.grouping && content.grouping.groups && content.grouping.groups.length > 0) {
+                // Restore topics list based on variant and saved view mode
+                if (document.body.classList.contains('option-a')) {
+                    // Variant A: Use saved view mode (concepts or terms)
+                    updateVariantAViewMode();
+                } else if (content.grouping && content.grouping.groups && content.grouping.groups.length > 0) {
                     console.log('✅ Loading grouped topics list with', content.grouping.groups.length, 'groups');
                     updateGroupedTopicsList(content.flashcards, content.grouping.groups);
                 } else {
@@ -627,7 +1017,7 @@ function loadSavedContent() {
                 console.log(`Loaded ${content.flashcards.length} cached flashcards`);
                 
                 // Update 3-panel view if active
-                if (document.body.classList.contains('option-b')) {
+                if (document.body.classList.contains('option-b') || document.body.classList.contains('option-e')) {
                     updatePanelTermsList();
                     updatePanelTitle();
                 }
@@ -663,8 +1053,8 @@ function attachEventListeners() {
         toggleStar();
     });
     
-    // Fullscreen
-    elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
+    // Launch Study Mode (was fullscreen)
+    elements.fullscreenBtn.addEventListener('click', () => openStudyModeScreen('flashcards'));
     
     // Tab navigation
     elements.tabButtons.forEach(btn => {
@@ -701,10 +1091,59 @@ function attachEventListeners() {
     });
     elements.importSubmitBtn.addEventListener('click', importFlashcards);
     
+    // Import delete button (for edit mode)
+    const importDeleteBtn = document.getElementById('import-delete-btn');
+    if (importDeleteBtn) {
+        importDeleteBtn.addEventListener('click', () => {
+            if (window.editingContentId) {
+                deleteSavedContent(window.editingContentId);
+                // Go back to main step after deleting
+                const modalStepMain = document.getElementById('modal-step-main');
+                const modalStepImport = document.getElementById('modal-step-import');
+                const headerMain = document.getElementById('header-main');
+                const headerImport = document.getElementById('header-import');
+                
+                modalStepImport?.classList.add('hidden');
+                modalStepMain?.classList.remove('hidden');
+                headerImport?.classList.add('hidden');
+                headerMain?.classList.remove('hidden');
+                resetImportStepUI();
+            }
+        });
+    }
+    
     // Reset study progress button
     const resetProgressBtn = document.getElementById('debug-reset-progress-btn');
     if (resetProgressBtn) {
         resetProgressBtn.addEventListener('click', resetStudyProgress);
+    }
+    
+    // Import modal step navigation
+    const importOpenBtn = document.getElementById('import-open-btn');
+    const importBackBtn = document.getElementById('import-back-btn');
+    const modalStepMain = document.getElementById('modal-step-main');
+    const modalStepImport = document.getElementById('modal-step-import');
+    const headerMain = document.getElementById('header-main');
+    const headerImport = document.getElementById('header-import');
+    
+    if (importOpenBtn) {
+        importOpenBtn.addEventListener('click', () => {
+            modalStepMain?.classList.add('hidden');
+            modalStepImport?.classList.remove('hidden');
+            headerMain?.classList.add('hidden');
+            headerImport?.classList.remove('hidden');
+        });
+    }
+    
+    if (importBackBtn) {
+        importBackBtn.addEventListener('click', () => {
+            modalStepImport?.classList.add('hidden');
+            modalStepMain?.classList.remove('hidden');
+            headerImport?.classList.add('hidden');
+            headerMain?.classList.remove('hidden');
+            // Reset import step UI
+            resetImportStepUI();
+        });
     }
     
     // Close import modal with Escape key
@@ -747,15 +1186,17 @@ function openImportModal() {
     document.body.classList.add('modal-open');
     elements.importTitleInput.value = '';
     elements.importTextarea.value = '';
-    elements.importTitleInput.focus();
+    const testerInput = document.getElementById('import-tester-name');
+    if (testerInput) testerInput.value = '';
     updateVariantButtonStates();
+    renderContentList();
 }
 
 // ============================================
 // Design Variant Functions
 // ============================================
 
-const VARIANTS = ['option-a', 'option-b', 'option-c', 'option-d'];
+const VARIANTS = ['option-a', 'option-b', 'option-c', 'option-d', 'option-e'];
 
 /**
  * Set the design variant
@@ -780,11 +1221,20 @@ function setDesignVariant(variant) {
     }
     
     // If switching to 3-panel, populate the panel terms list and initialize features
-    if (variant === 'option-b') {
+    if (variant === 'option-b' || variant === 'option-e') {
         updatePanelTermsList();
         updatePanelTitle();
         initPanelStudyMode();
+        
+        // Only init discovery panel for option-b
+        if (variant === 'option-b') {
         initDiscoveryPanel();
+        }
+        
+        // Init AI chat for option-e
+        if (variant === 'option-e') {
+            initAiChatPanel();
+        }
     }
     
     // If switching to Journey, populate the journey view
@@ -831,21 +1281,169 @@ function updatePanelTermsList() {
     const panelTermsList = document.getElementById('panel-terms-list');
     if (!panelTermsList) return;
     
+    // Update progress bar visibility based on engagement state
+    updatePanelProgressBar();
+    
+    // Check view mode (concepts vs terms) - default is concepts
+    if (panelViewState.viewMode === 'concepts') {
+        updatePanelConceptsView();
+        return;
+    }
+    
+    // Flat terms list with filtering
     panelTermsList.innerHTML = '';
     
-    flashcards.forEach((card, index) => {
+    // Get filtered indices
+    const filteredIndices = getFilteredPanelIndices();
+    
+    if (filteredIndices.length === 0) {
+        const { icon, message } = getEmptyStateContent(panelViewState.filterBy);
+        panelTermsList.innerHTML = `
+            <div class="panel-empty-state">
+                <span class="material-symbols-rounded">${icon}</span>
+                <p>${message}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Check if we're in progress view
+    const isProgressView = state.hasEngagedWithStudy;
+    
+    filteredIndices.forEach(index => {
+        const card = flashcards[index];
+        const row = createPanelTermRow(card, index, isProgressView);
+        panelTermsList.appendChild(row);
+    });
+    
+    // Update term count
+    const termCount = document.getElementById('panel-term-count');
+    if (termCount) {
+        termCount.innerHTML = `<span class="material-symbols-rounded">stacks</span> ${filteredIndices.length} terms`;
+    }
+}
+
+/**
+ * Get filtered indices for panel view
+ */
+function getFilteredPanelIndices() {
+    let indices = flashcards.map((_, i) => i);
+    
+    // Apply filter
+    if (panelViewState.filterBy === 'starred') {
+        indices = indices.filter(i => state.starredCards.has(i));
+    } else if (panelViewState.filterBy === 'know') {
+        indices = indices.filter(i => isCardKnown(i));
+    } else if (panelViewState.filterBy === 'still-learning') {
+        indices = indices.filter(i => !isCardKnown(i));
+    }
+    
+    return indices;
+}
+
+/**
+ * Update panel progress bar visibility
+ */
+function updatePanelProgressBar() {
+    const metaEl = document.getElementById('panel-meta');
+    const progressEl = document.getElementById('panel-progress-view');
+    
+    if (state.hasEngagedWithStudy) {
+        // Show progress bar, hide meta
+        if (metaEl) metaEl.style.display = 'none';
+        if (progressEl) {
+            progressEl.style.display = 'block';
+            updatePanelProgressValues();
+        }
+    } else {
+        // Show meta, hide progress bar
+        if (metaEl) metaEl.style.display = 'flex';
+        if (progressEl) progressEl.style.display = 'none';
+    }
+}
+
+/**
+ * Update panel progress bar values
+ */
+function updatePanelProgressValues() {
+    const fillEl = document.getElementById('panel-progress-fill');
+    const textEl = document.getElementById('panel-progress-text');
+    
+    if (!fillEl || !textEl) return;
+    
+    const total = flashcards.length;
+    let known = 0;
+    for (let i = 0; i < total; i++) {
+        if (isCardKnown(i)) known++;
+    }
+    
+    const percent = total > 0 ? Math.min(100, Math.round((known / total) * 100)) : 0;
+    fillEl.style.width = percent + '%';
+    textEl.textContent = `${percent}% Complete`;
+}
+
+/**
+ * Update rail progress bar visibility (Variant D)
+ */
+function updateRailProgressBar() {
+    const metaEl = document.getElementById('rail-meta');
+    const progressEl = document.getElementById('rail-progress-view');
+    
+    if (state.hasEngagedWithStudy) {
+        // Show progress bar, hide meta
+        if (metaEl) metaEl.style.display = 'none';
+        if (progressEl) {
+            progressEl.style.display = 'flex';
+            updateRailProgressValues();
+        }
+    } else {
+        // Show meta, hide progress bar
+        if (metaEl) metaEl.style.display = 'flex';
+        if (progressEl) progressEl.style.display = 'none';
+    }
+}
+
+/**
+ * Update rail progress bar values (Variant D)
+ */
+function updateRailProgressValues() {
+    const fillEl = document.getElementById('rail-progress-fill');
+    const textEl = document.getElementById('rail-progress-text');
+    
+    if (!fillEl || !textEl) return;
+    
+    const total = flashcards.length;
+    let known = 0;
+    for (let i = 0; i < total; i++) {
+        if (isCardKnown(i)) known++;
+    }
+    
+    const percent = total > 0 ? Math.min(100, Math.round((known / total) * 100)) : 0;
+    fillEl.style.width = percent + '%';
+    textEl.textContent = `${percent}% complete`;
+}
+
+/**
+ * Create a panel term row element
+ */
+function createPanelTermRow(card, index) {
         const row = document.createElement('div');
         row.className = 'panel-term-row';
         row.dataset.index = index;
         
-        const audioBtn = document.createElement('button');
-        audioBtn.className = 'panel-term-audio';
-        audioBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
-        audioBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            playTermAudio(card.term, card.definition, audioBtn);
-        });
-        
+    // Check if we're in progress view
+    const isProgressView = state.hasEngagedWithStudy;
+    
+    // Progress status icon on LEFT (only in progress view)
+    if (isProgressView) {
+        const isKnown = isCardKnown(index);
+        const statusIcon = document.createElement('div');
+        statusIcon.className = `panel-term-status ${isKnown ? 'known' : 'learning'}`;
+        statusIcon.innerHTML = `<span class="material-symbols-rounded">${isKnown ? 'check' : 'remove'}</span>`;
+        row.appendChild(statusIcon);
+    }
+    
+    // Content in middle
         const content = document.createElement('div');
         content.className = 'panel-term-content';
         
@@ -859,37 +1457,183 @@ function updatePanelTermsList() {
         
         content.appendChild(term);
         content.appendChild(definition);
+    row.appendChild(content);
+    
+    // Actions container on RIGHT (audio + star)
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'panel-term-actions';
+    
+    const audioBtn = document.createElement('button');
+    audioBtn.className = 'panel-term-audio';
+    audioBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
+    audioBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playTermAudio(card.term, card.definition, audioBtn);
+    });
+    actionsContainer.appendChild(audioBtn);
         
         const starBtn = document.createElement('button');
         starBtn.className = 'panel-term-star';
-        if (state.starredCards.has(index)) {
+        const isStarred = state.starredCards.has(index);
+        if (isStarred) {
             starBtn.classList.add('starred');
         }
-        starBtn.innerHTML = `<span class="material-symbols-rounded ${state.starredCards.has(index) ? 'filled' : ''}">star</span>`;
+    starBtn.innerHTML = `<span class="material-symbols-rounded${isStarred ? ' filled' : ''}">star</span>`;
         starBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            const icon = starBtn.querySelector('.material-symbols-rounded');
             if (state.starredCards.has(index)) {
                 state.starredCards.delete(index);
                 starBtn.classList.remove('starred');
-                starBtn.innerHTML = '<span class="material-symbols-rounded">star</span>';
+                if (icon) icon.classList.remove('filled');
             } else {
                 state.starredCards.add(index);
                 starBtn.classList.add('starred');
-                starBtn.innerHTML = '<span class="material-symbols-rounded filled">star</span>';
+                if (icon) icon.classList.add('filled');
             }
             saveState();
         });
-        row.appendChild(audioBtn);
-        row.appendChild(content);
-        row.appendChild(starBtn);
+    actionsContainer.appendChild(starBtn);
+    
+    row.appendChild(actionsContainer);
+    
+    return row;
+}
+
+/**
+ * Update panel with grouped concepts view (Variants B and E)
+ */
+function updatePanelConceptsView() {
+    const panelTermsList = document.getElementById('panel-terms-list');
+    if (!panelTermsList) return;
+    
+    panelTermsList.innerHTML = '';
+    
+    // Try to get saved grouping
+    const saved = localStorage.getItem('flashcardContent');
+    let groups = null;
+    
+    if (saved) {
+        try {
+            const content = JSON.parse(saved);
+            if (content.grouping && content.grouping.groups && Array.isArray(content.grouping.groups)) {
+                groups = content.grouping.groups;
+            }
+        } catch (e) {
+            console.error('Error loading groups:', e);
+        }
+    }
+    
+    // If no groups, show a single "All Cards" group
+    if (!groups || groups.length === 0) {
+        groups = [{
+            title: 'All Cards',
+            description: 'All flashcards in this set',
+            cardIndices: flashcards.map((_, i) => i)
+        }];
+    }
+    
+    // Check if we're in progress view
+    const isProgressView = state.hasEngagedWithStudy;
+    
+    // Render grouped concepts
+    groups.forEach((group, groupIndex) => {
+        // Filter card indices based on current filter
+        let filteredIndices = group.cardIndices.filter(i => i >= 0 && i < flashcards.length);
         
-        panelTermsList.appendChild(row);
+        if (panelViewState.filterBy === 'starred') {
+            filteredIndices = filteredIndices.filter(i => state.starredCards.has(i));
+        } else if (panelViewState.filterBy === 'know') {
+            filteredIndices = filteredIndices.filter(i => isCardKnown(i));
+        } else if (panelViewState.filterBy === 'still-learning') {
+            filteredIndices = filteredIndices.filter(i => !isCardKnown(i));
+        }
+        
+        // Skip empty groups after filtering
+        if (filteredIndices.length === 0) return;
+        
+        const section = document.createElement('div');
+        section.className = 'panel-concept-section collapsed';
+        
+        // Calculate progress for this group
+        let knownCount = 0;
+        filteredIndices.forEach(i => {
+            if (isCardKnown(i)) knownCount++;
+        });
+        const progressPercent = filteredIndices.length > 0 ? Math.round((knownCount / filteredIndices.length) * 100) : 0;
+        
+        // Header
+        const header = document.createElement('div');
+        header.className = 'panel-concept-header';
+        header.addEventListener('click', () => {
+            section.classList.toggle('collapsed');
+        });
+        
+        const headerLeft = document.createElement('div');
+        headerLeft.className = 'panel-concept-header-left';
+        
+        // Add progress ring if in progress view
+        if (isProgressView) {
+            const radius = 14;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (progressPercent / 100) * circumference;
+            const isComplete = progressPercent === 100;
+            
+            const progressRing = document.createElement('div');
+            progressRing.className = `panel-concept-progress-ring ${isComplete ? 'complete' : ''}`;
+            progressRing.innerHTML = `
+                <svg viewBox="0 0 36 36">
+                    <circle class="progress-ring-bg" cx="18" cy="18" r="${radius}"/>
+                    <circle class="progress-ring-fill" cx="18" cy="18" r="${radius}"
+                        stroke-dasharray="${circumference}"
+                        stroke-dashoffset="${offset}"/>
+                </svg>
+                ${isComplete ? '<span class="material-symbols-rounded progress-ring-check">check_small</span>' : ''}
+            `;
+            headerLeft.appendChild(progressRing);
+        }
+        
+        const title = document.createElement('h3');
+        title.className = 'panel-concept-title';
+        title.textContent = group.title;
+        
+        headerLeft.appendChild(title);
+        
+        const toggleIcon = document.createElement('span');
+        toggleIcon.className = 'material-symbols-rounded panel-concept-toggle';
+        toggleIcon.textContent = 'expand_more';
+        
+        header.appendChild(headerLeft);
+        header.appendChild(toggleIcon);
+        section.appendChild(header);
+        
+        // Cards container
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'panel-concept-cards';
+        
+        filteredIndices.forEach(cardIndex => {
+            const card = flashcards[cardIndex];
+            const row = createPanelTermRow(card, cardIndex, isProgressView);
+            cardsContainer.appendChild(row);
+        });
+        
+        section.appendChild(cardsContainer);
+        panelTermsList.appendChild(section);
     });
     
     // Update term count
     const termCount = document.getElementById('panel-term-count');
     if (termCount) {
         termCount.innerHTML = `<span class="material-symbols-rounded">stacks</span> ${flashcards.length} terms`;
+    }
+    
+    // Keep sort button text as "Sort" regardless of selection
+    const sortBtn = document.getElementById('panel-sort-btn');
+    if (sortBtn) {
+        const btnText = sortBtn.querySelector('span:first-child');
+        if (btnText) {
+            btnText.textContent = 'Sort';
+        }
     }
 }
 
@@ -946,15 +1690,16 @@ function togglePanelSortMenu(btn) {
     btn.classList.toggle('active');
     
     if (btn.classList.contains('active')) {
-        const sortOptions = [
-            { id: 'original', label: 'Original order', icon: 'format_list_numbered' },
-            { id: 'alphabetical', label: 'A → Z', icon: 'sort_by_alpha' },
-            { id: 'alphabetical-reverse', label: 'Z → A', icon: 'sort_by_alpha' }
+        // Both variants B and E show Concepts/Terms options
+        const viewOptions = [
+            { id: 'concepts', label: 'Concepts', icon: 'category' },
+            { id: 'terms', label: 'Terms', icon: 'format_list_bulleted' }
         ];
         
-        const menu = createDropdownMenu(sortOptions, sortFilterState.sortBy, (option) => {
-            sortFilterState.sortBy = option;
-            applyPanelSortFilter();
+        const menu = createDropdownMenu(viewOptions, panelViewState.viewMode, (option) => {
+            panelViewState.viewMode = option;
+            savePanelViewState();
+            updatePanelTermsList();
             btn.classList.remove('active');
             removeDropdownMenus();
         });
@@ -973,12 +1718,14 @@ function togglePanelFilterMenu(btn) {
     
     if (btn.classList.contains('active')) {
         const menu = createDropdownMenu([
-            { id: 'all', label: 'All terms', icon: 'list' },
-            { id: 'starred', label: 'Starred only', icon: 'star' },
-            { id: 'unstarred', label: 'Not starred', icon: 'star_outline' }
-        ], sortFilterState.filterBy, (option) => {
-            sortFilterState.filterBy = option;
-            applyPanelSortFilter();
+            { id: 'all', label: 'All', icon: 'list' },
+            { id: 'starred', label: 'Starred', icon: 'star' },
+            { id: 'know', label: 'Know', icon: 'check' },
+            { id: 'still-learning', label: 'Still learning', icon: 'pending' }
+        ], panelViewState.filterBy, (option) => {
+            panelViewState.filterBy = option;
+            savePanelViewState();
+            updatePanelTermsList();
             btn.classList.remove('active');
             removeDropdownMenus();
         });
@@ -1024,10 +1771,11 @@ function updateFilteredPanelTermsList(cards, indices) {
     container.innerHTML = '';
     
     if (indices.length === 0) {
+        const { icon, message } = getEmptyStateContent(sortFilterState.filterBy);
         container.innerHTML = `
             <div class="panel-empty-state">
-                <span class="material-symbols-rounded">filter_list_off</span>
-                <p>No terms match your filter</p>
+                <span class="material-symbols-rounded">${icon}</span>
+                <p>${message}</p>
             </div>
         `;
         return;
@@ -1035,100 +1783,9 @@ function updateFilteredPanelTermsList(cards, indices) {
     
     indices.forEach(index => {
         const card = cards[index];
-        const row = document.createElement('div');
-        row.className = 'panel-term-row';
-        row.dataset.index = index;
-        
-        const audioBtn = document.createElement('button');
-        audioBtn.className = 'panel-term-audio';
-        audioBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
-        audioBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            playTermAudio(card.term, card.definition);
-        });
-        
-        const content = document.createElement('div');
-        content.className = 'panel-term-content';
-        content.innerHTML = `
-            <span class="panel-term-word">${card.term}</span>
-            <span class="panel-term-def">${card.definition}</span>
-        `;
-        
-        const starBtn = document.createElement('button');
-        starBtn.className = 'panel-term-star';
-        if (state.starredCards.has(index)) {
-            starBtn.classList.add('starred');
-        }
-        starBtn.innerHTML = `<span class="material-symbols-rounded ${state.starredCards.has(index) ? 'filled' : ''}">star</span>`;
-        starBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (state.starredCards.has(index)) {
-                state.starredCards.delete(index);
-                starBtn.classList.remove('starred');
-                starBtn.innerHTML = '<span class="material-symbols-rounded">star</span>';
-            } else {
-                state.starredCards.add(index);
-                starBtn.classList.add('starred');
-                starBtn.innerHTML = '<span class="material-symbols-rounded filled">star</span>';
-            }
-            saveState();
-        });
-        
-        row.appendChild(audioBtn);
-        row.appendChild(content);
-        row.appendChild(starBtn);
+        const row = createPanelTermRow(card, index);
         container.appendChild(row);
     });
-}
-
-/**
- * Create a panel term row element
- */
-function createPanelTermRow(card, index) {
-    const row = document.createElement('div');
-    row.className = 'panel-term-row';
-    row.dataset.index = index;
-    
-    const audioBtn = document.createElement('button');
-    audioBtn.className = 'panel-term-audio';
-    audioBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
-    audioBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        playTermAudio(card.term, card.definition);
-    });
-    
-    const content = document.createElement('div');
-    content.className = 'panel-term-content';
-    content.innerHTML = `
-        <span class="panel-term-word">${card.term}</span>
-        <span class="panel-term-def">${card.definition}</span>
-    `;
-    
-    const starBtn = document.createElement('button');
-    starBtn.className = 'panel-term-star';
-    if (state.starredCards.has(index)) {
-        starBtn.classList.add('starred');
-    }
-    starBtn.innerHTML = `<span class="material-symbols-rounded ${state.starredCards.has(index) ? 'filled' : ''}">star</span>`;
-    starBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (state.starredCards.has(index)) {
-            state.starredCards.delete(index);
-            starBtn.classList.remove('starred');
-            starBtn.innerHTML = '<span class="material-symbols-rounded">star</span>';
-        } else {
-            state.starredCards.add(index);
-            starBtn.classList.add('starred');
-            starBtn.innerHTML = '<span class="material-symbols-rounded filled">star</span>';
-        }
-        saveState();
-    });
-    
-    row.appendChild(audioBtn);
-    row.appendChild(content);
-    row.appendChild(starBtn);
-    
-    return row;
 }
 
 // DEPRECATED: Old study panel functions removed - now using full-screen study mode
@@ -1160,12 +1817,13 @@ async function loadRelatedSets() {
     
     if (!discoveryList) return;
     
-    // Show loading state
+    // Show loading state with shimmer skeletons
     refreshBtn?.classList.add('loading');
     discoveryList.innerHTML = `
-        <div class="discovery-loading">
-            <div class="discovery-loading-spinner"></div>
-            <span>Finding related sets...</span>
+        <div class="discovery-loading-skeleton">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
         </div>
     `;
     
@@ -1351,6 +2009,506 @@ function updateJourneyView() {
     updateJourneyTitle();
     updateJourneyTermsList();
     updateJourneyMap();
+    updateJourneySidebar();
+    initJourneySidebarControls();
+}
+
+/**
+ * Initialize journey sidebar sort/filter controls
+ */
+function initJourneySidebarControls() {
+    const sortBtn = document.getElementById('journey-sort-btn');
+    const filterBtn = document.getElementById('journey-filter-btn');
+    const studyBtn = document.querySelector('.journey-sidebar-study-btn');
+    const topicsContainer = document.getElementById('journey-topics-container');
+    
+    // Sort button (currently only shows original order for terms list)
+    if (sortBtn && !sortBtn.hasAttribute('data-initialized')) {
+        sortBtn.setAttribute('data-initialized', 'true');
+        sortBtn.addEventListener('click', () => toggleJourneySortMenu(sortBtn));
+    }
+    
+    // Filter button
+    if (filterBtn && !filterBtn.hasAttribute('data-initialized')) {
+        filterBtn.setAttribute('data-initialized', 'true');
+        filterBtn.addEventListener('click', () => toggleJourneyFilterMenu(filterBtn));
+    }
+    
+    // Study button
+    if (studyBtn && !studyBtn.hasAttribute('data-initialized')) {
+        studyBtn.setAttribute('data-initialized', 'true');
+        studyBtn.addEventListener('click', () => openStudyModeScreen('flashcards'));
+    }
+    
+    // Scroll listener for journey node activation
+    if (topicsContainer && !topicsContainer.hasAttribute('data-scroll-initialized')) {
+        topicsContainer.setAttribute('data-scroll-initialized', 'true');
+        topicsContainer.addEventListener('scroll', debounce(() => {
+            updateActiveJourneyNodeFromScroll();
+        }, 100));
+    }
+}
+
+/**
+ * Toggle sort menu for journey sidebar
+ */
+function toggleJourneySortMenu(btn) {
+    removeDropdownMenus();
+    btn.classList.toggle('active');
+    
+    if (btn.classList.contains('active')) {
+        // Build menu options - Alphabetical shows direction arrow if selected
+        const alphabeticalLabel = journeyViewState.sortBy === 'alphabetical' 
+            ? `Alphabetical ${journeyViewState.sortDirection === 'asc' ? '↑' : '↓'}` 
+            : 'Alphabetical';
+        
+        const menu = createDropdownMenu([
+            { id: 'original', label: 'Original' },
+            { id: 'alphabetical', label: alphabeticalLabel }
+        ], journeyViewState.sortBy, (option) => {
+            if (option.id === 'alphabetical') {
+                if (journeyViewState.sortBy === 'alphabetical') {
+                    // Toggle direction if already selected
+                    journeyViewState.sortDirection = journeyViewState.sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    // First time selecting alphabetical
+                    journeyViewState.sortBy = 'alphabetical';
+                    journeyViewState.sortDirection = 'asc';
+                }
+            } else {
+                journeyViewState.sortBy = 'original';
+            }
+            
+            // Update the list
+            updateJourneySidebarTopics();
+            
+            btn.classList.remove('active');
+            removeDropdownMenus();
+        });
+        
+        positionDropdown(menu, btn);
+        document.body.appendChild(menu);
+    }
+}
+
+/**
+ * Toggle filter menu for journey sidebar
+ */
+function toggleJourneyFilterMenu(btn) {
+    removeDropdownMenus();
+    btn.classList.toggle('active');
+    
+    if (btn.classList.contains('active')) {
+        const menu = createDropdownMenu([
+            { id: 'all', label: 'All', icon: 'list' },
+            { id: 'starred', label: 'Starred', icon: 'star' },
+            { id: 'know', label: 'Know', icon: 'check' },
+            { id: 'still-learning', label: 'Still learning', icon: 'pending' }
+        ], journeyViewState.filterBy, (option) => {
+            journeyViewState.filterBy = option;
+            updateJourneySidebarTopics();
+            btn.classList.remove('active');
+            removeDropdownMenus();
+        });
+        
+        positionDropdown(menu, btn);
+        document.body.appendChild(menu);
+    }
+}
+
+// Journey sidebar view state (Variant C)
+const journeyViewState = {
+    filterBy: 'all', // 'all', 'starred', 'know', 'still-learning'
+    sortBy: 'original', // 'original', 'alphabetical'
+    sortDirection: 'asc' // 'asc' or 'desc' (only applies to alphabetical)
+};
+
+/**
+ * Update Journey sidebar (reuses Variant A sidebar structure)
+ */
+function updateJourneySidebar() {
+    // Update title
+    const journeySidebarTitle = document.querySelector('.journey-set-title-sync');
+    if (journeySidebarTitle && elements.setTitle) {
+        journeySidebarTitle.textContent = elements.setTitle.textContent;
+    }
+    
+    // Update progress view visibility
+    updateJourneySidebarProgress();
+    
+    // Update topics container - always show flat terms list (no concept groups)
+    updateJourneySidebarTopics();
+    
+    // Update about description
+    const saved = localStorage.getItem('flashcardContent');
+    if (saved) {
+        try {
+            const content = JSON.parse(saved);
+            const journeyAboutDesc = document.getElementById('journey-about-description');
+            if (journeyAboutDesc && content.description) {
+                journeyAboutDesc.textContent = content.description;
+            }
+        } catch (e) {
+            console.error('Error loading journey sidebar:', e);
+        }
+    }
+}
+
+/**
+ * Update journey sidebar progress bar visibility
+ */
+function updateJourneySidebarProgress() {
+    const metaEl = document.getElementById('journey-sidebar-set-meta');
+    const progressEl = document.getElementById('journey-sidebar-progress-view');
+    
+    if (state.hasEngagedWithStudy) {
+        if (metaEl) metaEl.style.display = 'none';
+        if (progressEl) {
+            progressEl.style.display = 'flex';
+            updateJourneySidebarProgressValues();
+        }
+    } else {
+        if (metaEl) metaEl.style.display = 'flex';
+        if (progressEl) progressEl.style.display = 'none';
+    }
+}
+
+/**
+ * Update journey sidebar progress values
+ */
+function updateJourneySidebarProgressValues() {
+    const fillEl = document.getElementById('journey-sidebar-progress-fill');
+    const textEl = document.getElementById('journey-sidebar-progress-text');
+    
+    if (!fillEl || !textEl) return;
+    
+    const total = flashcards.length;
+    let known = 0;
+    for (let i = 0; i < total; i++) {
+        if (isCardKnown(i)) known++;
+    }
+    
+    const percent = total > 0 ? Math.min(100, Math.round((known / total) * 100)) : 0;
+    fillEl.style.width = percent + '%';
+    textEl.textContent = `${percent}% complete`;
+}
+
+/**
+ * Update Journey sidebar topics list (flat terms list with filtering)
+ */
+function updateJourneySidebarTopics() {
+    const container = document.getElementById('journey-topics-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Get filtered indices
+    let indices = flashcards.map((_, i) => i);
+    
+    if (journeyViewState.filterBy === 'starred') {
+        indices = indices.filter(i => state.starredCards.has(i));
+    } else if (journeyViewState.filterBy === 'know') {
+        indices = indices.filter(i => isCardKnown(i));
+    } else if (journeyViewState.filterBy === 'still-learning') {
+        indices = indices.filter(i => !isCardKnown(i));
+    }
+    
+    // Apply sorting
+    if (journeyViewState.sortBy === 'alphabetical') {
+        indices.sort((a, b) => {
+            const termA = flashcards[a].term.toLowerCase();
+            const termB = flashcards[b].term.toLowerCase();
+            const comparison = termA.localeCompare(termB);
+            return journeyViewState.sortDirection === 'asc' ? comparison : -comparison;
+        });
+    }
+    // 'original' keeps the natural order (no sorting needed)
+    
+    // Show empty state if no terms match filter
+    if (indices.length === 0) {
+        const { icon, message } = getEmptyStateContent(journeyViewState.filterBy);
+        container.innerHTML = `
+            <div class="toc-empty">
+                <span class="material-symbols-rounded">${icon}</span>
+                <p>${message}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Check if we're in progress view (only show check/minus if user has engaged with study)
+    const isProgressView = state.hasEngagedWithStudy;
+    
+    // Create flat terms list (no collapsible header)
+    const termsContainer = document.createElement('div');
+    termsContainer.className = 'flat-terms-list';
+    
+    indices.forEach(index => {
+        const card = flashcards[index];
+        const termCard = createJourneySidebarTermCard(card, index, isProgressView);
+        termsContainer.appendChild(termCard);
+    });
+    
+    container.appendChild(termsContainer);
+}
+
+/**
+ * Update Journey sidebar with grouped topics
+ */
+function updateJourneySidebarGroupedTopics(groups) {
+    const container = document.getElementById('journey-topics-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    groups.forEach((group, groupIndex) => {
+        const topicSection = document.createElement('div');
+        topicSection.className = 'topic-section collapsed';
+        
+        const topicHeader = document.createElement('div');
+        topicHeader.className = 'topic-header';
+        topicHeader.addEventListener('click', () => {
+            const isCurrentlyCollapsed = topicSection.classList.contains('collapsed');
+            container.querySelectorAll('.topic-section').forEach(section => {
+                section.classList.add('collapsed');
+            });
+            if (isCurrentlyCollapsed) {
+                topicSection.classList.remove('collapsed');
+            }
+        });
+        
+        const topicTitle = document.createElement('h2');
+        topicTitle.className = 'topic-title';
+        topicTitle.textContent = group.title;
+        
+        const toggleIcon = document.createElement('div');
+        toggleIcon.className = 'topic-toggle';
+        toggleIcon.innerHTML = `<span class="material-symbols-rounded">expand_more</span>`;
+        
+        topicHeader.appendChild(topicTitle);
+        topicHeader.appendChild(toggleIcon);
+        topicSection.appendChild(topicHeader);
+        
+        const topicCards = document.createElement('div');
+        topicCards.className = 'topic-cards';
+        
+        group.cardIndices.forEach(cardIndex => {
+            if (cardIndex >= 0 && cardIndex < flashcards.length) {
+                const card = flashcards[cardIndex];
+                const termCard = createJourneySidebarTermCard(card, cardIndex);
+                topicCards.appendChild(termCard);
+            }
+        });
+        
+        topicSection.appendChild(topicCards);
+        container.appendChild(topicSection);
+    });
+}
+
+/**
+ * Create a term card for the journey sidebar
+ */
+function createJourneySidebarTermCard(card, cardIndex, isProgressView = false) {
+    const termCard = document.createElement('div');
+    termCard.className = 'term-card';
+    termCard.dataset.index = cardIndex;
+    
+    // Progress status icon on LEFT (only in progress view)
+    if (isProgressView) {
+        const isKnown = isCardKnown(cardIndex);
+        const statusIcon = document.createElement('div');
+        statusIcon.className = `term-status-icon ${isKnown ? 'known' : 'learning'}`;
+        statusIcon.innerHTML = `<span class="material-symbols-rounded">${isKnown ? 'check' : 'remove'}</span>`;
+        termCard.appendChild(statusIcon);
+    }
+    
+    // Content
+    const content = document.createElement('div');
+    content.className = 'term-content';
+    content.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.currentIndex = cardIndex;
+        updateCard();
+        updateJourneySidebarActiveItem();
+        // Activate and scroll to the corresponding journey node
+        activateJourneyNodeForCard(cardIndex);
+    });
+    
+    const termTitle = document.createElement('div');
+    termTitle.className = 'term-title';
+    termTitle.textContent = card.term.length > 60 ? card.term.substring(0, 57) + '...' : card.term;
+    
+    const termDefinition = document.createElement('div');
+    termDefinition.className = 'term-definition';
+    termDefinition.textContent = card.definition;
+    
+    content.appendChild(termTitle);
+    content.appendChild(termDefinition);
+    termCard.appendChild(content);
+    
+    // Actions container on RIGHT (audio + star)
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'term-actions';
+    
+    // Audio button
+    const audioBtn = document.createElement('button');
+    audioBtn.className = 'term-audio-btn';
+    audioBtn.setAttribute('aria-label', 'Play audio');
+    audioBtn.innerHTML = `<span class="material-symbols-rounded">volume_up</span>`;
+    audioBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playTermAudio(card.term, card.definition, audioBtn);
+    });
+    actionsContainer.appendChild(audioBtn);
+    
+    // Star button
+    const starBtn = document.createElement('button');
+    const isStarred = state.starredCards.has(cardIndex);
+    starBtn.className = `term-star-btn ${isStarred ? 'starred' : ''}`;
+    starBtn.setAttribute('aria-label', 'Star this term');
+    starBtn.innerHTML = `<span class="material-symbols-rounded ${isStarred ? 'filled' : ''}">star</span>`;
+    starBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleStar(cardIndex);
+        const nowStarred = state.starredCards.has(cardIndex);
+        starBtn.classList.toggle('starred', nowStarred);
+        const icon = starBtn.querySelector('.material-symbols-rounded');
+        if (icon) icon.classList.toggle('filled', nowStarred);
+    });
+    actionsContainer.appendChild(starBtn);
+    
+    termCard.appendChild(actionsContainer);
+    
+    // Don't mark active by default - only after user clicks a term
+    // Active state is managed by updateJourneySidebarActiveItem()
+    
+    return termCard;
+}
+
+/**
+ * Update active item in journey sidebar
+ */
+function updateJourneySidebarActiveItem() {
+    const container = document.getElementById('journey-topics-container');
+    if (!container) return;
+    
+    const termCards = container.querySelectorAll('.term-card[data-index]');
+    termCards.forEach(card => {
+        card.classList.remove('active');
+        if (parseInt(card.dataset.index) === state.currentIndex) {
+            card.classList.add('active');
+        }
+    });
+}
+
+/**
+ * Activate journey node for a specific card and scroll it into view
+ */
+function activateJourneyNodeForCard(cardIndex) {
+    const journeyMap = document.getElementById('journey-map');
+    if (!journeyMap) return;
+    
+    // Get groups from saved content
+    const saved = localStorage.getItem('flashcardContent');
+    if (!saved) return;
+    
+    let groups = null;
+    try {
+        const content = JSON.parse(saved);
+        if (content.grouping && content.grouping.groups && Array.isArray(content.grouping.groups)) {
+            groups = content.grouping.groups;
+        }
+    } catch (e) {
+        return;
+    }
+    
+    if (!groups || groups.length === 0) return;
+    
+    // Find which group this card belongs to
+    let targetGroupIndex = 0;
+    for (let i = 0; i < groups.length; i++) {
+        if (groups[i].cardIndices && groups[i].cardIndices.includes(cardIndex)) {
+            targetGroupIndex = i;
+            break;
+        }
+    }
+    
+    // Update journey nodes - activate the target, lock others
+    const journeyNodes = journeyMap.querySelectorAll('.journey-node');
+    journeyNodes.forEach((node, index) => {
+        node.classList.remove('active', 'locked');
+        if (index === targetGroupIndex) {
+            node.classList.add('active');
+            // Scroll the node into view with smooth animation
+            node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        } else {
+            node.classList.add('locked');
+        }
+    });
+}
+
+/**
+ * Update active journey node based on scroll position in terms list
+ */
+function updateActiveJourneyNodeFromScroll() {
+    const container = document.getElementById('journey-topics-container');
+    const journeyMap = document.getElementById('journey-map');
+    if (!container || !journeyMap) return;
+    
+    // Get groups from saved content
+    const saved = localStorage.getItem('flashcardContent');
+    if (!saved) return;
+    
+    let groups = null;
+    try {
+        const content = JSON.parse(saved);
+        if (content.grouping && content.grouping.groups && Array.isArray(content.grouping.groups)) {
+            groups = content.grouping.groups;
+        }
+    } catch (e) {
+        return;
+    }
+    
+    if (!groups || groups.length === 0) return;
+    
+    // Build a map of card index to group index
+    const cardToGroup = new Map();
+    groups.forEach((group, groupIndex) => {
+        if (group.cardIndices) {
+            group.cardIndices.forEach(cardIndex => {
+                cardToGroup.set(cardIndex, groupIndex);
+            });
+        }
+    });
+    
+    // Get visible term cards
+    const termCards = container.querySelectorAll('.term-card[data-index]');
+    const containerRect = container.getBoundingClientRect();
+    
+    // Find the first visible card
+    let activeGroupIndex = 0;
+    for (const card of termCards) {
+        const cardRect = card.getBoundingClientRect();
+        // Check if card is visible (at least partially in the container)
+        if (cardRect.top < containerRect.bottom && cardRect.bottom > containerRect.top) {
+            const cardIndex = parseInt(card.dataset.index);
+            if (cardToGroup.has(cardIndex)) {
+                activeGroupIndex = cardToGroup.get(cardIndex);
+                break;
+            }
+        }
+    }
+    
+    // Update journey nodes
+    const journeyNodes = journeyMap.querySelectorAll('.journey-node');
+    journeyNodes.forEach((node, index) => {
+        node.classList.remove('active', 'locked');
+        if (index === activeGroupIndex) {
+            node.classList.add('active');
+        } else {
+            node.classList.add('locked');
+        }
+    });
 }
 
 /**
@@ -1435,12 +2593,24 @@ function updateJourneyMap() {
     
     nodesToRender.forEach((title, index) => {
         const node = document.createElement('div');
-        // First node is active, rest are locked
+        // First node is active, rest are locked (but all show progress)
         const nodeState = index === 0 ? 'active' : 'locked';
         
         node.className = `journey-node ${nodeState}`;
         node.dataset.groupIndex = index;
         node.style.cursor = 'pointer';
+        
+        // Calculate progress for this group
+        let groupProgress = 0;
+        if (groups && groups[index]) {
+            const cardIndices = groups[index].cardIndices || [];
+            const total = cardIndices.length;
+            let known = 0;
+            cardIndices.forEach(i => {
+                if (isCardKnown(i)) known++;
+            });
+            groupProgress = total > 0 ? Math.round((known / total) * 100) : 0;
+        }
         
         const nodeMain = document.createElement('div');
         nodeMain.className = 'journey-node-main';
@@ -1457,12 +2627,24 @@ function updateJourneyMap() {
             node3d.appendChild(startLabel);
         }
         
-        // Progress ring (for active node)
-        if (nodeState === 'active') {
+        // SVG Progress ring for all nodes (empty by default, fills based on progress)
+        const radius = 37;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (groupProgress / 100) * circumference;
+        const isNodeComplete = groupProgress === 100;
+        
             const progressRing = document.createElement('div');
-            progressRing.className = 'journey-node-progress-ring';
+        progressRing.className = `journey-node-progress-ring ${isNodeComplete ? 'complete' : ''}`;
+        progressRing.innerHTML = `
+            <svg viewBox="0 0 82 82">
+                <circle class="progress-ring-bg" cx="41" cy="41" r="${radius}"/>
+                <circle class="progress-ring-fill" cx="41" cy="41" r="${radius}"
+                    stroke-dasharray="${circumference}"
+                    stroke-dashoffset="${offset}"/>
+            </svg>
+            ${isNodeComplete ? '<span class="material-symbols-rounded progress-ring-check">check_small</span>' : ''}
+        `;
             node3d.appendChild(progressRing);
-        }
         
         // The main sphere with star icon
         const sphere = document.createElement('div');
@@ -1497,8 +2679,9 @@ function updateJourneyMap() {
  * Load the saved design variant
  */
 function loadDesignVariant() {
-    const saved = localStorage.getItem('designVariant');
-    const variant = saved && VARIANTS.includes(saved) ? saved : 'option-a';
+    // Load saved variant from localStorage, default to option-a
+    const savedVariant = localStorage.getItem('designVariant');
+    const variant = savedVariant && VARIANTS.includes(savedVariant) ? savedVariant : 'option-a';
     setDesignVariant(variant);
 }
 
@@ -1526,21 +2709,42 @@ function initPanelResize() {
     const handles = document.querySelectorAll('.panel-resize-handle');
     const discoveryPanel = document.querySelector('.panel-discovery');
     const studyPlanPanel = document.querySelector('.panel-study-plan');
+    const mainPanel = document.querySelector('.panel-main');
+    const aiChatPanel = document.querySelector('.ai-chat-panel');
     
     if (!handles.length) return;
     
-    // Load saved sizes
-    const savedDiscoveryWidth = localStorage.getItem('panelDiscoveryWidth');
-    const savedStudyPlanWidth = localStorage.getItem('panelStudyPlanWidth');
+    const isVariantB = document.body.classList.contains('option-b');
+    const isVariantE = document.body.classList.contains('option-e');
+    
+    // Load saved sizes for Option B (simple pixel-based)
+    if (isVariantB) {
+        const savedDiscoveryWidth = localStorage.getItem('panelDiscoveryWidthB');
+        const savedStudyPlanWidth = localStorage.getItem('panelStudyPlanWidthB');
     
     if (savedDiscoveryWidth && discoveryPanel) {
-        discoveryPanel.style.width = savedDiscoveryWidth;
-        discoveryPanel.style.minWidth = '180px';
+            discoveryPanel.style.width = savedDiscoveryWidth + 'px';
+    }
+    if (savedStudyPlanWidth && studyPlanPanel) {
+            studyPlanPanel.style.width = savedStudyPlanWidth + 'px';
+        }
     }
     
-    if (savedStudyPlanWidth && studyPlanPanel) {
-        studyPlanPanel.style.width = savedStudyPlanWidth;
-        studyPlanPanel.style.minWidth = '150px';
+    // Load saved sizes for Option E
+    if (isVariantE) {
+        const savedMainPanelWidthE = localStorage.getItem('panelMainWidthE');
+        const savedStudyPlanWidthE = localStorage.getItem('panelStudyPlanWidthE');
+        const savedAiChatWidthE = localStorage.getItem('panelAiChatWidthE');
+        
+        if (savedMainPanelWidthE && mainPanel) {
+            mainPanel.style.width = savedMainPanelWidthE + 'px';
+        }
+        if (savedAiChatWidthE && aiChatPanel) {
+            aiChatPanel.style.width = savedAiChatWidthE + 'px';
+        }
+        if (savedStudyPlanWidthE && studyPlanPanel) {
+            studyPlanPanel.style.width = savedStudyPlanWidthE + 'px';
+        }
     }
     
     handles.forEach(handle => {
@@ -1548,6 +2752,8 @@ function initPanelResize() {
         let startX = 0;
         let startWidth = 0;
         let targetPanel = null;
+        let resizeDirection = 1;
+        let minWidth = 200;
         
         handle.addEventListener('mousedown', (e) => {
             isResizing = true;
@@ -1559,8 +2765,16 @@ function initPanelResize() {
             
             if (resizeType === 'left') {
                 targetPanel = discoveryPanel;
+                resizeDirection = 1;
+                minWidth = 200;
+            } else if (resizeType === 'center' && isVariantE) {
+                targetPanel = mainPanel;
+                resizeDirection = 1;
+                minWidth = 280;
             } else if (resizeType === 'right') {
                 targetPanel = studyPlanPanel;
+                resizeDirection = -1;
+                minWidth = 200;
             }
             
             if (targetPanel) {
@@ -1573,24 +2787,14 @@ function initPanelResize() {
         document.addEventListener('mousemove', (e) => {
             if (!isResizing || !targetPanel) return;
             
-            const resizeType = handle.dataset.resize;
-            let delta = e.clientX - startX;
-            
-            // For right panel, invert the delta
-            if (resizeType === 'right') {
-                delta = -delta;
-            }
-            
+            const delta = (e.clientX - startX) * resizeDirection;
             let newWidth = startWidth + delta;
             
-            // Set min/max constraints
-            const minWidth = resizeType === 'left' ? 180 : 150;
-            const maxWidth = resizeType === 'left' ? 450 : 350;
+            // Simple min-width constraint
+            newWidth = Math.max(minWidth, newWidth);
             
-            newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-            
+            // Apply width directly in pixels
             targetPanel.style.width = newWidth + 'px';
-            targetPanel.style.minWidth = minWidth + 'px';
         });
         
         document.addEventListener('mouseup', () => {
@@ -1599,12 +2803,25 @@ function initPanelResize() {
                 handle.classList.remove('dragging');
                 document.body.classList.remove('resizing');
                 
-                // Save sizes to localStorage
-                if (discoveryPanel) {
-                    localStorage.setItem('panelDiscoveryWidth', discoveryPanel.style.width);
-                }
-                if (studyPlanPanel) {
-                    localStorage.setItem('panelStudyPlanWidth', studyPlanPanel.style.width);
+                // Save sizes to localStorage (pixel values only)
+                if (targetPanel) {
+                    const width = parseInt(targetPanel.style.width);
+                    
+                    if (isVariantE) {
+                        if (targetPanel === mainPanel) {
+                            localStorage.setItem('panelMainWidthE', width);
+                        } else if (targetPanel === aiChatPanel) {
+                            localStorage.setItem('panelAiChatWidthE', width);
+                        } else if (targetPanel === studyPlanPanel) {
+                            localStorage.setItem('panelStudyPlanWidthE', width);
+                        }
+                    } else if (isVariantB) {
+                        if (targetPanel === discoveryPanel) {
+                            localStorage.setItem('panelDiscoveryWidthB', width);
+                        } else if (targetPanel === studyPlanPanel) {
+                            localStorage.setItem('panelStudyPlanWidthB', width);
+                        }
+                    }
                 }
                 
                 targetPanel = null;
@@ -1619,6 +2836,20 @@ function initPanelResize() {
 function closeImportModal() {
     elements.importModalOverlay.classList.remove('active');
     document.body.classList.remove('modal-open');
+    
+    // Reset to main step when closing
+    const modalStepMain = document.getElementById('modal-step-main');
+    const modalStepImport = document.getElementById('modal-step-import');
+    const headerMain = document.getElementById('header-main');
+    const headerImport = document.getElementById('header-import');
+    
+    modalStepImport?.classList.add('hidden');
+    modalStepMain?.classList.remove('hidden');
+    headerImport?.classList.add('hidden');
+    headerMain?.classList.remove('hidden');
+    
+    // Reset import step UI
+    resetImportStepUI();
 }
 
 /**
@@ -1659,6 +2890,7 @@ function resetStudyProgress() {
  * Supports tab-separated format: Question\tAnswer
  */
 async function importFlashcards() {
+    const testerName = document.getElementById('import-tester-name')?.value.trim() || '';
     const title = elements.importTitleInput.value.trim();
     const content = elements.importTextarea.value.trim();
     
@@ -1706,18 +2938,27 @@ async function importFlashcards() {
     state.isFlipped = false;
     state.starredCards.clear();
     
-    // Update the set title
-    if (title) {
-        elements.setTitle.textContent = title;
-    } else {
-        elements.setTitle.textContent = 'Imported Set';
-    }
+    // Update the set title across all variants
+    const displayTitle = title || 'Imported Set';
+    updateAllSetTitles(displayTitle);
     
     // Update the flashcard display
     updateCard();
     
-    // Close the modal
-    closeImportModal();
+    // Switch back to main step and show loading in content selector
+    const modalStepMain = document.getElementById('modal-step-main');
+    const modalStepImport = document.getElementById('modal-step-import');
+    const headerMain = document.getElementById('header-main');
+    const headerImport = document.getElementById('header-import');
+    
+    modalStepImport?.classList.add('hidden');
+    modalStepMain?.classList.remove('hidden');
+    headerImport?.classList.add('hidden');
+    headerMain?.classList.remove('hidden');
+    resetImportStepUI();
+    
+    // Show loading shimmer in content selector
+    showContentLoading();
     
     // Show loading state in TOC
     showTocLoading();
@@ -1772,10 +3013,20 @@ async function importFlashcards() {
     }
     
     // Save content to localStorage for persistence
-    saveContent(setTitle, newCards, savedGrouping, savedDescription);
+    saveContent(setTitle, newCards, savedGrouping, savedDescription, testerName);
+    
+    // Check if we're editing an existing item or creating new
+    if (window.editingContentId) {
+        // Update existing content in the list
+        updateContentInList(window.editingContentId, setTitle, newCards, savedGrouping, savedDescription, testerName);
+        window.editingContentId = null; // Clear editing state
+    } else {
+        // Save as new to the content list
+        saveToContentList(setTitle, newCards, savedGrouping, savedDescription, testerName);
+    }
     
     // Update 3-panel view if active
-    if (document.body.classList.contains('option-b')) {
+    if (document.body.classList.contains('option-b') || document.body.classList.contains('option-e')) {
         updatePanelTermsList();
         updatePanelTitle();
     }
@@ -1788,6 +3039,48 @@ async function importFlashcards() {
     // Update Table view if active
     if (document.body.classList.contains('option-d')) {
         initTableView();
+    }
+    
+    // Close the modal after import is complete
+    closeImportModal();
+}
+
+/**
+ * Update all set title elements across all variants
+ */
+function updateAllSetTitles(title) {
+    // Variant A sidebar title
+    const sidebarTitle = document.querySelector('.sidebar .set-title');
+    if (sidebarTitle) {
+        sidebarTitle.textContent = title;
+    }
+    
+    // Also update elements.setTitle reference
+    if (elements.setTitle) {
+        elements.setTitle.textContent = title;
+    }
+    
+    // Variant B/E panel title
+    const panelTitle = document.getElementById('panel-set-title');
+    if (panelTitle) {
+        panelTitle.textContent = title;
+    }
+    
+    // Variant C journey titles
+    const journeyTitle = document.getElementById('journey-set-title');
+    if (journeyTitle) {
+        journeyTitle.textContent = title;
+    }
+    
+    const journeySidebarTitle = document.querySelector('.journey-set-title-sync');
+    if (journeySidebarTitle) {
+        journeySidebarTitle.textContent = title;
+    }
+    
+    // Variant D table title
+    const tableTitle = document.getElementById('table-set-title');
+    if (tableTitle) {
+        tableTitle.textContent = title;
     }
 }
 
@@ -1840,10 +3133,17 @@ function updateSidebarProgress() {
     
     if (!fillEl || !textEl) return;
     
-    // Get viewed cards from studyModeState
+    // Count only viewed cards that exist in current flashcards array
     const total = flashcards.length;
-    const viewed = studyModeState.viewedCards ? studyModeState.viewedCards.size : 0;
-    const percent = total > 0 ? Math.round((viewed / total) * 100) : 0;
+    let viewed = 0;
+    if (studyModeState.viewedCards) {
+        for (let i = 0; i < total; i++) {
+            if (studyModeState.viewedCards.has(i)) {
+                viewed++;
+            }
+        }
+    }
+    const percent = total > 0 ? Math.min(100, Math.round((viewed / total) * 100)) : 0;
     
     fillEl.style.width = `${percent}%`;
     textEl.textContent = `${percent}% complete`;
@@ -1855,14 +3155,18 @@ function updateSidebarProgress() {
 function getGroupProgress(cardIndices) {
     if (!studyModeState.viewedCards || cardIndices.length === 0) return 0;
     
+    // Only count valid indices within flashcards array
+    const validIndices = cardIndices.filter(i => i >= 0 && i < flashcards.length);
+    if (validIndices.length === 0) return 0;
+    
     let viewed = 0;
-    cardIndices.forEach(index => {
+    validIndices.forEach(index => {
         if (studyModeState.viewedCards.has(index)) {
             viewed++;
         }
     });
     
-    return Math.round((viewed / cardIndices.length) * 100);
+    return Math.min(100, Math.round((viewed / validIndices.length) * 100));
 }
 
 /**
@@ -1877,9 +3181,13 @@ function isCardKnown(cardIndex) {
  */
 function showTocLoading() {
     elements.topicsContainer.innerHTML = `
-        <div class="toc-loading">
-            <div class="toc-loading-spinner"></div>
-            <span>Organizing with AI...</span>
+        <div class="toc-loading-skeleton">
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-pill"></div>
         </div>
     `;
 }
@@ -1895,7 +3203,7 @@ function updateTopicsList(cards) {
     
     // Create a single topic section with all the terms
     const topicSection = document.createElement('div');
-    topicSection.className = 'topic-section';
+    topicSection.className = 'topic-section collapsed';
     if (isProgressView) {
         topicSection.classList.add('progress-view');
     }
@@ -2084,9 +3392,10 @@ function createProgressRing(percent, size = 24) {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percent / 100) * circumference;
+    const isComplete = percent === 100;
     
     const container = document.createElement('div');
-    container.className = 'sidebar-progress-ring';
+    container.className = `sidebar-progress-ring ${isComplete ? 'complete' : ''}`;
     container.innerHTML = `
         <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
             <circle 
@@ -2109,6 +3418,7 @@ function createProgressRing(percent, size = 24) {
                 transform="rotate(-90 ${size/2} ${size/2})"
             />
         </svg>
+        ${isComplete ? '<span class="material-symbols-rounded progress-ring-check">check_small</span>' : ''}
     `;
     
     return container;
@@ -2128,27 +3438,16 @@ function createTermCard(card, cardIndex, isProgressView = false) {
     }
     termCard.dataset.index = cardIndex;
     
-    // Progress status icon (shown in progress view)
+    // Progress status icon on LEFT (shown in progress view)
     if (isProgressView) {
         const isKnown = isCardKnown(cardIndex);
         const statusIcon = document.createElement('div');
         statusIcon.className = `term-status-icon ${isKnown ? 'known' : 'learning'}`;
-        statusIcon.innerHTML = `<span class="material-symbols-rounded">${isKnown ? 'check_circle' : 'remove'}</span>`;
+        statusIcon.innerHTML = `<span class="material-symbols-rounded">${isKnown ? 'check' : 'remove'}</span>`;
         termCard.appendChild(statusIcon);
-    } else {
-        // Audio button (only in non-progress view)
-        const audioBtn = document.createElement('button');
-        audioBtn.className = 'term-audio-btn';
-        audioBtn.setAttribute('aria-label', 'Play audio');
-        audioBtn.innerHTML = `<span class="material-symbols-rounded">volume_up</span>`;
-        audioBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            playTermAudio(card.term, card.definition, audioBtn);
-        });
-        termCard.appendChild(audioBtn);
     }
     
-    // Content (term + definition)
+    // Content (term + definition) - in middle
     const content = document.createElement('div');
     content.className = 'term-content';
     content.addEventListener('click', (e) => {
@@ -2170,19 +3469,37 @@ function createTermCard(card, cardIndex, isProgressView = false) {
     content.appendChild(termDefinition);
     termCard.appendChild(content);
     
+    // Actions container on RIGHT - groups audio and star
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'term-actions';
+    
+    // Audio button
+    const audioBtn = document.createElement('button');
+    audioBtn.className = 'term-audio-btn';
+    audioBtn.setAttribute('aria-label', 'Play audio');
+    audioBtn.innerHTML = `<span class="material-symbols-rounded">volume_up</span>`;
+    audioBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playTermAudio(card.term, card.definition, audioBtn);
+    });
+    actionsContainer.appendChild(audioBtn);
+    
     // Star button
     const starBtn = document.createElement('button');
     starBtn.className = 'term-star-btn';
-    if (state.starredCards.has(cardIndex)) {
+    const isStarredTerm = state.starredCards.has(cardIndex);
+    if (isStarredTerm) {
         starBtn.classList.add('starred');
     }
     starBtn.setAttribute('aria-label', 'Star term');
-    updateTermStarIcon(starBtn, state.starredCards.has(cardIndex));
+    starBtn.innerHTML = `<span class="material-symbols-rounded${isStarredTerm ? ' filled' : ''}">star</span>`;
     starBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleTermStar(cardIndex, starBtn);
     });
-    termCard.appendChild(starBtn);
+    actionsContainer.appendChild(starBtn);
+    
+    termCard.appendChild(actionsContainer);
     
     return termCard;
 }
@@ -2218,10 +3535,28 @@ function toggleTermStar(cardIndex, btn) {
 /**
  * Play text-to-speech for a term and definition
  */
+let audioPlaying = false;
 function playTermAudio(term, definition, btn) {
+    // Prevent rapid clicks from crashing the browser
+    if (audioPlaying) {
+        speechSynthesis.cancel();
+        if (btn) btn.classList.remove('playing');
+        audioPlaying = false;
+        return;
+    }
+    
+    // Check if speechSynthesis is available
+    if (!window.speechSynthesis) {
+        console.warn('Speech synthesis not available');
+        return;
+    }
+    
     // Cancel any ongoing speech
     speechSynthesis.cancel();
     
+    // Small delay after cancel to prevent Chrome crash bug
+    setTimeout(() => {
+        try {
     // Create utterance
     const text = `${term}. ${definition}`;
     const utterance = new SpeechSynthesisUtterance(text);
@@ -2229,18 +3564,28 @@ function playTermAudio(term, definition, btn) {
     utterance.pitch = 1;
     
     // Add visual feedback
-    btn.classList.add('playing');
+            audioPlaying = true;
+            if (btn) btn.classList.add('playing');
     
     utterance.onend = () => {
-        btn.classList.remove('playing');
+                if (btn) btn.classList.remove('playing');
+                audioPlaying = false;
     };
     
-    utterance.onerror = () => {
-        btn.classList.remove('playing');
+            utterance.onerror = (e) => {
+                console.warn('Speech synthesis error:', e);
+                if (btn) btn.classList.remove('playing');
+                audioPlaying = false;
     };
     
     // Speak
     speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error('Error playing audio:', e);
+            if (btn) btn.classList.remove('playing');
+            audioPlaying = false;
+        }
+    }, 50);
 }
 
 // ============================================
@@ -2262,6 +3607,7 @@ function initTableView() {
     updateTableTermCount();
     renderTable();
     attachTableEventListeners();
+    updateRailProgressBar();
 }
 
 /**
@@ -2324,6 +3670,7 @@ function renderTableTermsList(container) {
     container.innerHTML = '';
     
     const filteredCards = getFilteredCards();
+    const isProgressView = state.hasEngagedWithStudy;
     
     filteredCards.forEach(card => {
         const row = document.createElement('div');
@@ -2332,6 +3679,15 @@ function renderTableTermsList(container) {
         
         if (tableListState.selectedItems.has(card.originalIndex)) {
             row.classList.add('selected');
+        }
+        
+        // Progress status icon on LEFT (only in progress view)
+        if (isProgressView) {
+            const isKnown = isCardKnown(card.originalIndex);
+            const statusIcon = document.createElement('div');
+            statusIcon.className = `table-term-status ${isKnown ? 'known' : 'learning'}`;
+            statusIcon.innerHTML = `<span class="material-symbols-rounded">${isKnown ? 'check' : 'remove'}</span>`;
+            row.appendChild(statusIcon);
         }
         
         // Checkbox
@@ -2351,15 +3707,6 @@ function renderTableTermsList(container) {
         });
         checkboxWrapper.appendChild(checkbox);
         
-        // Audio button
-        const audioBtn = document.createElement('button');
-        audioBtn.className = 'table-term-audio';
-        audioBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
-        audioBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            playTermAudio(card.term, card.definition);
-        });
-        
         // Content
         const content = document.createElement('div');
         content.className = 'table-term-content';
@@ -2368,25 +3715,42 @@ function renderTableTermsList(container) {
             <span class="table-term-def">${card.definition}</span>
         `;
         
+        // Actions container on right (audio + star)
+        const actionsContainer = document.createElement('div');
+        actionsContainer.className = 'table-term-actions';
+        
+        // Audio button
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'table-term-audio';
+        audioBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
+        audioBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playTermAudio(card.term, card.definition);
+        });
+        actionsContainer.appendChild(audioBtn);
+        
         // Star button
         const starBtn = document.createElement('button');
         starBtn.className = 'table-term-star';
-        if (state.starredCards.has(card.originalIndex)) {
+        const isTableStarred = state.starredCards.has(card.originalIndex);
+        if (isTableStarred) {
             starBtn.classList.add('starred');
         }
-        starBtn.innerHTML = `<span class="material-symbols-rounded ${state.starredCards.has(card.originalIndex) ? 'filled' : ''}">star</span>`;
+        starBtn.innerHTML = `<span class="material-symbols-rounded${isTableStarred ? ' filled' : ''}">star</span>`;
         starBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            const icon = starBtn.querySelector('.material-symbols-rounded');
             if (state.starredCards.has(card.originalIndex)) {
                 state.starredCards.delete(card.originalIndex);
                 starBtn.classList.remove('starred');
-                starBtn.querySelector('.material-symbols-rounded').classList.remove('filled');
+                if (icon) icon.classList.remove('filled');
             } else {
                 state.starredCards.add(card.originalIndex);
                 starBtn.classList.add('starred');
-                starBtn.querySelector('.material-symbols-rounded').classList.add('filled');
+                if (icon) icon.classList.add('filled');
             }
         });
+        actionsContainer.appendChild(starBtn);
         
         // Click row to toggle selection
         row.addEventListener('click', () => {
@@ -2396,9 +3760,8 @@ function renderTableTermsList(container) {
         });
         
         row.appendChild(checkboxWrapper);
-        row.appendChild(audioBtn);
         row.appendChild(content);
-        row.appendChild(starBtn);
+        row.appendChild(actionsContainer);
         container.appendChild(row);
     });
     
@@ -2952,16 +4315,6 @@ function attachTableEventListeners() {
         });
     });
     
-    // New mode control (new layout)
-    document.querySelectorAll('#table-mode-control .table-mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('#table-mode-control .table-mode-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const mode = btn.dataset.mode;
-            console.log('Switched to mode:', mode);
-            // TODO: Implement study mode views (flashcards, learn, test)
-        });
-    });
 }
 
 // ============================================
@@ -2970,11 +4323,46 @@ function attachTableEventListeners() {
 
 const sortFilterState = {
     sortBy: 'original', // 'original', 'alphabetical', 'alphabetical-reverse'
-    filterBy: 'all' // 'all', 'starred', 'unstarred'
+    filterBy: 'all', // 'all', 'starred', 'know', 'still-learning'
+    viewMode: 'concepts' // 'concepts' or 'terms' (for Variant A)
+};
+
+// Variant E specific state (legacy - now using panelViewState)
+const variantEState = {
+    viewMode: 'concepts' // 'concepts' or 'terms'
+};
+
+// Panel view state for Variants B and E
+const panelViewState = {
+    viewMode: 'concepts', // 'concepts' or 'terms'
+    filterBy: 'all' // 'all', 'starred', 'know', 'still-learning'
 };
 
 /**
- * Toggle sort dropdown menu
+ * Save panel view state to localStorage
+ */
+function savePanelViewState() {
+    localStorage.setItem('panelViewState', JSON.stringify(panelViewState));
+}
+
+/**
+ * Load panel view state from localStorage
+ */
+function loadPanelViewState() {
+    const saved = localStorage.getItem('panelViewState');
+    if (saved) {
+        try {
+            const state = JSON.parse(saved);
+            if (state.viewMode) panelViewState.viewMode = state.viewMode;
+            if (state.filterBy) panelViewState.filterBy = state.filterBy;
+        } catch (e) {
+            console.error('Error loading panel view state:', e);
+        }
+    }
+}
+
+/**
+ * Toggle sort dropdown menu (Variant A)
  */
 function toggleSortMenu(btn) {
     // Remove any existing menus
@@ -2985,12 +4373,12 @@ function toggleSortMenu(btn) {
     
     if (btn.classList.contains('active')) {
         const menu = createDropdownMenu([
-            { id: 'original', label: 'Original order', icon: 'format_list_numbered' },
-            { id: 'alphabetical', label: 'A → Z', icon: 'sort_by_alpha' },
-            { id: 'alphabetical-reverse', label: 'Z → A', icon: 'sort_by_alpha' }
-        ], sortFilterState.sortBy, (option) => {
-            sortFilterState.sortBy = option;
-            applySortFilter();
+            { id: 'concepts', label: 'Concepts', icon: 'category' },
+            { id: 'terms', label: 'Terms', icon: 'list' }
+        ], sortFilterState.viewMode, (option) => {
+            sortFilterState.viewMode = option;
+            saveSortFilterState();
+            updateVariantAViewMode();
             btn.classList.remove('active');
             removeDropdownMenus();
         });
@@ -3001,7 +4389,7 @@ function toggleSortMenu(btn) {
 }
 
 /**
- * Toggle filter dropdown menu
+ * Toggle filter dropdown menu (Variant A)
  */
 function toggleFilterMenu(btn) {
     // Remove any existing menus
@@ -3012,12 +4400,13 @@ function toggleFilterMenu(btn) {
     
     if (btn.classList.contains('active')) {
         const menu = createDropdownMenu([
-            { id: 'all', label: 'All terms', icon: 'list' },
-            { id: 'starred', label: 'Starred only', icon: 'star' },
-            { id: 'unstarred', label: 'Not starred', icon: 'star_outline' }
+            { id: 'all', label: 'All', icon: 'list' },
+            { id: 'starred', label: 'Starred', icon: 'star' },
+            { id: 'know', label: 'Know', icon: 'check' },
+            { id: 'still-learning', label: 'Still learning', icon: 'pending' }
         ], sortFilterState.filterBy, (option) => {
             sortFilterState.filterBy = option;
-            applySortFilter();
+            updateVariantAViewMode();
             btn.classList.remove('active');
             removeDropdownMenus();
         });
@@ -3038,7 +4427,6 @@ function createDropdownMenu(options, activeOption, onSelect) {
         const item = document.createElement('button');
         item.className = 'dropdown-item' + (option.id === activeOption ? ' active' : '');
         item.innerHTML = `
-            <span class="material-symbols-rounded">${option.icon}</span>
             <span>${option.label}</span>
             ${option.id === activeOption ? '<span class="material-symbols-rounded check">check</span>' : ''}
         `;
@@ -3084,9 +4472,9 @@ function positionDropdown(menu, btn) {
 }
 
 /**
- * Apply sort and filter to the topics list
+ * Update Variant A view mode (concepts vs terms) and apply filters
  */
-function applySortFilter() {
+function updateVariantAViewMode() {
     const saved = localStorage.getItem('flashcardContent');
     if (!saved) return;
     
@@ -3099,23 +4487,148 @@ function applySortFilter() {
         
         if (sortFilterState.filterBy === 'starred') {
             filteredIndices = filteredIndices.filter(i => state.starredCards.has(i));
-        } else if (sortFilterState.filterBy === 'unstarred') {
-            filteredIndices = filteredIndices.filter(i => !state.starredCards.has(i));
+        } else if (sortFilterState.filterBy === 'know') {
+            filteredIndices = filteredIndices.filter(i => isCardKnown(i));
+        } else if (sortFilterState.filterBy === 'still-learning') {
+            filteredIndices = filteredIndices.filter(i => !isCardKnown(i));
         }
         
-        // Apply sort
-        if (sortFilterState.sortBy === 'alphabetical') {
-            filteredIndices.sort((a, b) => cards[a].term.localeCompare(cards[b].term));
-        } else if (sortFilterState.sortBy === 'alphabetical-reverse') {
-            filteredIndices.sort((a, b) => cards[b].term.localeCompare(cards[a].term));
+        // If view mode is 'concepts', show grouped view with filtered cards
+        if (sortFilterState.viewMode === 'concepts') {
+            // Get groups from saved content (stored in content.grouping.groups)
+            const groups = content.grouping?.groups;
+            if (groups && groups.length > 0) {
+                // Filter groups to only include cards that match the filter
+                const filteredGroups = groups.map(group => ({
+                    ...group,
+                    cardIndices: group.cardIndices.filter(i => filteredIndices.includes(i))
+                })).filter(group => group.cardIndices.length > 0);
+                
+                if (filteredGroups.length > 0) {
+                    updateGroupedTopicsList(cards, filteredGroups);
+                } else {
+                    showEmptyFilterMessage();
+                }
+            } else {
+                // No groups, fall back to flat list
+                updateFlatTermsListVariantA(cards, filteredIndices);
+            }
+        } else {
+            // View mode is 'terms', show flat list
+            updateFlatTermsListVariantA(cards, filteredIndices);
         }
-        
-        // Rebuild the topics list with sorted/filtered cards
-        updateFilteredTopicsList(cards, filteredIndices);
         
     } catch (e) {
-        console.error('Error applying sort/filter:', e);
+        console.error('Error updating Variant A view:', e);
     }
+}
+
+/**
+ * Get empty state content based on filter type
+ */
+function getEmptyStateContent(filterBy) {
+    switch (filterBy) {
+        case 'starred':
+            return {
+                icon: 'star',
+                message: 'Starred terms will display here'
+            };
+        case 'know':
+            return {
+                icon: 'check',
+                message: 'Terms you know will display here'
+            };
+        case 'still-learning':
+            return {
+                icon: 'remove',
+                message: 'Terms you are still learning will display here'
+            };
+        case 'unstarred':
+            return {
+                icon: 'star_border',
+                message: 'Unstarred terms will display here'
+            };
+        default:
+            return {
+                icon: 'filter_list_off',
+                message: 'No terms match your filter'
+            };
+    }
+}
+
+/**
+ * Show empty filter message
+ */
+function showEmptyFilterMessage() {
+    const { icon, message } = getEmptyStateContent(sortFilterState.filterBy);
+    elements.topicsContainer.innerHTML = `
+        <div class="toc-empty">
+            <span class="material-symbols-rounded">${icon}</span>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+/**
+ * Update flat terms list for Variant A (no collapsible header)
+ */
+function updateFlatTermsListVariantA(cards, indices) {
+    elements.topicsContainer.innerHTML = '';
+    
+    if (indices.length === 0) {
+        showEmptyFilterMessage();
+        return;
+        }
+        
+    // Check if we're in progress view
+    const isProgressView = state.hasEngagedWithStudy;
+    
+    // Create a simple container for term cards (no header/dropdown)
+    const termsContainer = document.createElement('div');
+    termsContainer.className = 'flat-terms-list';
+    
+    // Add term cards directly
+    indices.forEach(index => {
+        const card = cards[index];
+        const termCard = createTermCard(card, index, isProgressView);
+        termsContainer.appendChild(termCard);
+    });
+    
+    elements.topicsContainer.appendChild(termsContainer);
+}
+
+/**
+ * Save sort/filter state to localStorage
+ */
+function saveSortFilterState() {
+    const stateToSave = {
+        viewMode: sortFilterState.viewMode,
+        filterBy: sortFilterState.filterBy
+    };
+    localStorage.setItem('sortFilterState', JSON.stringify(stateToSave));
+}
+
+/**
+ * Load sort/filter state from localStorage
+ */
+function loadSortFilterState() {
+    const saved = localStorage.getItem('sortFilterState');
+    if (saved) {
+        try {
+            const state = JSON.parse(saved);
+            if (state.viewMode) sortFilterState.viewMode = state.viewMode;
+            if (state.filterBy) sortFilterState.filterBy = state.filterBy;
+    } catch (e) {
+            console.error('Error loading sort/filter state:', e);
+    }
+    }
+}
+
+/**
+ * Apply sort and filter to the topics list (legacy - now redirects to updateVariantAViewMode)
+ */
+function applySortFilter() {
+    updateVariantAViewMode();
 }
 
 /**
@@ -3125,17 +4638,18 @@ function updateFilteredTopicsList(cards, indices) {
     elements.topicsContainer.innerHTML = '';
     
     if (indices.length === 0) {
+        const { icon, message } = getEmptyStateContent(sortFilterState.filterBy);
         elements.topicsContainer.innerHTML = `
             <div class="toc-empty">
-                <span class="material-symbols-rounded">filter_list_off</span>
-                <p>No terms match your filter</p>
+                <span class="material-symbols-rounded">${icon}</span>
+                <p>${message}</p>
             </div>
         `;
         return;
     }
     
     const topicSection = document.createElement('div');
-    topicSection.className = 'topic-section';
+    topicSection.className = 'topic-section collapsed';
     
     // Create header
     const topicHeader = document.createElement('div');
@@ -3231,6 +4745,13 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
     const screen = document.getElementById('study-mode-screen');
     if (!screen) return;
     
+    // Show/hide List tab based on current variant
+    const currentVariant = localStorage.getItem('designVariant') || 'option-a';
+    const listTab = screen.querySelector('.study-mode-tab[data-mode="list"]');
+    if (listTab) {
+        listTab.style.display = currentVariant === 'option-d' ? '' : 'none';
+    }
+    
     // Load all flashcards
     studyModeState.allCards = [...flashcards];
     studyModeState.currentIndex = 0;
@@ -3261,6 +4782,16 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
         studyModeState.viewedCards = new Set();
     }
     
+    // Check if we're in Option D for smooth transition
+    const isOptionD = document.body.classList.contains('option-d');
+    const tableLayout = document.querySelector('.table-layout');
+    
+    if (isOptionD && tableLayout) {
+        // Add exit animation to table layout
+        tableLayout.classList.add('transitioning-out');
+        
+        // Wait for exit animation, then show study mode
+        setTimeout(() => {
     screen.classList.add('active');
     document.body.style.overflow = 'hidden';
     
@@ -3269,7 +4800,7 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
         state.hasEngagedWithStudy = true;
         saveState();
         updateSidebarProgressView();
-        refreshTopicsList(); // Refresh to show progress view
+                refreshTopicsList();
     }
     
     // Update UI
@@ -3280,6 +4811,37 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
     updateStudyModeCard();
     updateStudyModeProgress();
     updateStudyModeTabs();
+        }, 300); // Match the CSS animation duration
+    } else {
+        // Standard immediate show for other variants
+        screen.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Mark user as engaged with study experience
+        if (!state.hasEngagedWithStudy) {
+            state.hasEngagedWithStudy = true;
+            saveState();
+            updateSidebarProgressView();
+            refreshTopicsList();
+            
+            // Update Variant C journey view
+            const isOptionC = document.body.classList.contains('option-c');
+            if (isOptionC) {
+                updateJourneySidebarProgress();
+                updateJourneySidebarTopics();
+                updateJourneyMap();
+            }
+        }
+        
+        // Update UI
+        updateStudyModeTitle();
+        populateGroupDropdown();
+        updateGroupDropdownSelection();
+        updateStudyModeTermsList();
+        updateStudyModeCard();
+        updateStudyModeProgress();
+        updateStudyModeTabs();
+    }
 }
 
 /**
@@ -3491,17 +5053,58 @@ function toggleGroupDropdown(forceState) {
  */
 function closeStudyModeScreen() {
     const screen = document.getElementById('study-mode-screen');
-    if (screen) {
-        screen.classList.remove('active');
-        document.body.style.overflow = '';
+    if (!screen) return;
+    
+    // Check if we're in Option D for smooth transition back
+    const isOptionD = document.body.classList.contains('option-d');
+    const tableLayout = document.querySelector('.table-layout');
         
         // Save viewed cards
         localStorage.setItem('studyModeViewed', JSON.stringify([...studyModeState.viewedCards]));
+    
+    if (isOptionD && tableLayout) {
+        // Add closing animation to study screen
+        screen.classList.add('closing');
+        screen.classList.remove('active');
+        
+        // Wait for study screen to fade, then animate table back in
+        setTimeout(() => {
+            tableLayout.classList.remove('transitioning-out');
+            tableLayout.classList.add('transitioning-in');
+            document.body.style.overflow = '';
+            screen.classList.remove('closing');
+            
+            // Clean up transition class after animation completes
+            setTimeout(() => {
+                tableLayout.classList.remove('transitioning-in');
+                
+                // Refresh table to show updated progress
+                if (state.hasEngagedWithStudy) {
+                    refreshTopicsList();
+                    updateSidebarProgress();
+                    updateRailProgressBar();
+                    // Re-render table to show progress icons
+                    renderTable();
+                }
+            }, 400);
+        }, 250);
+    } else {
+        // Standard immediate close for other variants
+        screen.classList.remove('active');
+        document.body.style.overflow = '';
         
         // Refresh sidebar to show updated progress
         if (state.hasEngagedWithStudy) {
             refreshTopicsList();
             updateSidebarProgress();
+            
+            // Update Variant C journey view
+            const isOptionC = document.body.classList.contains('option-c');
+            if (isOptionC) {
+                updateJourneySidebarProgress();
+                updateJourneySidebarTopics();
+                updateJourneyMap();
+            }
         }
     }
 }
@@ -3513,76 +5116,100 @@ function updateStudyModeTitle() {
     const titleEl = document.getElementById('study-mode-title');
     if (!titleEl) return;
     
-    const selectedCount = studyModeState.selectedGroups.size;
-    
-    if (selectedCount === 0) {
-        // All terms selected
-        titleEl.textContent = 'All terms';
-    } else if (selectedCount === 1) {
-        // Single group selected - show its title in sentence case
-        const groupIndex = Array.from(studyModeState.selectedGroups)[0];
-        const group = studyModeState.groups[groupIndex];
-        titleEl.textContent = group?.title || 'Untitled group';
-    } else {
-        // Multiple groups selected
-        titleEl.textContent = `${selectedCount} groups selected`;
-    }
+    // Show the set title
+    const setTitle = elements.setTitle?.textContent || 'Study Set';
+    titleEl.textContent = setTitle;
 }
 
 /**
- * Update the terms list in study mode sidebar
+ * Update the concepts progress list in study mode sidebar
  */
-function updateStudyModeTermsList() {
-    const listEl = document.getElementById('study-mode-terms-list');
+function updateStudyModeConceptsList() {
+    const listEl = document.getElementById('study-mode-concepts-list');
     if (!listEl) return;
     
     listEl.innerHTML = '';
     
-    // Get current filter
-    const activeFilter = document.querySelector('.study-mode-filter-pill.active');
-    const filter = activeFilter?.dataset.filter || 'all';
+    const groups = studyModeState.groups;
     
-    studyModeState.cards.forEach((card, index) => {
-        const originalIndex = getStudyModeOriginalIndex(index);
-        const isKnown = studyModeState.viewedCards.has(originalIndex);
-        const isStarred = studyModeState.starredCards.has(originalIndex);
-        
-        // Apply filter
-        if (filter === 'know' && !isKnown) return;
-        if (filter === 'learning' && isKnown) return;
-        if (filter === 'starred' && !isStarred) return;
-        
-        const isActive = index === studyModeState.currentIndex;
-        
+    // If no groups, create a single "All Cards" group
+    if (!groups || groups.length === 0) {
+        const allGroup = {
+            title: 'All Cards',
+            cardIndices: flashcards.map((_, i) => i)
+        };
+        renderConceptItem(listEl, allGroup, 0, true);
+        return;
+    }
+    
+    // Render each concept group with progress ring
+    groups.forEach((group, index) => {
+        const isActive = studyModeState.selectedGroups.size === 1 && 
+                        studyModeState.selectedGroups.has(index);
+        renderConceptItem(listEl, group, index, isActive);
+    });
+}
+
+/**
+ * Render a single concept item with progress ring
+ */
+function renderConceptItem(container, group, groupIndex, isActive) {
         const itemEl = document.createElement('div');
-        itemEl.className = `study-mode-term-item${isActive ? ' active' : ''}`;
-        itemEl.dataset.index = index;
+    itemEl.className = `study-mode-concept-item${isActive ? ' active' : ''}`;
+    itemEl.dataset.groupIndex = groupIndex;
+    
+    // Calculate progress for this group
+    const cardIndices = group.cardIndices || [];
+    const totalCards = cardIndices.length;
+    let knownCards = 0;
+    
+    cardIndices.forEach(cardIndex => {
+        if (studyModeState.viewedCards.has(cardIndex)) {
+            knownCards++;
+        }
+    });
+    
+    const progress = totalCards > 0 ? Math.round((knownCards / totalCards) * 100) : 0;
+    const isComplete = progress === 100;
+    
+    // SVG progress ring (smaller, with check icon when complete)
+    const radius = 12;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (progress / 100) * circumference;
         
         itemEl.innerHTML = `
-            <div class="study-mode-term-content">
-                <div class="study-mode-term-text">${card.term}</div>
-                <div class="study-mode-term-def">${card.definition}</div>
+        <div class="study-mode-concept-ring ${isComplete ? 'complete' : ''}">
+            <svg viewBox="0 0 32 32">
+                <circle class="progress-ring-bg" cx="16" cy="16" r="${radius}"/>
+                <circle class="progress-ring-fill" cx="16" cy="16" r="${radius}"
+                    stroke-dasharray="${circumference}"
+                    stroke-dashoffset="${offset}"/>
+            </svg>
+            ${isComplete ? '<span class="material-symbols-rounded concept-complete-check">check_small</span>' : ''}
             </div>
-            <div class="study-mode-term-status ${isKnown ? 'known' : 'unknown'}">
-                <span class="material-symbols-rounded">${isKnown ? 'check_circle' : 'remove'}</span>
+        <div class="study-mode-concept-info">
+            <div class="study-mode-concept-title">${group.title}</div>
+            <div class="study-mode-concept-count">${knownCards}/${totalCards} terms</div>
             </div>
         `;
         
         itemEl.addEventListener('click', () => {
-            studyModeState.currentIndex = index;
-            studyModeState.isFlipped = false;
-            updateStudyModeCard();
-            updateStudyModeTermsList();
+        // Select only this group
+        studyModeState.selectedGroups.clear();
+        studyModeState.selectedGroups.add(groupIndex);
+        updateStudyModeAfterGroupChange();
+        updateStudyModeConceptsList();
         });
         
-        listEl.appendChild(itemEl);
-    });
-    
-    // Scroll active item into view
-    const activeItem = listEl.querySelector('.study-mode-term-item.active');
-    if (activeItem) {
-        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    container.appendChild(itemEl);
+}
+
+/**
+ * Update the terms list in study mode sidebar (legacy - kept for reference)
+ */
+function updateStudyModeTermsList() {
+    // Now redirects to concepts list
+    updateStudyModeConceptsList();
 }
 
 /**
@@ -3627,7 +5254,8 @@ function updateStudyModeCard() {
         starBtn.classList.toggle('starred', isStarred);
         const icon = starBtn.querySelector('.material-symbols-rounded');
         if (icon) {
-            icon.textContent = isStarred ? 'star' : 'star_border';
+            icon.textContent = 'star';
+            icon.classList.toggle('filled', isStarred);
         }
     }
     
@@ -3643,34 +5271,59 @@ function updateStudyModeProgress() {
     const fillEl = document.getElementById('study-mode-progress-fill');
     const textEl = document.getElementById('study-mode-progress-text');
     
-    const total = studyModeState.cards.length;
+    // Calculate overall progress across ALL flashcards (not just selected group)
+    const total = flashcards.length;
     
-    // Count viewed cards for the current group
+    // Count all viewed cards
     let viewed = 0;
     for (let i = 0; i < total; i++) {
-        const originalIndex = getStudyModeOriginalIndex(i);
-        if (studyModeState.viewedCards.has(originalIndex)) {
+        if (studyModeState.viewedCards && studyModeState.viewedCards.has(i)) {
             viewed++;
         }
     }
     
-    const percent = total > 0 ? Math.round((viewed / total) * 100) : 0;
+    const percent = total > 0 ? Math.min(100, Math.round((viewed / total) * 100)) : 0;
     
     if (fillEl) fillEl.style.width = `${percent}%`;
     if (textEl) textEl.textContent = `${percent}% Complete`;
     
     // Also update sidebar progress
     updateSidebarProgress();
+    
+    // Update concepts list to reflect progress changes
+    updateStudyModeConceptsList();
 }
 
 /**
- * Update the active mode tab
+ * Update the active mode tab with progression indicators
  */
 function updateStudyModeTabs() {
     const tabs = document.querySelectorAll('.study-mode-tab');
+    const modeOrder = ['list', 'flashcards', 'learn', 'games', 'test'];
+    const currentModeIndex = modeOrder.indexOf(studyModeState.currentMode);
+    
+    // Mark current mode as completed (visited)
+    if (!studyModeState.completedModes) {
+        studyModeState.completedModes = new Set();
+    }
+    if (studyModeState.currentMode && studyModeState.currentMode !== 'list') {
+        studyModeState.completedModes.add(studyModeState.currentMode);
+    }
+    
     tabs.forEach(tab => {
         const mode = tab.dataset.mode;
+        const modeIndex = modeOrder.indexOf(mode);
+        
+        // Active state
         tab.classList.toggle('active', mode === studyModeState.currentMode);
+        
+        // Completed state (modes before current that have been visited)
+        const isCompleted = studyModeState.completedModes.has(mode) && mode !== studyModeState.currentMode;
+        tab.classList.toggle('completed', isCompleted);
+        
+        // Next state (the immediate next mode after current)
+        const isNext = modeIndex === currentModeIndex + 1 && mode !== 'list';
+        tab.classList.toggle('next', isNext);
     });
 }
 
@@ -3730,7 +5383,8 @@ function studyModeToggleStar() {
         starBtn.classList.toggle('starred', isStarred);
         const icon = starBtn.querySelector('.material-symbols-rounded');
         if (icon) {
-            icon.textContent = isStarred ? 'star' : 'star_border';
+            icon.textContent = 'star';
+            icon.classList.toggle('filled', isStarred);
         }
     }
     
@@ -3809,17 +5463,16 @@ function initStudyModeScreen() {
     const modeTabs = document.querySelectorAll('.study-mode-tab');
     modeTabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            studyModeState.currentMode = tab.dataset.mode;
+            const mode = tab.dataset.mode;
+            
+            // If "List" is clicked, go back to set page
+            if (mode === 'list') {
+                closeStudyModeScreen();
+                return;
+            }
+            
+            studyModeState.currentMode = mode;
             updateStudyModeTabs();
-        });
-    });
-    
-    // Filter pills
-    document.querySelectorAll('.study-mode-filter-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-            document.querySelectorAll('.study-mode-filter-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            updateStudyModeTermsList();
         });
     });
     
@@ -3896,8 +5549,16 @@ function initStudyModeScreen() {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const mode = btn.dataset.mode || 'flashcards';
+            const mode = btn.dataset.mode || 'list';
+            
+            // Update active state
+            document.querySelectorAll('#table-mode-control .table-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // List mode stays on the terms list view, other modes open study mode
+            if (mode !== 'list') {
             openStudyModeScreen(mode);
+            }
         });
     });
     
@@ -4215,6 +5876,327 @@ function initCreateSetScreen() {
             openCreateSetScreen();
         });
     });
+}
+
+// ============================================
+// AI Chat Panel (Variant E)
+// ============================================
+
+const aiChatState = {
+    messages: [],
+    isLoading: false
+};
+
+/**
+ * Initialize AI Chat panel
+ */
+function initAiChatPanel() {
+    const chatInput = document.getElementById('ai-chat-input');
+    const sendBtn = document.getElementById('ai-chat-send-btn');
+    const actionPills = document.querySelectorAll('.ai-action-pill');
+    const menuBtn = document.getElementById('ai-chat-menu-btn');
+    const menuDropdown = document.getElementById('ai-chat-menu-dropdown');
+    const clearHistoryBtn = document.getElementById('ai-chat-clear-history');
+    const newConversationBtn = document.getElementById('ai-chat-new-conversation');
+    
+    if (!chatInput || !sendBtn) return;
+    
+    // Enable/disable send button based on input
+    chatInput.addEventListener('input', () => {
+        sendBtn.disabled = !chatInput.value.trim();
+    });
+    
+    // Send on Enter
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (chatInput.value.trim()) {
+                sendAiChatMessage(chatInput.value.trim());
+            }
+        }
+    });
+    
+    // Send button click
+    sendBtn.addEventListener('click', () => {
+        if (chatInput.value.trim()) {
+            sendAiChatMessage(chatInput.value.trim());
+        }
+    });
+    
+    // Action pill buttons
+    actionPills.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prompt = btn.dataset.prompt;
+            if (prompt) {
+                sendAiChatMessage(prompt);
+            }
+        });
+    });
+    
+    // More menu dropdown
+    if (menuBtn && menuDropdown) {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdown.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menuDropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+                menuDropdown.classList.remove('active');
+            }
+        });
+    }
+    
+    // Clear chat history
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', () => {
+            clearAiChat();
+            menuDropdown?.classList.remove('active');
+        });
+    }
+    
+    // Start new conversation
+    if (newConversationBtn) {
+        newConversationBtn.addEventListener('click', () => {
+            clearAiChat();
+            menuDropdown?.classList.remove('active');
+        });
+    }
+    
+    // LLM Model Selector
+    initLLMSelector();
+}
+
+/**
+ * Initialize LLM Model Selector dropdown
+ */
+function initLLMSelector() {
+    const selectorBtn = document.getElementById('llm-selector-btn');
+    const dropdown = document.getElementById('llm-dropdown');
+    const selectedNameEl = selectorBtn?.querySelector('.llm-selected-name');
+    const options = dropdown?.querySelectorAll('.llm-option');
+    
+    if (!selectorBtn || !dropdown) return;
+    
+    // Toggle dropdown
+    selectorBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectorBtn.classList.toggle('active');
+        dropdown.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && !selectorBtn.contains(e.target)) {
+            selectorBtn.classList.remove('active');
+            dropdown.classList.remove('active');
+        }
+    });
+    
+    // Handle option selection
+    options?.forEach(option => {
+        option.addEventListener('click', () => {
+            const model = option.dataset.model;
+            
+            // Update active state
+            options.forEach(o => o.classList.remove('active'));
+            option.classList.add('active');
+            
+            // Update button text
+            if (selectedNameEl) {
+                selectedNameEl.textContent = model;
+            }
+            
+            // Close dropdown
+            selectorBtn.classList.remove('active');
+            dropdown.classList.remove('active');
+            
+            // Store selection
+            localStorage.setItem('selectedLLM', model);
+            console.log('Selected LLM:', model);
+        });
+    });
+    
+    // Load saved selection
+    const savedModel = localStorage.getItem('selectedLLM');
+    if (savedModel && selectedNameEl) {
+        selectedNameEl.textContent = savedModel;
+        options?.forEach(o => {
+            o.classList.toggle('active', o.dataset.model === savedModel);
+        });
+    }
+}
+
+/**
+ * Send a message to the AI chat
+ */
+async function sendAiChatMessage(message) {
+    if (aiChatState.isLoading) return;
+    
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    const chatInput = document.getElementById('ai-chat-input');
+    const sendBtn = document.getElementById('ai-chat-send-btn');
+    const welcomeEl = messagesContainer.querySelector('.ai-chat-welcome');
+    
+    // Hide welcome message
+    if (welcomeEl) {
+        welcomeEl.style.display = 'none';
+    }
+    
+    // Clear input
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    sendBtn.disabled = true;
+    
+    // Add user message
+    const userMessageEl = createChatMessage('user', message);
+    messagesContainer.appendChild(userMessageEl);
+    
+    // Add to state
+    aiChatState.messages.push({ role: 'user', content: message });
+    
+    // Show loading
+    aiChatState.isLoading = true;
+    const loadingEl = createChatLoadingMessage();
+    messagesContainer.appendChild(loadingEl);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    try {
+        // Get current flashcard context
+        const currentCard = flashcards[state.currentIndex];
+        const context = currentCard 
+            ? `Current flashcard - Term: "${currentCard.term}", Definition: "${currentCard.definition}"`
+            : 'No flashcard currently selected';
+        
+        // Build messages for API
+        const apiMessages = [
+            {
+                role: 'system',
+                content: `You are a helpful AI study assistant. You help students understand and memorize flashcards. 
+                
+Context: The user is studying a flashcard set. ${context}
+
+Be concise, friendly, and educational. Use examples when helpful. If asked to quiz, create a relevant question based on the flashcard content.`
+            },
+            ...aiChatState.messages
+        ];
+        
+        const response = await aiService.chat(apiMessages);
+        
+        // Remove loading
+        loadingEl.remove();
+        aiChatState.isLoading = false;
+        
+        if (response.success && response.message) {
+            // Add assistant message
+            const assistantMessageEl = createChatMessage('assistant', response.message.content);
+            messagesContainer.appendChild(assistantMessageEl);
+            
+            // Add to state
+            aiChatState.messages.push({ role: 'assistant', content: response.message.content });
+        } else {
+            // Show error
+            const errorMessageEl = createChatMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+            messagesContainer.appendChild(errorMessageEl);
+        }
+    } catch (error) {
+        console.error('AI Chat error:', error);
+        loadingEl.remove();
+        aiChatState.isLoading = false;
+        
+        const errorMessageEl = createChatMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+        messagesContainer.appendChild(errorMessageEl);
+    }
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+/**
+ * Create a chat message element
+ */
+function createChatMessage(role, content) {
+    const messageEl = document.createElement('div');
+    messageEl.className = `ai-message ${role}`;
+    
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'ai-message-avatar';
+    avatarEl.innerHTML = role === 'assistant' 
+        ? '<span class="material-symbols-rounded">psychology</span>'
+        : '<span class="material-symbols-rounded">person</span>';
+    
+    const contentEl = document.createElement('div');
+    contentEl.className = 'ai-message-content';
+    contentEl.textContent = content;
+    
+    messageEl.appendChild(avatarEl);
+    messageEl.appendChild(contentEl);
+    
+    return messageEl;
+}
+
+/**
+ * Create a loading message element
+ */
+function createChatLoadingMessage() {
+    const messageEl = document.createElement('div');
+    messageEl.className = 'ai-message assistant';
+    
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'ai-message-avatar';
+    avatarEl.innerHTML = '<span class="material-symbols-rounded">psychology</span>';
+    
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'ai-message-loading';
+    loadingEl.innerHTML = '<span></span><span></span><span></span>';
+    
+    messageEl.appendChild(avatarEl);
+    messageEl.appendChild(loadingEl);
+    
+    return messageEl;
+}
+
+/**
+ * Clear AI chat history
+ */
+function clearAiChat() {
+    aiChatState.messages = [];
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    if (messagesContainer) {
+        // Reset to welcome state
+        messagesContainer.innerHTML = `
+            <div class="ai-chat-welcome">
+                <div class="ai-chat-gradient-bg"></div>
+                <div class="ai-chat-welcome-content">
+                    <h2 class="ai-chat-welcome-title">Let's get ready for exam day</h2>
+                    <div class="ai-chat-action-pills">
+                        <button class="ai-action-pill" data-prompt="Help me cram for my exam on these flashcards">
+                            Help me cram
+                        </button>
+                        <button class="ai-action-pill" data-prompt="Quiz me on these flashcards">
+                            Quiz me
+                        </button>
+                        <button class="ai-action-pill" data-prompt="Help me prep for an exam on this material">
+                            Prep for an exam
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        // Re-attach event listeners
+        const actionPills = messagesContainer.querySelectorAll('.ai-action-pill');
+        actionPills.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const prompt = btn.dataset.prompt;
+                if (prompt) {
+                    sendAiChatMessage(prompt);
+                }
+            });
+        });
+    }
 }
 
 // ============================================
