@@ -29,7 +29,7 @@ const SUPABASE_URL = 'https://oonbbsigbcstpwkiwygl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vbmJic2lnYmNzdHB3a2l3eWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MTAyNTYsImV4cCI6MjA4MzM4NjI1Nn0.VxQ5mLDr39lHxKiXsISsJPEn1mdT9Akh3o1FD_m8aI4';
 
 // Initialize Supabase client
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // ============================================
 // AI API Service
@@ -614,9 +614,9 @@ async function saveToContentList(title, cards, grouping, description, testerName
     const contentId = Date.now().toString();
     
     // Save to Supabase
-    if (supabase) {
+    if (supabaseClient) {
         try {
-            const { error } = await supabase.from('study_sets').insert({
+            const { error } = await supabaseClient.from('study_sets').insert({
                 id: contentId,
                 title: title,
                 tester_name: testerName,
@@ -671,7 +671,7 @@ function saveToLocalStorage(contentId, title, cards, grouping, description, test
  */
 async function getSavedContentList() {
     // Try Supabase first
-    if (supabase) {
+    if (supabaseClient) {
         try {
             const { data, error } = await supabase
                 .from('study_sets')
@@ -741,7 +741,7 @@ function showContentLoading() {
  */
 async function updateContentInList(contentId, title, cards, grouping, description, testerName = '') {
     // Update in Supabase
-    if (supabase) {
+    if (supabaseClient) {
         try {
             const { error } = await supabase
                 .from('study_sets')
@@ -973,7 +973,7 @@ async function deleteSavedContent(contentId) {
     const deletedItem = contentList.find(item => item.id === contentId);
     
     // Delete from Supabase
-    if (supabase) {
+    if (supabaseClient) {
         try {
             const { error } = await supabase
                 .from('study_sets')
