@@ -6376,6 +6376,7 @@ body.option-c .journey-sidebar {
     max-width: none;
     overflow: visible;
     flex: 1;
+    margin-left: -200px;
 }
 
 /* Journey Node */
