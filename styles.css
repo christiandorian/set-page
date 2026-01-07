@@ -782,7 +782,7 @@ button.starred .material-symbols-rounded,
     align-items: center;
     justify-content: center;
     padding: var(--spacing-xs);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
 }
 
 .icon-btn:hover {
