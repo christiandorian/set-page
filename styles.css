@@ -2270,13 +2270,13 @@ button.starred .material-symbols-rounded,
 .card-stats {
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-md);
     border-bottom: 1px solid var(--border-default);
 }
 
-.stat-item {
+.card-stats .stat-item {
     display: flex;
     align-items: center;
     gap: var(--spacing-xxs);
@@ -2284,6 +2284,8 @@ button.starred .material-symbols-rounded,
     font-weight: var(--ref-typography-weight-subheader);
     color: var(--text-secondary);
     line-height: var(--ref-typography-line-height-subheading-four);
+    flex: 1;
+    white-space: nowrap;
 }
 
 .stat-item .material-symbols-rounded {
