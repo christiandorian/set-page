@@ -880,7 +880,7 @@ button.starred .material-symbols-rounded,
    ============================================ */
 .main-content {
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     gap: var(--spacing-xl);
     max-width: 1366px;
     margin: 0 auto;
@@ -1869,6 +1869,7 @@ button.starred .material-symbols-rounded,
     gap: var(--spacing-md);
     overflow-y: auto;
     flex: 1;
+    height: 100%;
     min-height: 0;
     padding: 0 20px 20px 20px;
     margin: 0 -20px -20px 0;
