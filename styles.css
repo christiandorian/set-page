@@ -897,7 +897,6 @@ button.starred .material-symbols-rounded,
     max-width: 400px;
     overflow-y: auto;
     height: 100%;
-    padding-right: var(--spacing-sm);
     padding-bottom: var(--spacing-xl);
 }
 
