@@ -3176,9 +3176,6 @@ async function importFlashcards() {
     if (document.body.classList.contains('option-d')) {
         initTableView();
     }
-    
-    // Close the modal after import is complete
-    closeImportModal();
 }
 
 /**
