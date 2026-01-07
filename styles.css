@@ -5848,13 +5848,11 @@ body.option-c .journey-sidebar {
 /* Journey Sidebar (exact mirror of Variant A .sidebar) */
 .journey-sidebar {
     display: none;
-    flex: 1;
+    flex: 0 0 auto;
+    width: 546px;
     max-width: 900px;
     overflow-y: auto;
-    max-height: calc(100vh - 64px - var(--spacing-xl));
-    position: sticky;
-    bottom: 0;
-    align-self: flex-end;
+    height: 100%;
     background: var(--surface);
     padding: 40px 56px;
     padding-bottom: 80px;
@@ -6057,6 +6055,7 @@ body.option-c .journey-sidebar {
     padding: var(--spacing-xl) 100px 0;
     gap: var(--spacing-xl);
     background: var(--surface-base);
+    overflow: hidden;
 }
 
 /* Journey Terms Panel (Left) */
