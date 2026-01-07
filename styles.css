@@ -6506,6 +6506,11 @@ body.option-c .journey-sidebar {
     stroke-width: 4;
 }
 
+/* Use mint100 background when node has some progress */
+.journey-node-progress-ring.has-progress .progress-ring-bg {
+    stroke: var(--color-mint-100);
+}
+
 .journey-node-progress-ring .progress-ring-fill {
     fill: none;
     stroke: var(--color-mint-500);

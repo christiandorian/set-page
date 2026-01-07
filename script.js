@@ -2812,9 +2812,10 @@ function updateJourneyMap() {
         const circumference = 2 * Math.PI * radius;
         const offset = circumference - (groupProgress / 100) * circumference;
         const isNodeComplete = groupProgress === 100;
+        const hasProgress = groupProgress > 0;
         
             const progressRing = document.createElement('div');
-        progressRing.className = `journey-node-progress-ring ${isNodeComplete ? 'complete' : ''}`;
+        progressRing.className = `journey-node-progress-ring ${isNodeComplete ? 'complete' : ''} ${hasProgress ? 'has-progress' : ''}`;
         progressRing.innerHTML = `
             <svg viewBox="0 0 82 82">
                 <circle class="progress-ring-bg" cx="41" cy="41" r="${radius}"/>
