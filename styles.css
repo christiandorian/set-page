@@ -3466,12 +3466,19 @@ body.option-b .panel-main-title {
 
 body.option-b .panel-main-buttons {
     margin-top: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 body.option-b .panel-study-btn,
 body.option-b .panel-remix-btn {
     flex: 1;
     justify-content: center;
+}
+
+body.option-b .panel-main-buttons .panel-main-actions {
+    margin-left: auto;
 }
 
 body.option-b .panel-sort-filter {
