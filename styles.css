@@ -6346,8 +6346,9 @@ body.option-c .journey-sidebar {
     align-items: flex-start;
     justify-content: center;
     overflow-y: auto;
+    overflow-x: hidden;
     height: 100%;
-    padding: var(--spacing-xl) var(--spacing-xl) 0;
+    padding: var(--spacing-xl) 60px var(--spacing-xl) var(--spacing-xl);
 }
 
 .journey-map {
@@ -6575,18 +6576,18 @@ body.option-c .journey-sidebar {
     font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
+    white-space: normal;
     padding: 8px 16px;
     background: var(--surface-base);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     position: absolute;
     left: 100px;
-    top: 10px;
-    max-width: 250px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: 200px;
     line-height: 1.3;
+    text-align: left;
     z-index: 10;
 }
 
