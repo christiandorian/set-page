@@ -4206,7 +4206,7 @@ body.resizing * {
     background: transparent;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .three-panel-layout.study-expanded .panel-discovery {
@@ -4317,7 +4317,10 @@ body.resizing * {
 .discovery-list {
     flex: 1;
     overflow-y: auto;
-    padding: 0 var(--spacing-sm) var(--spacing-sm);
+    overflow-x: visible;
+    padding: 0 var(--spacing-md) var(--spacing-lg);
+    margin: 0 calc(var(--spacing-md) * -1);
+    padding-right: calc(var(--spacing-md) + 8px);
 }
 
 .discovery-loading {
