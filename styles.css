@@ -4868,7 +4868,7 @@ body.resizing * {
 }
 
 .progress-ring-fill {
-    stroke: var(--color-mint-200);
+    stroke: var(--color-mint-500);
     stroke-linecap: round;
     transition: stroke-dashoffset 0.3s ease;
 }
@@ -5060,7 +5060,7 @@ body.resizing * {
 
 .panel-concept-progress-ring .progress-ring-fill {
     fill: none;
-    stroke: var(--color-mint-200);
+    stroke: var(--color-mint-500);
     stroke-width: 3;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.3s ease;
