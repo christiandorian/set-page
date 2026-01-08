@@ -310,6 +310,13 @@ async function init() {
     initTableListToolbar();
     initStudyModeScreen();
     initCreateSetScreen();
+    
+    // Load related/similar sets for all layouts (slight delay to ensure content is ready)
+    setTimeout(() => {
+        if (flashcards.length > 0) {
+            loadRelatedSets();
+        }
+    }, 500);
 }
 
 /**
@@ -1068,6 +1075,9 @@ async function loadSavedContentById(contentId) {
     
     // Update content list to show active state
     await renderContentList();
+    
+    // Refresh related/similar sets based on new content
+    loadRelatedSets();
 }
 
 /**
@@ -1985,8 +1995,10 @@ async function loadRelatedSets() {
     const discoveryList = document.getElementById('discovery-list');
     const refreshBtn = document.getElementById('discovery-refresh-btn');
     const tabsContainer = document.getElementById('discovery-tabs');
+    const similarSetsGrid = document.getElementById('similar-sets-grid');
     
-    if (!discoveryList) return;
+    // Return only if neither target exists
+    if (!discoveryList && !similarSetsGrid) return;
     
     // Show loading state with shimmer skeletons for tabs
     if (tabsContainer) {
@@ -1999,13 +2011,18 @@ async function loadRelatedSets() {
     
     // Show loading state with shimmer skeletons
     refreshBtn?.classList.add('loading');
+    if (discoveryList) {
     discoveryList.innerHTML = `
-        <div class="discovery-loading-skeleton">
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
+            <div class="discovery-loading-skeleton">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
         </div>
     `;
+    }
+    
+    // Show loading state for similar sets grid
+    renderSimilarSetsLoading();
     
     // Get current set info
     const currentTitle = elements.setTitle?.textContent || 'Study Set';
@@ -2026,11 +2043,16 @@ async function loadRelatedSets() {
       "author": "username123",
       "rating": 4.8,
       "studiers": 156,
-      "isVerified": true
+      "isVerified": true,
+      "sampleTerms": [
+        {"term": "Term 1", "definition": "Definition 1"},
+        {"term": "Term 2", "definition": "Definition 2"},
+        {"term": "Term 3", "definition": "Definition 3"}
+      ]
     }
   ]
 }
-Generate 6-8 related study sets based on the topic. Make them realistic with varied authors, ratings (4.0-5.0), and studier counts (10-500). Include 2-4 category tags.`
+Generate 6-8 related study sets based on the topic. Make them realistic with varied authors, ratings (4.0-5.0), and studier counts (10-500). Include 2-4 category tags. Include 3 sample term/definition pairs for each set that are relevant to the set topic.`
             },
             {
                 role: 'user',
@@ -2053,16 +2075,29 @@ Generate 6-8 related study sets based on the topic. Make them realistic with var
             if (data && data.sets) {
                 renderDiscoveryTabs(data.categories || ['All']);
                 renderDiscoverySets(data.sets);
+                renderSimilarSets(data.sets);
             } else {
                 renderFallbackSets();
+                renderSimilarSets([
+                    { title: 'Biology 101 - Cell Structure', terms: 45, rating: 4.7, studiers: 234 },
+                    { title: 'Chemistry Fundamentals', terms: 62, rating: 4.9, studiers: 189 }
+                ]);
             }
         } else {
             renderFallbackSets();
+            renderSimilarSets([
+                { title: 'Biology 101 - Cell Structure', terms: 45, rating: 4.7, studiers: 234 },
+                { title: 'Chemistry Fundamentals', terms: 62, rating: 4.9, studiers: 189 }
+            ]);
         }
     } catch (error) {
         console.error('Error loading related sets:', error);
         refreshBtn?.classList.remove('loading');
         renderFallbackSets();
+        renderSimilarSets([
+            { title: 'Biology 101 - Cell Structure', terms: 45, rating: 4.7, studiers: 234 },
+            { title: 'Chemistry Fundamentals', terms: 62, rating: 4.9, studiers: 189 }
+        ]);
     }
 }
 
@@ -2180,6 +2215,96 @@ function renderFallbackSets() {
     
     renderDiscoveryTabs(['Biology', 'Chemistry', 'Anatomy']);
     renderDiscoverySets(fallbackSets);
+}
+
+/**
+ * Render similar sets in the study area (2-column layout)
+ */
+function renderSimilarSets(sets) {
+    const grid = document.getElementById('similar-sets-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    // Only show first 2 sets for the 2-column grid
+    const displaySets = sets.slice(0, 2);
+    
+    displaySets.forEach(set => {
+        const card = document.createElement('div');
+        card.className = 'study-set-card';
+        
+        // Generate 3 sample terms for preview
+        const sampleTerms = set.sampleTerms || [
+            { term: 'Key concept', definition: 'A fundamental idea in this study area' },
+            { term: 'Important term', definition: 'Essential vocabulary for understanding the subject' },
+            { term: 'Core principle', definition: 'A foundational concept that supports other ideas' }
+        ];
+        
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="set-icon">
+                    <span class="material-symbols-rounded">content_copy</span>
+                </div>
+                <h4 class="set-name">${set.title}</h4>
+            </div>
+            <div class="card-stats">
+                <span class="stat-item">
+                    <span class="material-symbols-rounded trending">trending_up</span>
+                    ${set.studiers} studiers today
+                </span>
+                <span class="stat-item">
+                    <span class="material-symbols-rounded filled star">star</span>
+                    ${set.rating?.toFixed(1) || '4.5'}
+                </span>
+            </div>
+            <div class="card-terms-preview">
+                ${sampleTerms.slice(0, 3).map(t => `
+                    <div class="term-preview-item">
+                        <span class="preview-term">${t.term}</span>
+                        <span class="preview-definition">${t.definition}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <button class="card-preview-btn">
+                Go to flashcards set
+                <span class="material-symbols-rounded">arrow_forward</span>
+            </button>
+        `;
+        
+        grid.appendChild(card);
+    });
+}
+
+/**
+ * Render loading skeleton for similar sets
+ */
+function renderSimilarSetsLoading() {
+    const grid = document.getElementById('similar-sets-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    for (let i = 0; i < 2; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'study-set-card similar-set-loading';
+        skeleton.innerHTML = `
+            <div class="card-header">
+                <div class="similar-skeleton-icon"></div>
+                <div class="similar-skeleton-title"></div>
+            </div>
+            <div class="card-stats">
+                <div class="similar-skeleton-stat"></div>
+                <div class="similar-skeleton-stat short"></div>
+            </div>
+            <div class="card-terms-preview">
+                <div class="similar-skeleton-term"></div>
+                <div class="similar-skeleton-term"></div>
+                <div class="similar-skeleton-term"></div>
+            </div>
+            <div class="similar-skeleton-btn"></div>
+        `;
+        grid.appendChild(skeleton);
+    }
 }
 
 /**
@@ -2619,8 +2744,16 @@ function activateJourneyNodeForCard(cardIndex) {
         node.classList.remove('active', 'locked');
         if (index === targetGroupIndex) {
             node.classList.add('active');
-            // Scroll the node into view with smooth animation
-            node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            // Scroll the node into view vertically only (no horizontal scroll to prevent layout shift)
+            const journeyMapPanel = document.querySelector('.journey-map-panel');
+            if (journeyMapPanel) {
+                const nodeRect = node.getBoundingClientRect();
+                const panelRect = journeyMapPanel.getBoundingClientRect();
+                const nodeCenter = nodeRect.top + nodeRect.height / 2;
+                const panelCenter = panelRect.top + panelRect.height / 2;
+                const scrollOffset = nodeCenter - panelCenter;
+                journeyMapPanel.scrollBy({ top: scrollOffset, behavior: 'smooth' });
+            }
         } else {
             node.classList.add('locked');
         }
@@ -3221,6 +3354,9 @@ async function importFlashcards() {
     if (document.body.classList.contains('option-d')) {
         initTableView();
     }
+    
+    // Refresh related/similar sets based on new content
+    loadRelatedSets();
 }
 
 /**

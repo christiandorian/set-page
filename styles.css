@@ -2358,19 +2358,31 @@ body.has-study-progress .panel-study-btn {
 }
 
 .stat-item .material-symbols-rounded.trending {
-    color: var(--color-coral);
+    color: var(--color-cherry);
 }
 
 .stat-item .material-symbols-rounded.star {
     color: var(--color-sunset);
 }
 
-.stat-item .material-symbols-rounded.star.filled {
+.stat-item .material-symbols-rounded.star.filled,
+.card-stats .stat-item .material-symbols-rounded.filled.star,
+.study-set-card .material-symbols-rounded.filled.star {
     font-variation-settings:
         'FILL' 1,
         'wght' 400,
         'GRAD' -25,
-        'opsz' 24;
+        'opsz' 24 !important;
+    color: var(--color-sunset);
+}
+
+/* Ensure filled stars in similar sets cards are filled */
+.study-set-card .stat-item .material-symbols-rounded.filled {
+    font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' -25,
+        'opsz' 24 !important;
 }
 
 /* Term Preview Items */
@@ -2380,6 +2392,8 @@ body.has-study-progress .panel-study-btn {
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
     flex: 1;
+    max-height: 180px;
+    overflow-y: auto;
 }
 
 .term-preview-item {
@@ -2430,6 +2444,70 @@ body.has-study-progress .panel-study-btn {
 
 .card-preview-btn .material-symbols-rounded {
     font-size: 18px;
+}
+
+/* Similar Sets Loading Skeleton */
+.study-set-card.similar-set-loading {
+    pointer-events: none;
+}
+
+.similar-skeleton-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-100) 50%, var(--color-gray-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    flex-shrink: 0;
+}
+
+.similar-skeleton-title {
+    height: 20px;
+    width: 70%;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-100) 50%, var(--color-gray-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    animation-delay: 0.1s;
+}
+
+.similar-skeleton-stat {
+    height: 16px;
+    width: 120px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-100) 50%, var(--color-gray-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    animation-delay: 0.2s;
+}
+
+.similar-skeleton-stat.short {
+    width: 60px;
+}
+
+.similar-skeleton-term {
+    height: 48px;
+    width: 100%;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-100) 50%, var(--color-gray-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    margin-bottom: var(--spacing-xs);
+}
+
+.similar-skeleton-term:nth-child(1) { animation-delay: 0.1s; }
+.similar-skeleton-term:nth-child(2) { animation-delay: 0.2s; }
+.similar-skeleton-term:nth-child(3) { animation-delay: 0.3s; }
+
+.similar-skeleton-btn {
+    height: 40px;
+    width: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-100) 50%, var(--color-gray-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    animation-delay: 0.4s;
+    margin-top: var(--spacing-sm);
 }
 
 /* ============================================
@@ -3394,7 +3472,58 @@ body.option-b .panel-discovery {
     flex: 1 1 33.333%;
     min-width: 200px;
     max-width: none;
-    overflow: hidden;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--spacing-md);
+    margin: 0 calc(var(--spacing-md) * -1);
+}
+
+body.option-b .discovery-tabs {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 5;
+    padding-top: 0;
+    padding-bottom: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+body.option-b #discovery-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: visible;
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin: 0 calc(var(--spacing-lg) * -1);
+    position: relative;
+}
+
+body.option-b .panel-discovery {
+    position: relative;
+}
+
+body.option-b .panel-discovery::before {
+    content: '';
+    position: absolute;
+    top: 41px;
+    left: 0;
+    right: 0;
+    height: 25px;
+    background: linear-gradient(to bottom, var(--surface) 0%, var(--surface) 30%, transparent 100%);
+    pointer-events: none;
+    z-index: 10;
+}
+
+body.option-b .panel-discovery::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 25px;
+    background: linear-gradient(to top, var(--surface) 0%, var(--surface) 30%, transparent 100%);
+    pointer-events: none;
+    z-index: 10;
 }
 
 body.option-b .discovery-header {
@@ -3405,24 +3534,57 @@ body.option-b .discovery-card {
     box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08);
 }
 
-body.option-b .discovery-list {
-    padding: var(--spacing-md);
-    margin: calc(var(--spacing-md) * -1);
-    overflow-y: auto;
-    overflow-x: hidden;
-}
+/* Discovery list padding handled in earlier rule */
 
 /* Style panel-main to look like Option A sidebar */
 body.option-b .panel-main {
     background: var(--surface);
     border-radius: 0;
     padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+body.option-b .panel-main::before {
+    content: '';
+    position: absolute;
+    bottom: 56px;
+    left: 0;
+    right: 0;
+    height: 25px;
+    background: linear-gradient(to top, #fff 0%, #fff 30%, transparent 100%);
+    pointer-events: none;
+    z-index: 10;
+}
+
+body.option-b #panel-terms-list {
+    margin-top: 0;
+    padding-top: var(--spacing-sm);
+    margin-bottom: 0;
+    padding-bottom: 25px;
+}
+
+body.option-b .panel-main-header {
+    position: relative;
+}
+
+body.option-b .panel-main-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    height: 25px;
+    background: linear-gradient(to bottom, #fff 0%, #fff 30%, transparent 100%);
+    pointer-events: none;
+    z-index: 10;
 }
 
 body.option-b .panel-add-term-btn {
     margin-bottom: 0;
     margin-left: 0;
     margin-right: 0;
+    margin-top: 0;
 }
 
 body.option-b .panel-main-header {
@@ -3452,7 +3614,7 @@ body.option-b .panel-main-actions .panel-action-btn:hover {
 body.option-b .panel-study-plan {
     box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08);
     position: relative;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 body.option-b .panel-study-plan::after {
@@ -3461,10 +3623,38 @@ body.option-b .panel-study-plan::after {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 80px;
-    background: linear-gradient(to top, var(--surface) 0%, var(--surface) 20%, transparent 100%);
+    height: 50px;
+    background: linear-gradient(to top, var(--surface-base) 0%, var(--surface-base) 30%, transparent 100%);
     pointer-events: none;
     border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    z-index: 10;
+}
+
+body.option-b .panel-study-plan #study-plan-default {
+    overflow-y: auto;
+    height: 100%;
+    padding-bottom: 40px;
+    padding-left: 8px;
+}
+
+body.option-b .panel-study-plan .study-plan-header {
+    position: sticky;
+    top: 0;
+    background: var(--surface-base);
+    z-index: 5;
+    padding-bottom: var(--spacing-xs);
+    margin-bottom: 0;
+}
+
+body.option-b .panel-study-plan .study-plan-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    height: 25px;
+    background: linear-gradient(to bottom, var(--surface-base) 0%, var(--surface-base) 30%, transparent 100%);
+    pointer-events: none;
     z-index: 10;
 }
 
@@ -3495,13 +3685,17 @@ body.option-b .panel-main-buttons .panel-main-actions {
 }
 
 body.option-b .panel-sort-filter {
-    margin-top: var(--spacing-md);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-default);
+    margin-top: var(--spacing-xs);
+    padding-bottom: 0;
+    padding-top: var(--spacing-xs);
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
 }
 
 body.option-b .panel-terms-list {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
     padding-left: 0;
     padding-right: 0;
 }
@@ -4810,7 +5004,6 @@ body.resizing * {
 
 .panel-control-btn.active {
     background: none;
-    color: var(--color-primary);
 }
 
 .panel-control-btn .material-symbols-rounded {
@@ -5075,7 +5268,7 @@ body.resizing * {
 
 .panel-concept-progress-ring .progress-ring-bg {
     fill: none;
-    stroke: var(--color-gray-300);
+    stroke: var(--ref-color-gray-400);
     stroke-width: 3;
 }
 
@@ -5115,14 +5308,17 @@ body.resizing * {
 
 
 .panel-concept-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 32px;
     height: 32px;
     color: var(--text-secondary);
     transition: transform 0.25s ease;
     flex-shrink: 0;
+    font-size: 24px;
+    line-height: 32px;
+    text-align: center;
+    padding-left: 4px;
+    padding-top: 2px;
+    box-sizing: border-box;
 }
 
 .panel-concept-section.collapsed .panel-concept-toggle {
@@ -5287,6 +5483,8 @@ body.resizing * {
     gap: var(--spacing-xs);
     position: relative;
     padding-left: 20px;
+    margin-left: 0;
+    overflow: visible;
 }
 
 .study-plan-timeline::before {
@@ -5842,6 +6040,7 @@ body.resizing * {
 /* Option C: Journey */
 body.option-c {
     background: var(--surface-base);
+    overflow: hidden;
 }
 
 body.option-c .top-nav {
@@ -5872,6 +6071,7 @@ body.option-c .journey-sidebar {
     width: 546px;
     max-width: 900px;
     overflow-y: scroll;
+    scrollbar-gutter: stable;
     height: 100%;
     background: var(--surface);
     padding: 40px 56px;
@@ -6061,11 +6261,12 @@ body.option-c .journey-sidebar {
 /* Journey Sidebar Term Card Active State */
 .journey-sidebar .term-card {
     margin: var(--spacing-xs) 0;
-    padding: var(--spacing-md) 0;
+    padding: var(--spacing-md) var(--spacing-sm);
     border-radius: var(--radius-lg);
     transition: background var(--transition-fast);
     width: 100%;
     box-sizing: border-box;
+    border-bottom: 1px solid transparent;
 }
 
 .journey-sidebar .term-card.active {
@@ -6083,6 +6284,7 @@ body.option-c .journey-sidebar {
     gap: var(--spacing-xl);
     background: var(--surface-base);
     overflow: hidden;
+    scrollbar-gutter: stable;
 }
 
 /* Journey Terms Panel (Left) */
@@ -6375,6 +6577,7 @@ body.option-c .journey-sidebar {
     justify-content: stretch;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
     height: 100%;
     padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl) 80px;
 }
