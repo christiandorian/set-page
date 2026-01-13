@@ -34,7 +34,7 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
 // ============================================
 // AI API Service
 // ============================================
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:3000/api';
 
 const aiService = {
     /**
@@ -1917,6 +1917,104 @@ function togglePanelFilterMenu(btn) {
 }
 
 /**
+ * Toggle discovery card more menu
+ */
+function toggleDiscoveryCardMenu(btn, set) {
+    removeDropdownMenus();
+    btn.classList.toggle('active');
+    
+    if (btn.classList.contains('active')) {
+        const menuOptions = [
+            { id: 'preview', label: 'Preview', icon: 'visibility' },
+            { id: 'save', label: 'Save', icon: 'bookmark' },
+            { id: 'share', label: 'Share', icon: 'share' },
+            { id: 'divider', label: '', icon: '' },
+            { id: 'show-less', label: 'Show less like this', icon: 'thumb_down' },
+            { id: 'show-more', label: 'Show more like this', icon: 'thumb_up' },
+            { id: 'divider2', label: '', icon: '' },
+            { id: 'report', label: 'Report', icon: 'flag' }
+        ];
+        
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu discovery-card-menu';
+        
+        menuOptions.forEach(option => {
+            if (option.id.startsWith('divider')) {
+                const divider = document.createElement('div');
+                divider.className = 'dropdown-divider';
+                menu.appendChild(divider);
+            } else {
+                const item = document.createElement('button');
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    ${option.icon ? `<span class="material-symbols-rounded">${option.icon}</span>` : ''}
+                    <span>${option.label}</span>
+                `;
+                item.addEventListener('click', () => {
+                    handleDiscoveryCardAction(option.id, set);
+                    btn.classList.remove('active');
+                    removeDropdownMenus();
+                });
+                menu.appendChild(item);
+            }
+        });
+        
+        // Position to the left of the button
+        positionDropdownLeft(menu, btn);
+        document.body.appendChild(menu);
+        
+        // Close on outside click
+        setTimeout(() => {
+            document.addEventListener('click', function closeMenu(e) {
+                if (!e.target.closest('.dropdown-menu') && !e.target.closest('.discovery-card-more-btn')) {
+                    removeDropdownMenus();
+                    btn.classList.remove('active');
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }, 0);
+    }
+}
+
+/**
+ * Position dropdown below button, aligned to the right (menu extends left)
+ */
+function positionDropdownLeft(menu, btn) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = `${rect.bottom + 4}px`;
+    menu.style.left = 'auto';
+    menu.style.right = `${window.innerWidth - rect.right}px`;
+    menu.style.zIndex = '1000';
+}
+
+/**
+ * Handle discovery card menu actions
+ */
+function handleDiscoveryCardAction(action, set) {
+    switch (action) {
+        case 'preview':
+            console.log('Preview set:', set.title);
+            break;
+        case 'save':
+            console.log('Save set:', set.title);
+            break;
+        case 'share':
+            console.log('Share set:', set.title);
+            break;
+        case 'show-less':
+            console.log('Show less like:', set.title);
+            break;
+        case 'show-more':
+            console.log('Show more like:', set.title);
+            break;
+        case 'report':
+            console.log('Report set:', set.title);
+            break;
+    }
+}
+
+/**
  * Apply sort and filter to the panel terms list
  */
 function applyPanelSortFilter() {
@@ -1981,7 +2079,7 @@ function updateFilteredPanelTermsList(cards, indices) {
 async function initDiscoveryPanel() {
     const refreshBtn = document.getElementById('discovery-refresh-btn');
     if (refreshBtn) {
-        refreshBtn.addEventListener('click', loadRelatedSets);
+        refreshBtn.addEventListener('click', () => loadRelatedSets(true)); // Force refresh
     }
     
     // Load related sets on init
@@ -1989,9 +2087,10 @@ async function initDiscoveryPanel() {
 }
 
 /**
- * Load related study sets from AI
+ * Load related study sets from AI (with caching)
+ * @param {boolean} forceRefresh - Force fetch from API, ignoring cache
  */
-async function loadRelatedSets() {
+async function loadRelatedSets(forceRefresh = false) {
     const discoveryList = document.getElementById('discovery-list');
     const refreshBtn = document.getElementById('discovery-refresh-btn');
     const tabsContainer = document.getElementById('discovery-tabs');
@@ -1999,6 +2098,32 @@ async function loadRelatedSets() {
     
     // Return only if neither target exists
     if (!discoveryList && !similarSetsGrid) return;
+    
+    // Get current set info for cache key
+    const currentTitle = elements.setTitle?.textContent || 'Study Set';
+    const cacheKey = `discoveryCache_${currentTitle.replace(/\s+/g, '_').toLowerCase()}`;
+    const cacheExpiry = 60 * 60 * 1000; // 1 hour in milliseconds
+    
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+        try {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                const isExpired = Date.now() - timestamp > cacheExpiry;
+                
+                if (!isExpired && data && data.sets) {
+                    console.log('📦 Using cached discovery sets');
+                    renderDiscoveryTabs(data.categories || ['All']);
+                    renderDiscoverySets(data.sets);
+                    renderSimilarSets(data.sets);
+                    return;
+                }
+            }
+        } catch (e) {
+            console.log('Cache read error, fetching fresh data');
+        }
+    }
     
     // Show loading state with shimmer skeletons for tabs
     if (tabsContainer) {
@@ -2024,8 +2149,6 @@ async function loadRelatedSets() {
     // Show loading state for similar sets grid
     renderSimilarSetsLoading();
     
-    // Get current set info
-    const currentTitle = elements.setTitle?.textContent || 'Study Set';
     const sampleTerms = flashcards.slice(0, 5).map(c => c.term).join(', ');
     
     try {
@@ -2073,6 +2196,17 @@ Generate 6-8 related study sets based on the topic. Make them realistic with var
             }
             
             if (data && data.sets) {
+                // Cache the successful response
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        data: data,
+                        timestamp: Date.now()
+                    }));
+                    console.log('💾 Cached discovery sets');
+                } catch (e) {
+                    console.log('Cache write error:', e);
+                }
+                
                 renderDiscoveryTabs(data.categories || ['All']);
                 renderDiscoverySets(data.sets);
                 renderSimilarSets(data.sets);
@@ -2147,54 +2281,51 @@ function renderDiscoverySets(sets) {
     
     discoveryList.innerHTML = '';
     
-    const iconTypes = ['biology', 'chemistry', 'psychology', 'anatomy', 'default'];
-    
     sets.forEach((set, index) => {
-        const iconType = iconTypes[index % iconTypes.length];
         const card = document.createElement('div');
         card.className = 'discovery-card';
         card.dataset.category = set.category?.toLowerCase() || 'all';
         
+        const studiedToday = set.studiers || Math.floor(Math.random() * 30) + 5;
+        const ratingCount = Math.floor(Math.random() * 20) + 5;
+        
         card.innerHTML = `
             <div class="discovery-card-header">
-                <div class="discovery-icon ${iconType}">
-                    <span class="material-symbols-rounded">style</span>
+                <div class="discovery-icon">
+                    <img src="images/set.png" alt="Set" class="discovery-icon-img">
                 </div>
                 <div class="discovery-info">
                     <span class="discovery-card-title">${set.title}</span>
-                    <span class="discovery-card-author">
-                        <span class="material-symbols-rounded">person</span>
-                        ${set.author}
-                        ${set.isVerified ? '<span class="material-symbols-rounded" style="color: #3B82F6; font-size: 14px;">verified</span>' : ''}
+                    <div class="discovery-card-meta-line">
+                        <span class="discovery-stat-item trending">
+                            <span class="material-symbols-rounded">trending_up</span>
+                            ${studiedToday} studied today
                     </span>
+                        <span class="discovery-card-author">by ${set.author}</span>
                 </div>
             </div>
-            <div class="discovery-card-meta">
-                <span class="discovery-meta-item">
-                    <span class="material-symbols-rounded filled">star</span>
-                    ${set.rating?.toFixed(1) || '4.5'}
-                </span>
-                <span class="discovery-meta-item">
-                    <span class="material-symbols-rounded">stacks</span>
-                    ${set.terms} terms
-                </span>
-                ${set.isVerified ? '<span class="discovery-meta-badge">Verified</span>' : ''}
-            </div>
-            <div class="discovery-card-footer">
-                <span class="discovery-studiers">
-                    <span class="material-symbols-rounded">group</span>
-                    ${set.studiers} studying now
-                </span>
-                <button class="discovery-preview-btn">Preview</button>
+                <button class="discovery-card-more-btn">
+                    <span class="material-symbols-rounded">more_vert</span>
+                </button>
             </div>
         `;
         
+        // Card click - select the card
         card.addEventListener('click', (e) => {
-            if (!e.target.closest('.discovery-preview-btn')) {
+            if (!e.target.closest('.discovery-card-more-btn')) {
                 document.querySelectorAll('.discovery-card').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
             }
         });
+        
+        // More button click - show menu
+        const moreBtn = card.querySelector('.discovery-card-more-btn');
+        if (moreBtn) {
+            moreBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleDiscoveryCardMenu(moreBtn, set);
+            });
+        }
         
         discoveryList.appendChild(card);
     });
@@ -5102,6 +5233,51 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
         listTab.style.display = currentVariant === 'option-d' ? '' : 'none';
     }
     
+    // Handle sidebar content based on variant (3-panel shows study plan, others show progress)
+    const isOptionB = document.body.classList.contains('option-b');
+    const tabsContainer = screen.querySelector('.study-mode-tabs-container');
+    const progressView = screen.querySelector('#study-mode-progress-view');
+    const planView = screen.querySelector('#study-mode-plan-view');
+    
+    // Remove previous option-b class if any
+    screen.classList.remove('from-option-b');
+    
+    if (isOptionB) {
+        // Add class for option-b specific styling
+        screen.classList.add('from-option-b');
+        
+        // Hide the tabs container
+        if (tabsContainer) {
+            tabsContainer.style.display = 'none';
+        }
+        
+        // Show study plan view, hide progress view
+        if (progressView) progressView.style.display = 'none';
+        if (planView) {
+            planView.style.display = 'flex';
+            // Hide the sidebar title row (title is now in the header)
+            const planTitleRow = planView.querySelector('.study-mode-plan-title-row');
+            if (planTitleRow) planTitleRow.style.display = 'none';
+            // Attach event listeners to study action cards
+            attachStudyPlanEventListeners(planView);
+        }
+        
+        // Update the header title with the set title
+        const headerTitle = screen.querySelector('#study-mode-header-title');
+        if (headerTitle && elements.setTitle) {
+            headerTitle.textContent = elements.setTitle.textContent;
+        }
+    } else {
+        // Reset for non-option-b variants
+        if (tabsContainer) {
+            tabsContainer.style.display = '';
+        }
+        
+        // Show progress view, hide study plan view
+        if (progressView) progressView.style.display = 'flex';
+        if (planView) planView.style.display = 'none';
+    }
+    
     // Load all flashcards
     studyModeState.allCards = [...flashcards];
     studyModeState.currentIndex = 0;
@@ -5192,6 +5368,44 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
         updateStudyModeProgress();
         updateStudyModeTabs();
     }
+}
+
+/**
+ * Attach event listeners to cloned study plan elements
+ */
+function attachStudyPlanEventListeners(planElement) {
+    // Attach click handlers to study action cards
+    const actionCards = planElement.querySelectorAll('.study-action-card');
+    actionCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const mode = card.dataset.mode;
+            if (mode) {
+                // Switch to the appropriate study mode
+                switchStudyMode(mode);
+            }
+        });
+    });
+    
+    // Attach click handler to tune button
+    const tuneBtn = planElement.querySelector('.study-plan-tune-btn');
+    if (tuneBtn) {
+        tuneBtn.addEventListener('click', () => {
+            console.log('Tune study plan clicked');
+        });
+    }
+}
+
+/**
+ * Switch study mode (flashcards, learn, games, test)
+ */
+function switchStudyMode(mode) {
+    const tabs = document.querySelectorAll('.study-mode-tab');
+    tabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.mode === mode);
+    });
+    
+    studyModeState.currentMode = mode;
+    updateStudyModeTabs();
 }
 
 /**
@@ -5405,6 +5619,28 @@ function closeStudyModeScreen() {
     const screen = document.getElementById('study-mode-screen');
     if (!screen) return;
     
+    // Clean up option-b specific UI changes
+    if (screen.classList.contains('from-option-b')) {
+        screen.classList.remove('from-option-b');
+        
+        // Restore tabs container visibility
+        const tabsContainer = screen.querySelector('.study-mode-tabs-container');
+        if (tabsContainer) {
+            tabsContainer.style.display = '';
+        }
+        
+        // Restore concepts list (will be repopulated on next open)
+        const conceptsList = screen.querySelector('#study-mode-concepts-list');
+        if (conceptsList) {
+            conceptsList.classList.remove('showing-study-plan');
+            // Remove cloned study plan if present
+            const clonedPlan = conceptsList.querySelector('#study-mode-study-plan');
+            if (clonedPlan) {
+                clonedPlan.remove();
+            }
+        }
+    }
+    
     // Check if we're in Option D for smooth transition back
     const isOptionD = document.body.classList.contains('option-d');
     const tableLayout = document.querySelector('.table-layout');
@@ -5558,6 +5794,11 @@ function renderConceptItem(container, group, groupIndex, isActive) {
  * Update the terms list in study mode sidebar (legacy - kept for reference)
  */
 function updateStudyModeTermsList() {
+    // Skip if showing study plan from option-b
+    const screen = document.getElementById('study-mode-screen');
+    if (screen?.classList.contains('from-option-b')) {
+        return;
+    }
     // Now redirects to concepts list
     updateStudyModeConceptsList();
 }
@@ -5636,6 +5877,12 @@ function updateStudyModeProgress() {
     
     if (fillEl) fillEl.style.width = `${percent}%`;
     if (textEl) textEl.textContent = `${percent}% Complete`;
+    
+    // Also update flashcard progress in study plan view (for option-b variant)
+    const flashcardProgressFill = document.getElementById('study-mode-flashcard-progress');
+    const flashcardProgressText = document.getElementById('study-mode-flashcard-progress-text');
+    if (flashcardProgressFill) flashcardProgressFill.style.width = `${percent}%`;
+    if (flashcardProgressText) flashcardProgressText.textContent = `${percent}% complete`;
     
     // Also update sidebar progress
     updateSidebarProgress();

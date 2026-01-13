@@ -75,16 +75,17 @@
                 <!-- Default meta (hidden in progress view) -->
                 <div class="panel-main-meta hide-in-progress" id="panel-meta">
                     <span class="panel-meta-item">
-                        <img src="images/Avatar-photo.png" alt="User avatar" class="panel-meta-avatar">
-                        thisismyname
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M2.5 11.5L5.5 8.5L8.5 10.5L13.5 4.5" stroke="#D62381" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 4.5H13.5V8" stroke="#D62381" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="panel-studiers-count">32 studiers today</span>
                     </span>
                     <span class="panel-meta-item">
-                        <span class="material-symbols-rounded filled">star</span>
-                        4.8
-                    </span>
-                    <span class="panel-meta-item" id="panel-term-count">
-                        <span class="material-symbols-rounded">stacks</span>
-                        22 terms
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 1.5L9.79 5.13L13.81 5.72L10.9 8.53L11.58 12.51L8 10.63L4.42 12.51L5.1 8.53L2.19 5.72L6.21 5.13L8 1.5Z" fill="#FFCD1F"/>
+                        </svg>
+                        <span id="panel-rating">4.8 (32 reviews)</span>
                     </span>
                 </div>
                 <!-- Progress bar (shown in progress view) -->
@@ -138,7 +139,7 @@
                                 <button class="more-menu-item">
                                     <span class="material-symbols-rounded">warning</span>
                                     Report
-                                </button>
+                    </button>
                             </div>
                         </div>
                     </div>
@@ -921,7 +922,7 @@
                     </button>
                     <div class="more-menu-wrapper">
                         <button class="action-btn more-menu-trigger" aria-label="More options">
-                            <span class="material-symbols-rounded">more_horiz</span>
+                        <span class="material-symbols-rounded">more_horiz</span>
                         </button>
                         <div class="more-menu-dropdown">
                             <button class="more-menu-item">
@@ -947,7 +948,7 @@
                             <button class="more-menu-item">
                                 <span class="material-symbols-rounded">warning</span>
                                 Report
-                            </button>
+                    </button>
                         </div>
                     </div>
                 </div>
@@ -1113,20 +1114,20 @@
             <div class="import-modal-content">
                 <!-- Step 1: Main Menu -->
                 <div class="modal-step" id="modal-step-main" data-step="main">
-                    <!-- Design Variant Selector -->
+                <!-- Design Variant Selector -->
                     <div class="import-field variant-field">
                         <label class="import-label">Select prototype</label>
-                        <div class="variant-selector" id="variant-selector">
-                            <button class="variant-btn active" data-variant="option-a">
+                    <div class="variant-selector" id="variant-selector">
+                        <button class="variant-btn active" data-variant="option-a">
                                 <span class="variant-icon">
                                     <span class="material-symbols-rounded">view_carousel</span>
                                 </span>
                                 <span class="variant-btn-text">
-                                <span class="variant-name">Preview</span>
+                            <span class="variant-name">Preview</span>
                                     <span class="variant-desc">Card carousel with preview</span>
                                 </span>
-                            </button>
-                            <button class="variant-btn" data-variant="option-b">
+                        </button>
+                        <button class="variant-btn" data-variant="option-b">
                                 <span class="variant-icon">
                                     <span class="material-symbols-rounded">view_column</span>
                                 </span>
@@ -1134,19 +1135,19 @@
                                     <span class="variant-name">Panels</span>
                                     <span class="variant-desc">Three-column layout</span>
                                 </span>
-                            </button>
-                            <button class="variant-btn" data-variant="option-c">
+                        </button>
+                        <button class="variant-btn" data-variant="option-c">
                                 <span class="variant-icon">
                                     <span class="material-symbols-rounded">route</span>
                                 </span>
                                 <span class="variant-btn-text">
-                                <span class="variant-name">Journey</span>
+                            <span class="variant-name">Journey</span>
                                     <span class="variant-desc">Visual learning path</span>
                                 </span>
-                            </button>
-                        </div>
+                        </button>
                     </div>
-                    
+                </div>
+                
                     <!-- Select Content Section -->
                     <div class="modal-section-divider"></div>
                     <div class="import-field content-field">
@@ -1188,32 +1189,32 @@
                             placeholder="e.g., John Smith"
                         >
                     </div>
-                    <div class="import-field">
-                        <label class="import-label" for="import-title">Set Title</label>
-                        <input 
-                            type="text" 
-                            id="import-title" 
-                            class="import-title-input" 
-                            placeholder="e.g., PSY 101 - Chapter 1"
-                        >
-                    </div>
-                    <div class="import-field">
-                        <label class="import-label" for="import-textarea">Flashcard Content</label>
-                        <p class="import-instructions">Paste your Quizlet export below (tab-separated format).</p>
-                        <textarea 
-                            id="import-textarea" 
-                            class="import-textarea" 
-                            placeholder="Question or term&#x9;Answer or definition&#x0a;What is psychology?&#x9;The scientific study of mind and behavior"
-                            spellcheck="false"
-                        ></textarea>
-                    </div>
+                <div class="import-field">
+                    <label class="import-label" for="import-title">Set Title</label>
+                    <input 
+                        type="text" 
+                        id="import-title" 
+                        class="import-title-input" 
+                        placeholder="e.g., PSY 101 - Chapter 1"
+                    >
+                </div>
+                <div class="import-field">
+                    <label class="import-label" for="import-textarea">Flashcard Content</label>
+                    <p class="import-instructions">Paste your Quizlet export below (tab-separated format).</p>
+                    <textarea 
+                        id="import-textarea" 
+                        class="import-textarea" 
+                        placeholder="Question or term&#x9;Answer or definition&#x0a;What is psychology?&#x9;The scientific study of mind and behavior"
+                        spellcheck="false"
+                    ></textarea>
+                </div>
                     <div class="import-step-actions">
-                        <button class="import-submit-btn" id="import-submit-btn">
+                <button class="import-submit-btn" id="import-submit-btn">
                             <span id="import-submit-text">Import Set</span>
-                        </button>
+                </button>
                         <button class="import-delete-btn hidden" id="import-delete-btn">
                             Delete set
-                        </button>
+                </button>
                     </div>
                 </div>
             </div>
@@ -1224,20 +1225,139 @@
     <div class="study-mode-screen" id="study-mode-screen">
         <!-- Left Panel - Progress View -->
         <aside class="study-mode-sidebar">
-            <div class="study-mode-sidebar-header">
-                <div class="study-mode-title-row">
-                    <h1 class="study-mode-title" id="study-mode-title">Cells & Tissues</h1>
-                </div>
-                <div class="study-mode-progress">
-                    <div class="study-mode-progress-bar">
-                        <div class="study-mode-progress-fill" id="study-mode-progress-fill" style="width: 12%"></div>
+            <!-- Version 1: Progress View (default for most variants) -->
+            <div class="study-mode-sidebar-content study-mode-progress-view" id="study-mode-progress-view">
+                <div class="study-mode-sidebar-header">
+                    <div class="study-mode-title-row">
+                        <h1 class="study-mode-title" id="study-mode-title">Cells & Tissues</h1>
                     </div>
+                    <div class="study-mode-progress">
+                        <div class="study-mode-progress-bar">
+                            <div class="study-mode-progress-fill" id="study-mode-progress-fill" style="width: 12%"></div>
+                        </div>
+                    </div>
+                    <span class="study-mode-progress-text" id="study-mode-progress-text">12% Complete</span>
                 </div>
-                <span class="study-mode-progress-text" id="study-mode-progress-text">12% Complete</span>
+                
+                <div class="study-mode-concepts-list" id="study-mode-concepts-list">
+                    <!-- Concept progress items will be populated dynamically -->
+                </div>
             </div>
             
-            <div class="study-mode-concepts-list" id="study-mode-concepts-list">
-                <!-- Concept progress items will be populated dynamically -->
+            <!-- Version 2: Study Plan View (for 3-panel variant) -->
+            <div class="study-mode-sidebar-content study-mode-plan-view" id="study-mode-plan-view" style="display: none;">
+                <div class="study-mode-plan-title-row">
+                    <h1 class="study-mode-title" id="study-mode-plan-title">Set Title</h1>
+                </div>
+                <div class="study-plan-header">
+                    <h2 class="study-plan-title">Study plan</h2>
+                    <button class="study-plan-settings">
+                        <span class="material-symbols-rounded">tune</span>
+                    </button>
+                </div>
+                
+                <div class="study-plan-timeline">
+                    <div class="study-plan-item recommended">
+                        <div class="study-plan-dot"></div>
+                        <div class="study-action-card study-action-flashcards" data-mode="flashcards">
+                            <div class="study-action-header">
+                                <span class="study-action-label">Flashcards</span>
+                            </div>
+                            <div class="study-action-illustration">
+                                <div class="illustration-cards">
+                                    <div class="illus-card illus-card-back"></div>
+                                    <div class="illus-card illus-card-front"></div>
+                                </div>
+                            </div>
+                            <div class="study-action-progress">
+                                <div class="study-action-progress-bar">
+                                    <div class="study-action-progress-fill" id="study-mode-flashcard-progress" style="width: 0%"></div>
+                                </div>
+                                <span class="study-action-progress-text" id="study-mode-flashcard-progress-text">0% complete</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="study-plan-item">
+                        <div class="study-plan-dot"></div>
+                        <div class="study-action-card study-action-learn" data-mode="learn">
+                            <span class="study-action-label">Learn</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">donut_large</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="study-plan-item">
+                        <div class="study-plan-dot"></div>
+                        <div class="study-action-card study-action-games" data-mode="games">
+                            <span class="study-action-label">Games</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">grid_view</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="study-plan-item">
+                        <div class="study-plan-dot"></div>
+                        <div class="study-action-card study-action-test" data-mode="test">
+                            <span class="study-action-label">Test</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">assignment</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="study-plan-header exam-day-header">
+                    <h2 class="study-plan-title">Exam day</h2>
+                </div>
+                
+                <div class="exam-day-timeline">
+                    <div class="exam-day-item">
+                        <div class="exam-day-dot"></div>
+                        <div class="study-action-card study-action-cheatsheet" data-mode="cheatsheet">
+                            <span class="study-action-label">Cheat sheet</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">description</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-day-item">
+                        <div class="exam-day-dot"></div>
+                        <div class="study-action-card study-action-podcast" data-mode="podcast">
+                            <span class="study-action-label">Podcast</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">podcasts</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-day-item">
+                        <div class="exam-day-dot"></div>
+                        <div class="study-action-card study-action-video" data-mode="video">
+                            <span class="study-action-label">Video overview</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">play_circle</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-day-item">
+                        <div class="exam-day-dot"></div>
+                        <div class="study-action-card study-action-meditation" data-mode="meditation">
+                            <span class="study-action-label">Pre-test meditation</span>
+                            <div class="study-action-icon">
+                                <span class="material-symbols-rounded">self_improvement</span>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
         
@@ -1245,6 +1365,7 @@
         <main class="study-mode-main">
             <!-- Mode Tabs & Actions -->
             <div class="study-mode-header">
+                <h1 class="study-mode-header-title" id="study-mode-header-title">Set Title</h1>
                 <div class="study-mode-tabs-container">
                     <button class="study-mode-tab" data-mode="list">
                         <span class="material-symbols-rounded">format_list_bulleted</span>

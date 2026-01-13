@@ -1220,6 +1220,22 @@ body.has-study-progress .panel-study-btn {
     font-size: 18px;
 }
 
+/* Dropdown Divider */
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-default);
+    margin: var(--spacing-xs) 0;
+}
+
+/* Discovery Card Menu */
+.discovery-card-menu {
+    min-width: 200px;
+}
+
+.discovery-card-menu .dropdown-item {
+    border-radius: var(--radius-md);
+}
+
 /* TOC Empty State */
 .toc-empty {
     display: flex;
@@ -3470,7 +3486,7 @@ body.option-b .panel-resize-handle[data-resize="right"] {
 body.option-b .panel-discovery {
     order: 5;
     flex: 1 1 33.333%;
-    min-width: 200px;
+    min-width: 240px;
     max-width: none;
     overflow: visible;
     display: flex;
@@ -3531,7 +3547,7 @@ body.option-b .discovery-header {
 }
 
 body.option-b .discovery-card {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08);
+    box-shadow: none;
 }
 
 /* Discovery list padding handled in earlier rule */
@@ -4565,68 +4581,59 @@ body.resizing * {
     animation: spin 0.8s linear infinite;
 }
 
-/* Enhanced Discovery Card */
+/* Simplified Discovery Card */
 .discovery-card {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md);
+    gap: var(--spacing-xs);
+    padding: 0;
     background: var(--surface-base);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--spacing-sm);
+    border-radius: 0;
+    margin-bottom: var(--spacing-md);
     cursor: pointer;
     transition: all var(--transition-fast);
-    border: 2px solid transparent;
+    border: none;
 }
 
 .discovery-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card);
+    background: var(--color-gray-50);
 }
 
 .discovery-card.active {
-    border-color: var(--color-primary);
+    background: var(--color-gray-100);
 }
 
 .discovery-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-sm);
 }
 
+.discovery-card-header:hover .discovery-card-title {
+    color: var(--text-secondary);
+}
+
 .discovery-icon {
-    width: 44px;
-    height: 44px;
+    width: 64px;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     flex-shrink: 0;
-}
-
-.discovery-icon.biology {
-    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-    color: #059669;
-}
-
-.discovery-icon.chemistry {
-    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
-    color: #2563EB;
-}
-
-.discovery-icon.psychology {
-    background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
-    color: #9333EA;
-}
-
-.discovery-icon.anatomy {
-    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
-    color: #DC2626;
-}
-
-.discovery-icon.default {
     background: var(--color-gray-200);
     color: var(--text-secondary);
+    overflow: hidden;
+}
+
+.discovery-icon .material-symbols-rounded {
+    font-size: 28px;
+}
+
+.discovery-icon-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
 }
 
 .discovery-info {
@@ -4634,14 +4641,14 @@ body.resizing * {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .discovery-card-title {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--ref-typography-size-subheading-three);
+    font-weight: var(--ref-typography-weight-subheader);
     color: var(--text-primary);
-    line-height: 1.3;
+    line-height: var(--ref-typography-line-height-subheading-three);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -4649,84 +4656,65 @@ body.resizing * {
 }
 
 .discovery-card-author {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
-.discovery-card-author .material-symbols-rounded {
-    font-size: 14px;
-}
-
-.discovery-card-meta {
+/* Discovery Card Meta Line */
+.discovery-card-meta-line {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs) var(--spacing-md);
     flex-wrap: wrap;
 }
 
-.discovery-meta-item {
+.discovery-stat-item {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.discovery-meta-item .material-symbols-rounded {
-    font-size: 14px;
-}
-
-.discovery-meta-item .material-symbols-rounded.filled {
-    color: var(--color-sunset);
-}
-
-.discovery-meta-badge {
-    padding: 2px 8px;
-    background: rgba(16, 185, 129, 0.1);
-    border-radius: var(--radius-full);
-    font-size: 10px;
-    font-weight: 700;
-    color: #059669;
-    text-transform: uppercase;
-}
-
-.discovery-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: var(--spacing-xs);
-    border-top: 1px solid var(--border-default);
-}
-
-.discovery-studiers {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--text-muted);
-}
-
-.discovery-studiers .material-symbols-rounded {
-    font-size: 14px;
-}
-
-.discovery-preview-btn {
-    padding: 4px 10px;
-    background: var(--color-gray-200);
-    border-radius: var(--radius-full);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-secondary);
+}
+
+.discovery-stat-item .material-symbols-rounded {
+    font-size: 16px;
+}
+
+.discovery-stat-item.trending {
+    color: var(--text-secondary);
+}
+
+.discovery-stat-item.trending .material-symbols-rounded {
+    color: var(--color-cherry);
+}
+
+/* Discovery Card More Button */
+.discovery-card-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+    margin-left: auto;
+    align-self: flex-start;
     transition: all var(--transition-fast);
 }
 
-.discovery-preview-btn:hover {
-    background: var(--color-primary);
-    color: white;
+.discovery-card-more-btn:hover {
+    background: var(--color-gray-200);
+    color: var(--text-primary);
+}
+
+.discovery-card-more-btn .material-symbols-rounded {
+    font-size: 20px;
 }
 
 /* Panel 2: Main Content */
@@ -8846,6 +8834,111 @@ input:checked + .custom-checkbox::after {
     margin: 0 calc(var(--spacing-sm) * -1);
 }
 
+/* Study Mode Sidebar Content Views */
+.study-mode-sidebar-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.study-mode-progress-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.study-mode-plan-view {
+    display: none;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: visible;
+    padding-right: var(--spacing-xs);
+    padding-left: var(--spacing-xs);
+}
+
+.study-mode-plan-title-row {
+    margin-bottom: var(--spacing-xs);
+}
+
+.study-mode-plan-title-row .study-mode-title {
+    font-size: var(--ref-typography-size-subheading-two);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-two);
+    color: var(--text-primary);
+}
+
+.study-mode-plan-view .study-plan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 5;
+    padding-bottom: var(--spacing-sm);
+    width: calc(100% + var(--spacing-xs));
+    margin-left: calc(var(--spacing-xs) * -1);
+    padding-left: var(--spacing-xs);
+}
+
+.study-mode-plan-view .study-plan-timeline,
+.study-mode-plan-view .exam-day-timeline {
+    padding-left: 20px;
+    overflow: visible;
+}
+
+.study-mode-plan-view .study-action-card {
+    cursor: pointer;
+}
+
+.study-mode-plan-view .study-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+}
+
+/* Progress bar inside study action card (study mode only) */
+.study-action-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: 0;
+    margin-top: var(--spacing-xs);
+    width: 100%;
+}
+
+.study-action-progress-bar {
+    height: 6px;
+    background-color: #FFFFFF;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    width: 100%;
+}
+
+.study-action-progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+    min-width: 12px;
+}
+
+.study-action-progress-text {
+    font-size: var(--ref-typography-size-subheading-five);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-five);
+    color: var(--text-secondary);
+    text-align: left;
+}
+
+/* Study Mode from Option B (3-panel variant) */
+.study-mode-screen.from-option-b .study-mode-sidebar {
+    background: var(--surface);
+}
+
 .study-mode-concept-item {
     display: flex;
     align-items: center;
@@ -9108,6 +9201,31 @@ input:checked + .custom-checkbox::after {
 .study-mode-header-actions {
     display: flex;
     gap: 8px;
+}
+
+/* Header title - hidden by default, shown for option-b */
+.study-mode-header-title {
+    display: none;
+    font-size: var(--ref-typography-size-subheading-three);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-three);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* When tabs are hidden (from option-b), show title and right-align the actions */
+.study-mode-screen.from-option-b .study-mode-header {
+    justify-content: space-between;
+    align-items: center;
+    padding-left: var(--spacing-sm);
+}
+
+.study-mode-screen.from-option-b .study-mode-header-title {
+    display: block;
+}
+
+.study-mode-screen.from-option-b .study-mode-header-actions {
+    margin-left: auto;
 }
 
 .study-mode-action-btn {
