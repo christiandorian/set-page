@@ -2076,6 +2076,7 @@ const STUDY_MODE_IMAGES = {
     learn: 'images/learn.png',
     games: 'images/games.png',
     test: 'images/test.png',
+    match: 'images/match.png',
     cheatsheet: 'images/cheatsheet.png'
 };
 
