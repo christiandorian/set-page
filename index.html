@@ -281,16 +281,26 @@
             <div class="study-plan-default" id="study-plan-default">
                 <div class="study-plan-header">
                     <h2 class="study-plan-title">Study plan</h2>
-                    <button class="study-plan-settings">
-                        <span class="material-symbols-rounded">tune</span>
+                    <button class="study-plan-settings" id="study-plan-settings-btn">
+                        <span class="material-symbols-rounded settings-icon">tune</span>
+                        <span class="material-symbols-rounded save-icon">check</span>
                     </button>
                 </div>
                 
-                <div class="study-plan-timeline">
-                    <div class="study-plan-item recommended">
+                <div class="study-plan-timeline" id="study-plan-timeline">
+                    <div class="study-plan-item recommended" data-mode="flashcards">
                         <div class="study-plan-dot"></div>
-                        <div class="study-action-card study-action-flashcards" data-mode="flashcards">
+                        <button class="study-plan-drag-handle">
+                            <span class="material-symbols-rounded">drag_indicator</span>
+                        </button>
+                        <div class="study-action-card study-action-flashcards expanded" data-mode="flashcards">
                             <div class="study-action-header">
+                                <div class="study-action-icon edit-mode-icon">
+                                    <div class="mode-icon-wrapper">
+                                        <img src="images/flashcards.png" alt="Flashcards" class="mode-icon-img">
+                                        <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                    </div>
+                                </div>
                                 <span class="study-action-label">Flashcards</span>
                                 <div class="study-action-cta">
                                     <span class="study-action-cta-text">Quick practice</span>
@@ -298,45 +308,87 @@
                                 </div>
                             </div>
                             <div class="study-action-illustration">
-                                <div class="illustration-cards">
-                                    <div class="illus-card illus-card-back"></div>
-                                    <div class="illus-card illus-card-front"></div>
-                                </div>
+                                <img src="images/flashcards.png" alt="Flashcards" class="study-action-illustration-img">
+                                <img src="images/shadow.png" alt="" class="study-action-illustration-shadow">
                             </div>
+                            <div class="study-action-progress panel-flashcard-progress">
+                                <div class="study-action-progress-bar">
+                                    <div class="study-action-progress-fill" id="panel-flashcard-progress" style="width: 0%"></div>
+                            </div>
+                                <span class="study-action-progress-text" id="panel-flashcard-progress-text">0% complete</span>
+                            </div>
+                            <button class="study-action-delete">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="study-plan-item">
+                    <div class="study-plan-item" data-mode="learn">
                         <div class="study-plan-dot"></div>
+                        <button class="study-plan-drag-handle">
+                            <span class="material-symbols-rounded">drag_indicator</span>
+                        </button>
                         <div class="study-action-card study-action-learn" data-mode="learn">
                             <span class="study-action-label">Learn</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">donut_large</span>
-                                <span class="material-symbols-rounded">chevron_right</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/learn.png" alt="Learn" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
+                                <span class="material-symbols-rounded chevron-icon">chevron_right</span>
                             </div>
+                            <button class="study-action-delete">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="study-plan-item">
+                    <div class="study-plan-item" data-mode="games">
                         <div class="study-plan-dot"></div>
+                        <button class="study-plan-drag-handle">
+                            <span class="material-symbols-rounded">drag_indicator</span>
+                        </button>
                         <div class="study-action-card study-action-games" data-mode="games">
                             <span class="study-action-label">Games</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">grid_view</span>
-                                <span class="material-symbols-rounded">chevron_right</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/games.png" alt="Games" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
+                                <span class="material-symbols-rounded chevron-icon">chevron_right</span>
                             </div>
+                            <button class="study-action-delete">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="study-plan-item">
+                    <div class="study-plan-item" data-mode="test">
                         <div class="study-plan-dot"></div>
+                        <button class="study-plan-drag-handle">
+                            <span class="material-symbols-rounded">drag_indicator</span>
+                        </button>
                         <div class="study-action-card study-action-test" data-mode="test">
                             <span class="study-action-label">Test</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">assignment</span>
-                                <span class="material-symbols-rounded">chevron_right</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/test.png" alt="Test" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
+                                <span class="material-symbols-rounded chevron-icon">chevron_right</span>
                             </div>
+                            <button class="study-action-delete">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
                         </div>
+                    </div>
+                    
+                    <div class="study-plan-item study-plan-add-new" id="study-plan-add-new">
+                        <div class="study-plan-dot add-dot"></div>
+                        <button class="study-action-card study-action-add" id="study-plan-add-btn">
+                            <span class="study-action-label">Add activity</span>
+                            <span class="material-symbols-rounded">add</span>
+                        </button>
                     </div>
                 </div>
                 
@@ -350,7 +402,10 @@
                         <div class="study-action-card study-action-cheatsheet" data-mode="cheatsheet">
                             <span class="study-action-label">Cheat sheet</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">description</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/cheatsheet.png" alt="Cheat sheet" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
                                 <span class="material-symbols-rounded">chevron_right</span>
                             </div>
                         </div>
@@ -1175,6 +1230,9 @@
                         <button class="debug-reset-btn" id="debug-reset-progress-btn">
                             Reset study progress
                         </button>
+                        <button class="debug-reset-btn" id="debug-reset-plan-btn">
+                            Reset study plan
+                        </button>
                     </div>
                 </div>
                 
@@ -1227,18 +1285,18 @@
         <aside class="study-mode-sidebar">
             <!-- Version 1: Progress View (default for most variants) -->
             <div class="study-mode-sidebar-content study-mode-progress-view" id="study-mode-progress-view">
-                <div class="study-mode-sidebar-header">
-                    <div class="study-mode-title-row">
-                        <h1 class="study-mode-title" id="study-mode-title">Cells & Tissues</h1>
-                    </div>
-                    <div class="study-mode-progress">
-                        <div class="study-mode-progress-bar">
-                            <div class="study-mode-progress-fill" id="study-mode-progress-fill" style="width: 12%"></div>
-                        </div>
-                    </div>
-                    <span class="study-mode-progress-text" id="study-mode-progress-text">12% Complete</span>
+            <div class="study-mode-sidebar-header">
+                <div class="study-mode-title-row">
+                    <h1 class="study-mode-title" id="study-mode-title">Cells & Tissues</h1>
                 </div>
-                
+                <div class="study-mode-progress">
+                    <div class="study-mode-progress-bar">
+                        <div class="study-mode-progress-fill" id="study-mode-progress-fill" style="width: 12%"></div>
+                    </div>
+                </div>
+                <span class="study-mode-progress-text" id="study-mode-progress-text">12% Complete</span>
+            </div>
+            
                 <div class="study-mode-concepts-list" id="study-mode-concepts-list">
                     <!-- Concept progress items will be populated dynamically -->
                 </div>
@@ -1251,23 +1309,32 @@
                 </div>
                 <div class="study-plan-header">
                     <h2 class="study-plan-title">Study plan</h2>
-                    <button class="study-plan-settings">
-                        <span class="material-symbols-rounded">tune</span>
-                    </button>
-                </div>
-                
+                    <button class="study-plan-settings" id="study-mode-plan-settings-btn">
+                        <span class="material-symbols-rounded settings-icon">tune</span>
+                        <span class="material-symbols-rounded save-icon">check</span>
+                </button>
+            </div>
+            
                 <div class="study-plan-timeline">
-                    <div class="study-plan-item recommended">
+                    <div class="study-plan-item recommended" data-mode="flashcards">
                         <div class="study-plan-dot"></div>
-                        <div class="study-action-card study-action-flashcards" data-mode="flashcards">
+                        <div class="study-action-card study-action-flashcards expanded" data-mode="flashcards">
                             <div class="study-action-header">
+                                <div class="study-action-icon edit-mode-icon">
+                                    <div class="mode-icon-wrapper">
+                                        <img src="images/flashcards.png" alt="Flashcards" class="mode-icon-img">
+                                        <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                    </div>
+                                </div>
                                 <span class="study-action-label">Flashcards</span>
+                                <div class="study-action-cta">
+                                    <span class="study-action-cta-text">Quick practice</span>
+                                    <span class="material-symbols-rounded">chevron_right</span>
+                                </div>
                             </div>
                             <div class="study-action-illustration">
-                                <div class="illustration-cards">
-                                    <div class="illus-card illus-card-back"></div>
-                                    <div class="illus-card illus-card-front"></div>
-                                </div>
+                                <img src="images/flashcards.png" alt="Flashcards" class="study-action-illustration-img">
+                                <img src="images/shadow.png" alt="" class="study-action-illustration-shadow">
                             </div>
                             <div class="study-action-progress">
                                 <div class="study-action-progress-bar">
@@ -1283,7 +1350,10 @@
                         <div class="study-action-card study-action-learn" data-mode="learn">
                             <span class="study-action-label">Learn</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">donut_large</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/learn.png" alt="Learn" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
                                 <span class="material-symbols-rounded">chevron_right</span>
                             </div>
                         </div>
@@ -1294,7 +1364,10 @@
                         <div class="study-action-card study-action-games" data-mode="games">
                             <span class="study-action-label">Games</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">grid_view</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/games.png" alt="Games" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
                                 <span class="material-symbols-rounded">chevron_right</span>
                             </div>
                         </div>
@@ -1305,7 +1378,10 @@
                         <div class="study-action-card study-action-test" data-mode="test">
                             <span class="study-action-label">Test</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">assignment</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/test.png" alt="Test" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
                                 <span class="material-symbols-rounded">chevron_right</span>
                             </div>
                         </div>
@@ -1322,7 +1398,10 @@
                         <div class="study-action-card study-action-cheatsheet" data-mode="cheatsheet">
                             <span class="study-action-label">Cheat sheet</span>
                             <div class="study-action-icon">
-                                <span class="material-symbols-rounded">description</span>
+                                <div class="mode-icon-wrapper">
+                                    <img src="images/cheatsheet.png" alt="Cheat sheet" class="mode-icon-img">
+                                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                                </div>
                                 <span class="material-symbols-rounded">chevron_right</span>
                             </div>
                         </div>

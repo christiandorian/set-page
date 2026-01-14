@@ -964,6 +964,12 @@ function resetImportStepUI() {
     if (submitText) submitText.textContent = 'Import Set';
     if (deleteBtn) deleteBtn.classList.add('hidden');
     
+    // Clear the input fields
+    if (elements.importTitleInput) elements.importTitleInput.value = '';
+    if (elements.importTextarea) elements.importTextarea.value = '';
+    const testerInput = document.getElementById('import-tester-name');
+    if (testerInput) testerInput.value = '';
+    
     window.editingContentId = null;
 }
 
@@ -1256,6 +1262,12 @@ function attachEventListeners() {
         resetProgressBtn.addEventListener('click', resetStudyProgress);
     }
     
+    // Reset study plan button
+    const resetPlanBtn = document.getElementById('debug-reset-plan-btn');
+    if (resetPlanBtn) {
+        resetPlanBtn.addEventListener('click', resetStudyPlan);
+    }
+    
     // Import modal step navigation
     const importOpenBtn = document.getElementById('import-open-btn');
     const importBackBtn = document.getElementById('import-back-btn');
@@ -1266,6 +1278,9 @@ function attachEventListeners() {
     
     if (importOpenBtn) {
         importOpenBtn.addEventListener('click', () => {
+            // Reset to import mode (not edit mode) and clear fields
+            resetImportStepUI();
+            
             modalStepMain?.classList.add('hidden');
             modalStepImport?.classList.remove('hidden');
             headerMain?.classList.add('hidden');
@@ -1550,8 +1565,6 @@ function updatePanelProgressValues() {
     const fillEl = document.getElementById('panel-progress-fill');
     const textEl = document.getElementById('panel-progress-text');
     
-    if (!fillEl || !textEl) return;
-    
     const total = flashcards.length;
     let known = 0;
     for (let i = 0; i < total; i++) {
@@ -1559,8 +1572,15 @@ function updatePanelProgressValues() {
     }
     
     const percent = total > 0 ? Math.min(100, Math.round((known / total) * 100)) : 0;
-    fillEl.style.width = percent + '%';
-    textEl.textContent = `${percent}% Complete`;
+    
+    if (fillEl) fillEl.style.width = percent + '%';
+    if (textEl) textEl.textContent = `${percent}% Complete`;
+    
+    // Also update flashcard progress on set page study plan card
+    const panelFlashcardProgressFill = document.getElementById('panel-flashcard-progress');
+    const panelFlashcardProgressText = document.getElementById('panel-flashcard-progress-text');
+    if (panelFlashcardProgressFill) panelFlashcardProgressFill.style.width = `${percent}%`;
+    if (panelFlashcardProgressText) panelFlashcardProgressText.textContent = `${percent}% complete`;
 }
 
 /**
@@ -1838,7 +1858,11 @@ function updatePanelTitle() {
 function initPanelStudyMode() {
     // Study action cards click handlers - now use new study mode screen
     document.querySelectorAll('.study-action-card[data-mode]').forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            // Don't open study mode if clicking delete button or in edit mode
+            if (e.target.closest('.study-action-delete') || document.getElementById('study-plan-default')?.classList.contains('edit-mode')) {
+                return;
+            }
             const mode = card.dataset.mode;
             openStudyModeScreen(mode);
         });
@@ -1860,6 +1884,1060 @@ function initPanelStudyMode() {
     
     if (panelFilterBtn) {
         panelFilterBtn.addEventListener('click', () => togglePanelFilterMenu(panelFilterBtn));
+    }
+    
+    // Initialize study plan edit mode
+    initStudyPlanEditMode();
+}
+
+// Study plan edit mode state
+const studyPlanEditState = {
+    isEditMode: false,
+    hasChanges: false,
+    originalOrder: [],
+    currentOrder: []
+};
+
+/**
+ * Initialize study plan edit mode
+ */
+function initStudyPlanEditMode() {
+    const settingsBtn = document.getElementById('study-plan-settings-btn');
+    const studyPlanDefault = document.getElementById('study-plan-default');
+    const addBtn = document.getElementById('study-plan-add-btn');
+    
+    if (!settingsBtn || !studyPlanDefault) return;
+    
+    // Store original order
+    studyPlanEditState.originalOrder = getStudyPlanOrder();
+    studyPlanEditState.currentOrder = [...studyPlanEditState.originalOrder];
+    
+    // Settings/Save button click handler
+    settingsBtn.addEventListener('click', () => {
+        if (studyPlanEditState.isEditMode) {
+            // Save and exit edit mode
+            if (studyPlanEditState.hasChanges) {
+                saveStudyPlanOrder();
+            }
+            exitStudyPlanEditMode();
+        } else {
+            // Enter edit mode
+            enterStudyPlanEditMode();
+        }
+    });
+    
+    // Add activity button click handler
+    if (addBtn) {
+        addBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleAddActivityMenu(addBtn);
+        });
+    }
+    
+    // Initialize drag and drop
+    initStudyPlanDragDrop();
+    
+    // Initialize delete buttons
+    initStudyPlanDeleteButtons();
+}
+
+/**
+ * Get current study plan order
+ */
+function getStudyPlanOrder() {
+    const timeline = document.getElementById('study-plan-timeline');
+    if (!timeline) return [];
+    
+    const items = timeline.querySelectorAll('.study-plan-item:not(.study-plan-add-new)');
+    return Array.from(items).map(item => item.dataset.mode);
+}
+
+/**
+ * Enter edit mode
+ */
+function enterStudyPlanEditMode() {
+    const studyPlanDefault = document.getElementById('study-plan-default');
+    const settingsBtn = document.getElementById('study-plan-settings-btn');
+    
+    if (!studyPlanDefault) return;
+    
+    studyPlanEditState.isEditMode = true;
+    studyPlanEditState.hasChanges = false;
+    studyPlanEditState.originalOrder = getStudyPlanOrder();
+    studyPlanEditState.currentOrder = [...studyPlanEditState.originalOrder];
+    
+    studyPlanDefault.classList.add('edit-mode');
+    
+    // Ensure add-new button is at the bottom
+    const timeline = studyPlanDefault.querySelector('.study-plan-timeline');
+    if (timeline) {
+        ensureAddNewAtBottom(timeline);
+    }
+    
+    // Disable save button initially
+    if (settingsBtn) {
+        settingsBtn.classList.add('disabled');
+    }
+}
+
+/**
+ * Exit edit mode
+ */
+function exitStudyPlanEditMode() {
+    const studyPlanDefault = document.getElementById('study-plan-default');
+    const settingsBtn = document.getElementById('study-plan-settings-btn');
+    
+    if (!studyPlanDefault) return;
+    
+    studyPlanEditState.isEditMode = false;
+    studyPlanEditState.hasChanges = false;
+    
+    studyPlanDefault.classList.remove('edit-mode');
+    
+    if (settingsBtn) {
+        settingsBtn.classList.remove('disabled');
+    }
+    
+    // Close any open menus
+    closeAllMenus();
+}
+
+/**
+ * Mark that changes have been made
+ */
+function markStudyPlanChanged() {
+    const settingsBtn = document.getElementById('study-plan-settings-btn');
+    
+    studyPlanEditState.hasChanges = true;
+    studyPlanEditState.currentOrder = getStudyPlanOrder();
+    
+    if (settingsBtn) {
+        settingsBtn.classList.remove('disabled');
+    }
+}
+
+/**
+ * Save study plan order to localStorage
+ */
+function saveStudyPlanOrder() {
+    const order = getStudyPlanOrder();
+    localStorage.setItem('studyPlanOrder', JSON.stringify(order));
+    console.log('Study plan order saved:', order);
+    
+    // Update recommended item to be the first one
+    const studyPlanDefault = document.getElementById('study-plan-default');
+    if (studyPlanDefault) {
+        const timeline = studyPlanDefault.querySelector('.study-plan-timeline');
+        if (timeline) {
+            updateRecommendedItem(timeline);
+        }
+    }
+    
+    // Also update the study mode plan to stay in sync
+    const studyModePlan = document.getElementById('study-mode-plan-view');
+    if (studyModePlan) {
+        const studyModeTimeline = studyModePlan.querySelector('.study-plan-timeline');
+        if (studyModeTimeline) {
+            // Reorder study mode to match
+            order.forEach(mode => {
+                const item = studyModeTimeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+                if (item) {
+                    // Insert before add-new item
+                    const addNew = studyModeTimeline.querySelector('.study-plan-add-new');
+                    if (addNew) {
+                        studyModeTimeline.insertBefore(item, addNew);
+                    } else {
+                        studyModeTimeline.appendChild(item);
+                    }
+                }
+            });
+            updateRecommendedItem(studyModeTimeline);
+        }
+    }
+}
+
+/**
+ * CTA text for each study mode
+ */
+const STUDY_MODE_CTA_TEXT = {
+    test: 'Test your knowledge',
+    learn: 'Structured practice',
+    flashcards: 'Quick practice',
+    games: 'Playful practice',
+    match: 'Playful practice',
+    write: 'Written practice'
+};
+
+/**
+ * Image paths for each study mode
+ */
+const STUDY_MODE_IMAGES = {
+    flashcards: 'images/flashcards.png',
+    learn: 'images/learn.png',
+    games: 'images/games.png',
+    test: 'images/test.png',
+    match: 'images/match.png',
+    cheatsheet: 'images/cheatsheet.png',
+    write: 'images/write.png'
+};
+
+/**
+ * Update which item is recommended (first item gets expanded styling)
+ */
+function updateRecommendedItem(timeline) {
+    if (!timeline) return;
+    
+    // Ensure add-new button is at the bottom
+    ensureAddNewAtBottom(timeline);
+    
+    // Get all study plan items (exclude add-new)
+    const items = timeline.querySelectorAll('.study-plan-item:not(.study-plan-add-new)');
+    if (items.length === 0) return;
+    
+    // Remove recommended class and collapse all items
+    items.forEach(item => {
+        item.classList.remove('recommended');
+        collapseStudyPlanItem(item);
+    });
+    
+    // Make the first item recommended and expanded
+    const firstItem = items[0];
+    firstItem.classList.add('recommended');
+    expandStudyPlanItem(firstItem);
+}
+
+/**
+ * Ensure the add-new button is always at the bottom of the timeline
+ */
+function ensureAddNewAtBottom(timeline) {
+    if (!timeline) return;
+    
+    const addNew = timeline.querySelector('.study-plan-add-new');
+    if (addNew) {
+        timeline.appendChild(addNew);
+    }
+}
+
+/**
+ * Expand a study plan item (show CTA, illustration)
+ */
+function expandStudyPlanItem(item) {
+    const card = item.querySelector('.study-action-card');
+    if (!card) return;
+    
+    const mode = card.dataset.mode;
+    const label = card.querySelector('.study-action-label')?.textContent || mode;
+    
+    // Check if already has expanded structure
+    if (card.querySelector('.study-action-header')) return;
+    
+    // Get the CTA text for this mode
+    const ctaText = STUDY_MODE_CTA_TEXT[mode] || 'Start practicing';
+    
+    // Store the original content
+    const originalLabel = card.querySelector('.study-action-label');
+    const originalIcon = card.querySelector('.study-action-icon');
+    const deleteBtn = card.querySelector('.study-action-delete');
+    
+    // Get mode image source
+    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    
+    // Create expanded structure
+    const header = document.createElement('div');
+    header.className = 'study-action-header';
+    header.innerHTML = `
+        <div class="study-action-icon edit-mode-icon">
+            <div class="mode-icon-wrapper">
+                <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+                <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+            </div>
+        </div>
+        <span class="study-action-label">${label}</span>
+        <div class="study-action-cta">
+            <span class="study-action-cta-text">${ctaText}</span>
+            <span class="material-symbols-rounded">chevron_right</span>
+        </div>
+    `;
+    
+    // Create illustration with mode image
+    const illustration = document.createElement('div');
+    illustration.className = 'study-action-illustration';
+    illustration.innerHTML = `
+        <img src="${imgSrc}" alt="${label}" class="study-action-illustration-img">
+        <img src="images/shadow.png" alt="" class="study-action-illustration-shadow">
+    `;
+    
+    // Remove old elements
+    if (originalLabel) originalLabel.remove();
+    if (originalIcon) originalIcon.remove();
+    
+    // Add new elements at the beginning
+    card.insertBefore(illustration, card.firstChild);
+    card.insertBefore(header, card.firstChild);
+    
+    // Check if we're in study mode (progress bar should show for any expanded mode in study mode)
+    const isInStudyMode = card.closest('#study-mode-plan-view') !== null;
+    
+    // Add progress bar if in study mode (any mode) or flashcards on set page
+    if (!card.querySelector('.study-action-progress')) {
+        if (isInStudyMode || mode === 'flashcards') {
+            const progress = document.createElement('div');
+            progress.className = 'study-action-progress';
+            progress.innerHTML = `
+                <div class="study-action-progress-bar">
+                    <div class="study-action-progress-fill study-mode-progress-fill" style="width: 0%"></div>
+                </div>
+                <span class="study-action-progress-text study-mode-progress-text">0% complete</span>
+            `;
+            // Insert after illustration
+            illustration.after(progress);
+            
+            // If in study mode, update with current progress
+            if (isInStudyMode && flashcards && studyModeState.viewedCards) {
+                const totalCards = flashcards.length;
+                const viewedCount = studyModeState.viewedCards.size;
+                const percentage = totalCards > 0 ? Math.round((viewedCount / totalCards) * 100) : 0;
+                const progressFill = progress.querySelector('.study-mode-progress-fill');
+                const progressText = progress.querySelector('.study-mode-progress-text');
+                if (progressFill) progressFill.style.width = `${percentage}%`;
+                if (progressText) progressText.textContent = `${percentage}% complete`;
+            }
+        }
+    }
+    
+    // Add expanded class to card
+    card.classList.add('expanded');
+}
+
+/**
+ * Collapse a study plan item (remove CTA, illustration, show icon)
+ */
+function collapseStudyPlanItem(item) {
+    const card = item.querySelector('.study-action-card');
+    if (!card) return;
+    
+    // Check if it has expanded structure
+    const header = card.querySelector('.study-action-header');
+    if (!header) return;
+    
+    const mode = card.dataset.mode;
+    const label = header.querySelector('.study-action-label')?.textContent || mode;
+    
+    // Get mode image
+    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    
+    // Remove expanded elements
+    header.remove();
+    const illustration = card.querySelector('.study-action-illustration');
+    if (illustration) illustration.remove();
+    const progress = card.querySelector('.study-action-progress');
+    if (progress && !mode.includes('flashcards')) progress.remove();
+    
+    // Create collapsed structure
+    const labelEl = document.createElement('span');
+    labelEl.className = 'study-action-label';
+    labelEl.textContent = label;
+    
+    const iconEl = document.createElement('div');
+    iconEl.className = 'study-action-icon';
+    iconEl.innerHTML = `
+        <div class="mode-icon-wrapper">
+            <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+            <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+        </div>
+        <span class="material-symbols-rounded chevron-icon">chevron_right</span>
+    `;
+    
+    // Add at the beginning of card
+    const deleteBtn = card.querySelector('.study-action-delete');
+    card.insertBefore(iconEl, deleteBtn);
+    card.insertBefore(labelEl, iconEl);
+    
+    // Remove expanded class
+    card.classList.remove('expanded');
+}
+
+/**
+ * Sync study mode plan view with saved order from set page
+ */
+function syncStudyModePlanWithSavedOrder(planView) {
+    const savedOrder = localStorage.getItem('studyPlanOrder');
+    const timeline = planView.querySelector('.study-plan-timeline');
+    if (!timeline) return;
+    
+    // Default order if nothing saved
+    const order = savedOrder ? JSON.parse(savedOrder) : ['flashcards', 'learn', 'games', 'test'];
+    
+    // Study mode info for creating items
+    const modeInfo = {
+        flashcards: { label: 'Flashcards', class: 'study-action-flashcards' },
+        learn: { label: 'Learn', class: 'study-action-learn' },
+        games: { label: 'Games', class: 'study-action-games' },
+        test: { label: 'Test', class: 'study-action-test' },
+        match: { label: 'Match', class: 'study-action-match' },
+        write: { label: 'Write', class: 'study-action-write' }
+    };
+    
+    // Clear the timeline
+    timeline.innerHTML = '';
+    
+    // Add items in saved order with full edit structure
+    order.forEach((mode, index) => {
+        if (!modeInfo[mode]) return;
+        
+        const info = modeInfo[mode];
+        const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+        const item = document.createElement('div');
+        item.className = `study-plan-item ${index === 0 ? 'recommended' : ''}`;
+        item.dataset.mode = mode;
+        item.setAttribute('draggable', 'true');
+        
+        item.innerHTML = `
+            <div class="study-plan-dot"></div>
+            <button class="study-plan-drag-handle">
+                <span class="material-symbols-rounded">drag_indicator</span>
+            </button>
+            <div class="study-action-card ${info.class}" data-mode="${mode}">
+                <span class="study-action-label">${info.label}</span>
+                <div class="study-action-icon">
+                    <div class="mode-icon-wrapper">
+                        <img src="${imgSrc}" alt="${info.label}" class="mode-icon-img">
+                        <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                    </div>
+                    <span class="material-symbols-rounded chevron-icon">chevron_right</span>
+                </div>
+                <button class="study-action-delete">
+                    <span class="material-symbols-rounded">delete</span>
+                </button>
+            </div>
+        `;
+        timeline.appendChild(item);
+    });
+    
+    // Add the "Add activity" button
+    const addNewItem = document.createElement('div');
+    addNewItem.className = 'study-plan-item study-plan-add-new';
+    addNewItem.id = 'study-mode-plan-add-new';
+    addNewItem.innerHTML = `
+        <div class="study-plan-dot add-dot"></div>
+        <button class="study-action-card study-action-add" id="study-mode-plan-add-btn">
+            <span class="study-action-label">Add activity</span>
+            <span class="material-symbols-rounded">add</span>
+        </button>
+    `;
+    timeline.appendChild(addNewItem);
+    
+    // Expand the first (recommended) item
+    const firstItem = timeline.querySelector('.study-plan-item.recommended');
+    if (firstItem) {
+        expandStudyPlanItem(firstItem);
+    }
+    
+    // Initialize edit mode for this plan view
+    initStudyModePlanEditMode(planView);
+    
+    console.log('Study mode plan synced with saved order:', order);
+}
+
+/**
+ * Study mode plan edit state
+ */
+const studyModePlanEditState = {
+    isEditMode: false,
+    hasChanges: false
+};
+
+/**
+ * Initialize edit mode for study mode plan view
+ */
+function initStudyModePlanEditMode(planView) {
+    const settingsBtn = planView.querySelector('#study-mode-plan-settings-btn');
+    const addBtn = planView.querySelector('#study-mode-plan-add-btn');
+    const timeline = planView.querySelector('.study-plan-timeline');
+    
+    if (!settingsBtn || !timeline) return;
+    
+    // Remove any existing listeners by cloning and replacing
+    const newSettingsBtn = settingsBtn.cloneNode(true);
+    settingsBtn.parentNode.replaceChild(newSettingsBtn, settingsBtn);
+    
+    // Settings/Save button click handler
+    newSettingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (studyModePlanEditState.isEditMode) {
+            // Save and exit edit mode
+            if (studyModePlanEditState.hasChanges) {
+                saveStudyModePlanOrder(planView);
+            }
+            exitStudyModePlanEditMode(planView);
+        } else {
+            // Enter edit mode
+            enterStudyModePlanEditMode(planView);
+        }
+    });
+    
+    // Add activity button click handler
+    if (addBtn) {
+        addBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleStudyModePlanAddMenu(addBtn, planView);
+        });
+    }
+    
+    // Initialize drag and drop
+    initStudyModePlanDragDrop(planView);
+    
+    // Initialize delete buttons
+    initStudyModePlanDeleteButtons(planView);
+}
+
+/**
+ * Get study mode plan order
+ */
+function getStudyModePlanOrder(planView) {
+    const timeline = planView.querySelector('.study-plan-timeline');
+    if (!timeline) return [];
+    
+    const items = timeline.querySelectorAll('.study-plan-item:not(.study-plan-add-new)');
+    return Array.from(items).map(item => item.dataset.mode);
+}
+
+/**
+ * Enter edit mode for study mode plan
+ */
+function enterStudyModePlanEditMode(planView) {
+    const studyPlanContainer = planView.querySelector('.study-plan-timeline')?.parentElement;
+    const settingsBtn = planView.querySelector('#study-mode-plan-settings-btn');
+    
+    if (!studyPlanContainer) return;
+    
+    studyModePlanEditState.isEditMode = true;
+    studyModePlanEditState.hasChanges = false;
+    
+    // Add edit-mode class to the parent container
+    planView.classList.add('edit-mode');
+    
+    // Disable save button initially
+    if (settingsBtn) {
+        settingsBtn.classList.add('disabled');
+    }
+}
+
+/**
+ * Exit edit mode for study mode plan
+ */
+function exitStudyModePlanEditMode(planView) {
+    const settingsBtn = planView.querySelector('#study-mode-plan-settings-btn');
+    
+    studyModePlanEditState.isEditMode = false;
+    studyModePlanEditState.hasChanges = false;
+    
+    planView.classList.remove('edit-mode');
+    
+    if (settingsBtn) {
+        settingsBtn.classList.remove('disabled');
+    }
+    
+    // Close any open menus
+    closeAllMenus();
+}
+
+/**
+ * Mark study mode plan as changed
+ */
+function markStudyModePlanChanged(planView) {
+    const settingsBtn = planView.querySelector('#study-mode-plan-settings-btn');
+    
+    studyModePlanEditState.hasChanges = true;
+    
+    if (settingsBtn) {
+        settingsBtn.classList.remove('disabled');
+    }
+}
+
+/**
+ * Save study mode plan order
+ */
+function saveStudyModePlanOrder(planView) {
+    const order = getStudyModePlanOrder(planView);
+    localStorage.setItem('studyPlanOrder', JSON.stringify(order));
+    console.log('Study mode plan order saved:', order);
+    
+    // Update recommended item in study mode
+    const timeline = planView.querySelector('.study-plan-timeline');
+    if (timeline) {
+        updateRecommendedItem(timeline);
+    }
+    
+    // Also update the set page study plan to stay in sync
+    const setPagePlan = document.getElementById('study-plan-default');
+    if (setPagePlan) {
+        const setPageTimeline = setPagePlan.querySelector('.study-plan-timeline');
+        if (setPageTimeline) {
+            // Reorder set page to match
+            order.forEach(mode => {
+                const item = setPageTimeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+                if (item) {
+                    setPageTimeline.appendChild(item);
+                }
+            });
+            updateRecommendedItem(setPageTimeline);
+        }
+    }
+}
+
+/**
+ * Initialize drag and drop for study mode plan
+ */
+function initStudyModePlanDragDrop(planView) {
+    const timeline = planView.querySelector('.study-plan-timeline');
+    if (!timeline) return;
+    
+    let draggedItem = null;
+    
+    timeline.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('.study-plan-item:not(.study-plan-add-new)');
+        if (!item || !studyModePlanEditState.isEditMode) return;
+        
+        draggedItem = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    
+    timeline.addEventListener('dragend', (e) => {
+        const item = e.target.closest('.study-plan-item');
+        if (item) {
+            item.classList.remove('dragging');
+        }
+        draggedItem = null;
+        timeline.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+    
+    timeline.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!draggedItem || !studyModePlanEditState.isEditMode) return;
+        
+        const item = e.target.closest('.study-plan-item:not(.study-plan-add-new)');
+        if (item && item !== draggedItem) {
+            timeline.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            item.classList.add('drag-over');
+        }
+    });
+    
+    timeline.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!draggedItem || !studyModePlanEditState.isEditMode) return;
+        
+        const dropTarget = e.target.closest('.study-plan-item:not(.study-plan-add-new)');
+        if (dropTarget && dropTarget !== draggedItem) {
+            const addNewItem = timeline.querySelector('.study-plan-add-new');
+            timeline.insertBefore(draggedItem, dropTarget);
+            if (addNewItem) {
+                timeline.appendChild(addNewItem);
+            }
+            markStudyModePlanChanged(planView);
+        }
+        timeline.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+}
+
+/**
+ * Initialize delete buttons for study mode plan
+ */
+function initStudyModePlanDeleteButtons(planView) {
+    planView.querySelectorAll('.study-action-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!studyModePlanEditState.isEditMode) return;
+            
+            const item = btn.closest('.study-plan-item');
+            if (item) {
+                item.remove();
+                markStudyModePlanChanged(planView);
+            }
+        });
+    });
+}
+
+/**
+ * Toggle add activity menu for study mode plan
+ */
+function toggleStudyModePlanAddMenu(button, planView) {
+    const existingMenu = document.querySelector('.add-activity-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
+    const currentModes = getStudyModePlanOrder(planView);
+    
+    const allModes = [
+        { mode: 'flashcards', label: 'Flashcards', icon: 'style' },
+        { mode: 'learn', label: 'Learn', icon: 'donut_large' },
+        { mode: 'games', label: 'Games', icon: 'grid_view' },
+        { mode: 'test', label: 'Test', icon: 'assignment' },
+        { mode: 'match', label: 'Match', icon: 'swap_horiz' }
+    ];
+    
+    const menu = document.createElement('div');
+    menu.className = 'dropdown-menu add-activity-menu';
+    
+    allModes.forEach(({ mode, label, icon }) => {
+        const isSelected = currentModes.includes(mode);
+        const option = document.createElement('button');
+        option.className = `dropdown-item ${isSelected ? 'active' : ''}`;
+        option.dataset.mode = mode;
+        option.innerHTML = `
+            <span class="material-symbols-rounded checkbox-icon">${isSelected ? 'check_box' : 'check_box_outline_blank'}</span>
+            <span>${label}</span>
+        `;
+        option.addEventListener('click', () => {
+            const isCurrentlySelected = option.classList.contains('active');
+            const checkboxIcon = option.querySelector('.checkbox-icon');
+            if (isCurrentlySelected) {
+                removeStudyModePlanActivity(mode, planView);
+                option.classList.remove('active');
+                if (checkboxIcon) checkboxIcon.textContent = 'check_box_outline_blank';
+            } else {
+                addStudyModePlanActivity(mode, label, icon, planView);
+                option.classList.add('active');
+                if (checkboxIcon) checkboxIcon.textContent = 'check_box';
+            }
+        });
+        menu.appendChild(option);
+    });
+    
+    document.body.appendChild(menu);
+    positionDropdown(menu, button, 'above');
+    
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target) && e.target !== button) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }, 0);
+}
+
+/**
+ * Add activity to study mode plan
+ */
+function addStudyModePlanActivity(mode, label, icon, planView) {
+    const timeline = planView.querySelector('.study-plan-timeline');
+    const addNewItem = planView.querySelector('.study-plan-add-new');
+    
+    if (!timeline || !addNewItem) return;
+    
+    // Check if already exists
+    if (timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`)) return;
+    
+    const modeClasses = {
+        flashcards: 'study-action-flashcards',
+        learn: 'study-action-learn',
+        games: 'study-action-games',
+        test: 'study-action-test',
+        match: 'study-action-match',
+        write: 'study-action-write'
+    };
+    
+    // Get mode image
+    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    
+    const item = document.createElement('div');
+    item.className = 'study-plan-item';
+    item.dataset.mode = mode;
+    item.setAttribute('draggable', 'true');
+    
+    item.innerHTML = `
+        <div class="study-plan-dot"></div>
+        <button class="study-plan-drag-handle">
+            <span class="material-symbols-rounded">drag_indicator</span>
+        </button>
+        <div class="study-action-card ${modeClasses[mode] || ''}" data-mode="${mode}">
+            <span class="study-action-label">${label}</span>
+            <div class="study-action-icon">
+                <div class="mode-icon-wrapper">
+                    <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                </div>
+                <span class="material-symbols-rounded chevron-icon">chevron_right</span>
+            </div>
+            <button class="study-action-delete">
+                <span class="material-symbols-rounded">delete</span>
+            </button>
+        </div>
+    `;
+    
+    timeline.insertBefore(item, addNewItem);
+    
+    // Add delete handler
+    const deleteBtn = item.querySelector('.study-action-delete');
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!studyModePlanEditState.isEditMode) return;
+        item.remove();
+        markStudyModePlanChanged(planView);
+    });
+    
+    // Add click handler for study mode
+    const card = item.querySelector('.study-action-card');
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.study-action-delete') || studyModePlanEditState.isEditMode) return;
+        switchStudyMode(mode);
+    });
+    
+    markStudyModePlanChanged(planView);
+}
+
+/**
+ * Remove activity from study mode plan
+ */
+function removeStudyModePlanActivity(mode, planView) {
+    const timeline = planView.querySelector('.study-plan-timeline');
+    if (!timeline) return;
+    
+    const item = timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+    if (item) {
+        item.remove();
+        markStudyModePlanChanged(planView);
+    }
+}
+
+/**
+ * Initialize drag and drop for study plan items
+ */
+function initStudyPlanDragDrop() {
+    const timeline = document.getElementById('study-plan-timeline');
+    if (!timeline) return;
+    
+    let draggedItem = null;
+    
+    timeline.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('.study-plan-item:not(.study-plan-add-new)');
+        if (!item || !studyPlanEditState.isEditMode) return;
+        
+        draggedItem = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    
+    timeline.addEventListener('dragend', (e) => {
+        const item = e.target.closest('.study-plan-item');
+        if (item) {
+            item.classList.remove('dragging');
+        }
+        draggedItem = null;
+        
+        // Remove all drag-over classes
+        timeline.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+    
+    timeline.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!draggedItem || !studyPlanEditState.isEditMode) return;
+        
+        const item = e.target.closest('.study-plan-item:not(.study-plan-add-new)');
+        if (item && item !== draggedItem) {
+            // Remove previous drag-over
+            timeline.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            item.classList.add('drag-over');
+        }
+    });
+    
+    timeline.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!draggedItem || !studyPlanEditState.isEditMode) return;
+        
+        const dropTarget = e.target.closest('.study-plan-item:not(.study-plan-add-new)');
+        if (dropTarget && dropTarget !== draggedItem) {
+            const addNewItem = document.getElementById('study-plan-add-new');
+            
+            // Insert dragged item before drop target
+            timeline.insertBefore(draggedItem, dropTarget);
+            
+            // Make sure add-new stays at the end
+            if (addNewItem) {
+                timeline.appendChild(addNewItem);
+            }
+            
+            markStudyPlanChanged();
+        }
+        
+        // Remove all drag-over classes
+        timeline.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+    
+    // Make items draggable when entering edit mode
+    const items = timeline.querySelectorAll('.study-plan-item:not(.study-plan-add-new)');
+    items.forEach(item => {
+        item.setAttribute('draggable', 'true');
+    });
+}
+
+/**
+ * Initialize delete buttons for study plan items
+ */
+function initStudyPlanDeleteButtons() {
+    document.querySelectorAll('.study-action-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!studyPlanEditState.isEditMode) return;
+            
+            const item = btn.closest('.study-plan-item');
+            if (item) {
+                item.remove();
+                markStudyPlanChanged();
+            }
+        });
+    });
+}
+
+/**
+ * Toggle add activity menu
+ */
+function toggleAddActivityMenu(button) {
+    const existingMenu = document.querySelector('.add-activity-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
+    // Get current activities
+    const currentModes = getStudyPlanOrder();
+    
+    // All available study modes
+    const allModes = [
+        { mode: 'flashcards', label: 'Flashcards', icon: 'style' },
+        { mode: 'learn', label: 'Learn', icon: 'donut_large' },
+        { mode: 'games', label: 'Games', icon: 'grid_view' },
+        { mode: 'test', label: 'Test', icon: 'assignment' },
+        { mode: 'match', label: 'Match', icon: 'swap_horiz' }
+    ];
+    
+    // Create menu
+    const menu = document.createElement('div');
+    menu.className = 'dropdown-menu add-activity-menu';
+    
+    allModes.forEach(({ mode, label, icon }) => {
+        const isSelected = currentModes.includes(mode);
+        const option = document.createElement('button');
+        option.className = `dropdown-item ${isSelected ? 'active' : ''}`;
+        option.dataset.mode = mode;
+        option.innerHTML = `
+            <span class="material-symbols-rounded checkbox-icon">${isSelected ? 'check_box' : 'check_box_outline_blank'}</span>
+            <span>${label}</span>
+        `;
+        option.addEventListener('click', () => {
+            const isCurrentlySelected = option.classList.contains('active');
+            const checkboxIcon = option.querySelector('.checkbox-icon');
+            if (isCurrentlySelected) {
+                // Remove from study plan
+                removeStudyPlanActivity(mode);
+                option.classList.remove('active');
+                if (checkboxIcon) checkboxIcon.textContent = 'check_box_outline_blank';
+            } else {
+                // Add to study plan
+                addStudyPlanActivity(mode, label, icon);
+                option.classList.add('active');
+                if (checkboxIcon) checkboxIcon.textContent = 'check_box';
+            }
+            // Don't close menu - allow multiple selections
+        });
+        menu.appendChild(option);
+    });
+    
+    document.body.appendChild(menu);
+    positionDropdown(menu, button, 'above');
+    
+    // Close menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target) && e.target !== button) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }, 0);
+}
+
+/**
+ * Add a new activity to the study plan
+ */
+function addStudyPlanActivity(mode, label, icon) {
+    const timeline = document.getElementById('study-plan-timeline');
+    const addNewItem = document.getElementById('study-plan-add-new');
+    
+    if (!timeline || !addNewItem) return;
+    
+    // Check if activity already exists
+    const existingItem = timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+    if (existingItem) return;
+    
+    // Get mode image
+    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    
+    // Create new study plan item
+    const item = document.createElement('div');
+    item.className = 'study-plan-item';
+    item.dataset.mode = mode;
+    item.setAttribute('draggable', 'true');
+    
+    item.innerHTML = `
+        <div class="study-plan-dot"></div>
+        <button class="study-plan-drag-handle">
+            <span class="material-symbols-rounded">drag_indicator</span>
+        </button>
+        <div class="study-action-card study-action-${mode}" data-mode="${mode}">
+            <span class="study-action-label">${label}</span>
+            <div class="study-action-icon">
+                <div class="mode-icon-wrapper">
+                    <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+                </div>
+                <span class="material-symbols-rounded chevron-icon">chevron_right</span>
+            </div>
+            <button class="study-action-delete">
+                <span class="material-symbols-rounded">delete</span>
+            </button>
+        </div>
+    `;
+    
+    // Insert before add-new item
+    timeline.insertBefore(item, addNewItem);
+    
+    // Add click handler for the new card
+    const card = item.querySelector('.study-action-card');
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.study-action-delete') || document.getElementById('study-plan-default')?.classList.contains('edit-mode')) {
+            return;
+        }
+        openStudyModeScreen(mode);
+    });
+    
+    // Add delete handler
+    const deleteBtn = item.querySelector('.study-action-delete');
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!studyPlanEditState.isEditMode) return;
+        item.remove();
+        markStudyPlanChanged();
+    });
+    
+    markStudyPlanChanged();
+}
+
+/**
+ * Remove an activity from the study plan
+ */
+function removeStudyPlanActivity(mode) {
+    const timeline = document.getElementById('study-plan-timeline');
+    if (!timeline) return;
+    
+    const item = timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+    if (item) {
+        item.remove();
+        markStudyPlanChanged();
     }
 }
 
@@ -3328,6 +4406,69 @@ function resetStudyProgress() {
     
     // Show confirmation
     alert('Study progress has been reset.');
+}
+
+/**
+ * Reset study plan to default order (for variant 2/3-panel)
+ */
+function resetStudyPlan() {
+    // Remove the saved study plan order from localStorage
+    localStorage.removeItem('studyPlanOrder');
+    
+    // Default order
+    const defaultOrder = ['flashcards', 'learn', 'games', 'test'];
+    
+    // Reset the study plan on the set page (variant 2)
+    const setPagePlan = document.getElementById('study-plan-default');
+    if (setPagePlan) {
+        const timeline = setPagePlan.querySelector('.study-plan-timeline');
+        if (timeline) {
+            // Reorder items back to default
+            defaultOrder.forEach(mode => {
+                const item = timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+                if (item) {
+                    timeline.appendChild(item);
+                }
+            });
+            // Update recommended item to be first
+            updateRecommendedItem(timeline);
+        }
+        
+        // Exit edit mode if active
+        if (setPagePlan.classList.contains('edit-mode')) {
+            exitStudyPlanEditMode();
+        }
+    }
+    
+    // Reset the study plan in study mode if it's open
+    const studyModePlan = document.getElementById('study-mode-plan-view');
+    if (studyModePlan) {
+        const timeline = studyModePlan.querySelector('.study-plan-timeline');
+        if (timeline) {
+            // Reorder items back to default
+            const addNew = timeline.querySelector('.study-plan-add-new');
+            defaultOrder.forEach(mode => {
+                const item = timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
+                if (item) {
+                    if (addNew) {
+                        timeline.insertBefore(item, addNew);
+                    } else {
+                        timeline.appendChild(item);
+                    }
+                }
+            });
+            // Update recommended item to be first
+            updateRecommendedItem(timeline);
+        }
+        
+        // Exit edit mode if active
+        if (studyModePlan.classList.contains('edit-mode')) {
+            exitStudyModePlanEditMode(studyModePlan);
+        }
+    }
+    
+    // Show confirmation
+    alert('Study plan has been reset to default order.');
 }
 
 /**
@@ -4944,12 +6085,21 @@ function removeDropdownMenus() {
 /**
  * Position dropdown below button
  */
-function positionDropdown(menu, btn) {
+function positionDropdown(menu, btn, position = 'below') {
     const rect = btn.getBoundingClientRect();
     menu.style.position = 'fixed';
-    menu.style.top = `${rect.bottom + 4}px`;
     menu.style.left = `${rect.left}px`;
     menu.style.zIndex = '1000';
+    
+    if (position === 'above') {
+        // Position above the button
+        menu.style.top = 'auto';
+        menu.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+    } else {
+        // Position below the button (default)
+        menu.style.top = `${rect.bottom + 4}px`;
+        menu.style.bottom = 'auto';
+    }
 }
 
 /**
@@ -5258,6 +6408,8 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
             // Hide the sidebar title row (title is now in the header)
             const planTitleRow = planView.querySelector('.study-mode-plan-title-row');
             if (planTitleRow) planTitleRow.style.display = 'none';
+            // Sync study plan with saved order from set page
+            syncStudyModePlanWithSavedOrder(planView);
             // Attach event listeners to study action cards
             attachStudyPlanEventListeners(planView);
         }
@@ -5884,6 +7036,21 @@ function updateStudyModeProgress() {
     if (flashcardProgressFill) flashcardProgressFill.style.width = `${percent}%`;
     if (flashcardProgressText) flashcardProgressText.textContent = `${percent}% complete`;
     
+    // Also update flashcard progress on set page (panel-study-plan)
+    const panelFlashcardProgressFill = document.getElementById('panel-flashcard-progress');
+    const panelFlashcardProgressText = document.getElementById('panel-flashcard-progress-text');
+    if (panelFlashcardProgressFill) panelFlashcardProgressFill.style.width = `${percent}%`;
+    if (panelFlashcardProgressText) panelFlashcardProgressText.textContent = `${percent}% complete`;
+    
+    // Update any expanded card's progress bar in study mode sidebar
+    const studyModePlanView = document.getElementById('study-mode-plan-view');
+    if (studyModePlanView) {
+        const expandedProgressFills = studyModePlanView.querySelectorAll('.study-mode-progress-fill');
+        const expandedProgressTexts = studyModePlanView.querySelectorAll('.study-mode-progress-text');
+        expandedProgressFills.forEach(el => el.style.width = `${percent}%`);
+        expandedProgressTexts.forEach(el => el.textContent = `${percent}% complete`);
+    }
+    
     // Also update sidebar progress
     updateSidebarProgress();
     
@@ -6123,6 +7290,12 @@ function initStudyModeScreen() {
         card.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
+            // Don't open study mode if in edit mode
+            if (document.getElementById('study-plan-default')?.classList.contains('edit-mode')) {
+                return;
+            }
+            
             const mode = card.dataset.mode || 'flashcards';
             // Only open study mode for actual study modes
             if (['flashcards', 'learn', 'games', 'test'].includes(mode)) {
