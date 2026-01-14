@@ -6010,6 +6010,18 @@ body.option-b .panel-study-plan:has(.study-plan-default.edit-mode) {
     margin-top: 2px;
 }
 
+/* Material icon fallback for modes without images */
+.study-action-icon .mode-icon {
+    font-size: 32px;
+    color: var(--text-muted);
+}
+
+/* Illustration icon fallback for expanded cards */
+.study-action-illustration .illustration-icon {
+    font-size: 64px;
+    color: var(--text-muted);
+}
+
 /* Learn */
 .study-action-learn {
     background: linear-gradient(135deg, #E8F9F4 0%, #D4F3EB 100%);
@@ -6042,7 +6054,9 @@ body.option-b .panel-study-plan:has(.study-plan-default.edit-mode) {
     background: linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%);
 }
 
-.study-action-match .material-symbols-rounded:first-child {
+.study-action-match .material-symbols-rounded:first-child,
+.study-action-match .mode-icon,
+.study-action-match .illustration-icon {
     color: #EC4899;
 }
 
@@ -6051,7 +6065,9 @@ body.option-b .panel-study-plan:has(.study-plan-default.edit-mode) {
     background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
 }
 
-.study-action-write .material-symbols-rounded:first-child {
+.study-action-write .material-symbols-rounded:first-child,
+.study-action-write .mode-icon,
+.study-action-write .illustration-icon {
     color: #A855F7;
 }
 

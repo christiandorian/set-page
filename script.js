@@ -2076,9 +2076,20 @@ const STUDY_MODE_IMAGES = {
     learn: 'images/learn.png',
     games: 'images/games.png',
     test: 'images/test.png',
-    match: 'images/match.png',
-    cheatsheet: 'images/cheatsheet.png',
-    write: 'images/write.png'
+    cheatsheet: 'images/cheatsheet.png'
+};
+
+/**
+ * Material icons for modes without images
+ */
+const STUDY_MODE_ICONS = {
+    flashcards: 'style',
+    learn: 'donut_large',
+    games: 'grid_view',
+    test: 'assignment',
+    match: 'swap_horiz',
+    cheatsheet: 'description',
+    write: 'edit_note'
 };
 
 /**
@@ -2139,18 +2150,24 @@ function expandStudyPlanItem(item) {
     const originalIcon = card.querySelector('.study-action-icon');
     const deleteBtn = card.querySelector('.study-action-delete');
     
-    // Get mode image source
-    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    // Get mode image or icon
+    const imgSrc = STUDY_MODE_IMAGES[mode];
+    const iconName = STUDY_MODE_ICONS[mode] || 'style';
+    
+    // Create edit mode icon content (image or material icon)
+    const editModeIconContent = imgSrc 
+        ? `<div class="mode-icon-wrapper">
+            <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+            <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+        </div>`
+        : `<span class="material-symbols-rounded mode-icon">${iconName}</span>`;
     
     // Create expanded structure
     const header = document.createElement('div');
     header.className = 'study-action-header';
     header.innerHTML = `
         <div class="study-action-icon edit-mode-icon">
-            <div class="mode-icon-wrapper">
-                <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
-                <img src="images/shadow.png" alt="" class="mode-icon-shadow">
-            </div>
+            ${editModeIconContent}
         </div>
         <span class="study-action-label">${label}</span>
         <div class="study-action-cta">
@@ -2159,13 +2176,19 @@ function expandStudyPlanItem(item) {
         </div>
     `;
     
-    // Create illustration with mode image
+    // Create illustration with mode image (only if image exists)
     const illustration = document.createElement('div');
     illustration.className = 'study-action-illustration';
-    illustration.innerHTML = `
-        <img src="${imgSrc}" alt="${label}" class="study-action-illustration-img">
-        <img src="images/shadow.png" alt="" class="study-action-illustration-shadow">
-    `;
+    if (imgSrc) {
+        illustration.innerHTML = `
+            <img src="${imgSrc}" alt="${label}" class="study-action-illustration-img">
+            <img src="images/shadow.png" alt="" class="study-action-illustration-shadow">
+        `;
+    } else {
+        illustration.innerHTML = `
+            <span class="material-symbols-rounded illustration-icon">${iconName}</span>
+        `;
+    }
     
     // Remove old elements
     if (originalLabel) originalLabel.remove();
@@ -2223,8 +2246,9 @@ function collapseStudyPlanItem(item) {
     const mode = card.dataset.mode;
     const label = header.querySelector('.study-action-label')?.textContent || mode;
     
-    // Get mode image
-    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    // Get mode image or icon
+    const imgSrc = STUDY_MODE_IMAGES[mode];
+    const iconName = STUDY_MODE_ICONS[mode] || 'style';
     
     // Remove expanded elements
     header.remove();
@@ -2240,11 +2264,17 @@ function collapseStudyPlanItem(item) {
     
     const iconEl = document.createElement('div');
     iconEl.className = 'study-action-icon';
-    iconEl.innerHTML = `
-        <div class="mode-icon-wrapper">
+    
+    // Use image if available, otherwise use Material icon
+    const iconContent = imgSrc 
+        ? `<div class="mode-icon-wrapper">
             <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
             <img src="images/shadow.png" alt="" class="mode-icon-shadow">
-        </div>
+        </div>`
+        : `<span class="material-symbols-rounded mode-icon">${iconName}</span>`;
+    
+    iconEl.innerHTML = `
+        ${iconContent}
         <span class="material-symbols-rounded chevron-icon">chevron_right</span>
     `;
     
@@ -2286,7 +2316,17 @@ function syncStudyModePlanWithSavedOrder(planView) {
         if (!modeInfo[mode]) return;
         
         const info = modeInfo[mode];
-        const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+        const imgSrc = STUDY_MODE_IMAGES[mode];
+        const iconName = STUDY_MODE_ICONS[mode] || 'style';
+        
+        // Use image if available, otherwise use Material icon
+        const iconContent = imgSrc 
+            ? `<div class="mode-icon-wrapper">
+                <img src="${imgSrc}" alt="${info.label}" class="mode-icon-img">
+                <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+            </div>`
+            : `<span class="material-symbols-rounded mode-icon">${iconName}</span>`;
+        
         const item = document.createElement('div');
         item.className = `study-plan-item ${index === 0 ? 'recommended' : ''}`;
         item.dataset.mode = mode;
@@ -2300,10 +2340,7 @@ function syncStudyModePlanWithSavedOrder(planView) {
             <div class="study-action-card ${info.class}" data-mode="${mode}">
                 <span class="study-action-label">${info.label}</span>
                 <div class="study-action-icon">
-                    <div class="mode-icon-wrapper">
-                        <img src="${imgSrc}" alt="${info.label}" class="mode-icon-img">
-                        <img src="images/shadow.png" alt="" class="mode-icon-shadow">
-                    </div>
+                    ${iconContent}
                     <span class="material-symbols-rounded chevron-icon">chevron_right</span>
                 </div>
                 <button class="study-action-delete">
@@ -2641,8 +2678,17 @@ function addStudyModePlanActivity(mode, label, icon, planView) {
         write: 'study-action-write'
     };
     
-    // Get mode image
-    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    // Get mode image or icon
+    const imgSrc = STUDY_MODE_IMAGES[mode];
+    const iconName = STUDY_MODE_ICONS[mode] || 'style';
+    
+    // Use image if available, otherwise use Material icon
+    const iconContent = imgSrc 
+        ? `<div class="mode-icon-wrapper">
+            <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+            <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+        </div>`
+        : `<span class="material-symbols-rounded mode-icon">${iconName}</span>`;
     
     const item = document.createElement('div');
     item.className = 'study-plan-item';
@@ -2657,10 +2703,7 @@ function addStudyModePlanActivity(mode, label, icon, planView) {
         <div class="study-action-card ${modeClasses[mode] || ''}" data-mode="${mode}">
             <span class="study-action-label">${label}</span>
             <div class="study-action-icon">
-                <div class="mode-icon-wrapper">
-                    <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
-                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
-                </div>
+                ${iconContent}
                 <span class="material-symbols-rounded chevron-icon">chevron_right</span>
             </div>
             <button class="study-action-delete">
@@ -2874,8 +2917,17 @@ function addStudyPlanActivity(mode, label, icon) {
     const existingItem = timeline.querySelector(`.study-plan-item[data-mode="${mode}"]`);
     if (existingItem) return;
     
-    // Get mode image
-    const imgSrc = STUDY_MODE_IMAGES[mode] || 'images/flashcards.png';
+    // Get mode image or icon
+    const imgSrc = STUDY_MODE_IMAGES[mode];
+    const iconName = STUDY_MODE_ICONS[mode] || 'style';
+    
+    // Use image if available, otherwise use Material icon
+    const iconContent = imgSrc 
+        ? `<div class="mode-icon-wrapper">
+            <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
+            <img src="images/shadow.png" alt="" class="mode-icon-shadow">
+        </div>`
+        : `<span class="material-symbols-rounded mode-icon">${iconName}</span>`;
     
     // Create new study plan item
     const item = document.createElement('div');
@@ -2891,10 +2943,7 @@ function addStudyPlanActivity(mode, label, icon) {
         <div class="study-action-card study-action-${mode}" data-mode="${mode}">
             <span class="study-action-label">${label}</span>
             <div class="study-action-icon">
-                <div class="mode-icon-wrapper">
-                    <img src="${imgSrc}" alt="${label}" class="mode-icon-img">
-                    <img src="images/shadow.png" alt="" class="mode-icon-shadow">
-                </div>
+                ${iconContent}
                 <span class="material-symbols-rounded chevron-icon">chevron_right</span>
             </div>
             <button class="study-action-delete">
