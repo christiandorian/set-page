@@ -3716,6 +3716,34 @@ body.option-b .panel-terms-list {
     padding-right: 0;
 }
 
+/* Option B: Progress state - show metadata instead of progress bar */
+body.option-b #panel-meta {
+    display: flex !important;
+}
+
+body.option-b #panel-progress-view {
+    display: none !important;
+}
+
+/* Option B: Hide progress rings on concept groups */
+body.option-b .panel-concept-progress-ring {
+    display: none;
+}
+
+/* Option B: Flashcard progress bar in study plan - hide by default, show when engaged */
+body.option-b .panel-flashcard-progress {
+    display: none;
+}
+
+body.option-b.has-study-progress .panel-flashcard-progress {
+    display: flex;
+}
+
+/* Option B: Hide CTA when showing progress on the expanded/recommended card */
+body.option-b.has-study-progress .study-action-card.expanded .study-action-cta {
+    display: none;
+}
+
 /* Option E: 3 Panel - AI */
 
 body.option-e {
@@ -4658,7 +4686,7 @@ body.resizing * {
 .discovery-card-author {
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 /* Discovery Card Meta Line */
@@ -5451,7 +5479,7 @@ body.resizing * {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     color: var(--text-muted);
     transition: all var(--transition-fast);
 }
@@ -5463,6 +5491,311 @@ body.resizing * {
 
 .study-plan-settings .material-symbols-rounded {
     font-size: 20px;
+}
+
+/* Save icon - hidden by default */
+.study-plan-settings .save-icon {
+    display: none;
+}
+
+/* Edit mode: show save icon, hide tune icon */
+.study-plan-default.edit-mode .study-plan-settings {
+    background: var(--color-primary);
+    color: white;
+}
+
+.study-plan-default.edit-mode .study-plan-settings:hover {
+    background: var(--color-primary-dark);
+}
+
+.study-plan-default.edit-mode .study-plan-settings.disabled {
+    background: var(--color-gray-300);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.study-plan-default.edit-mode .study-plan-settings .settings-icon {
+    display: none;
+}
+
+.study-plan-default.edit-mode .study-plan-settings .save-icon {
+    display: inline;
+}
+
+/* Drag handle - hidden by default */
+.study-plan-drag-handle {
+    display: none;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: grab;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.study-plan-drag-handle:hover {
+    background: var(--color-gray-200);
+    color: var(--text-secondary);
+}
+
+.study-plan-drag-handle:active {
+    cursor: grabbing;
+}
+
+.study-plan-drag-handle .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Delete button - hidden by default */
+.study-action-delete {
+    display: none;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    transition: all var(--transition-fast);
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.study-action-delete:hover {
+    background: var(--color-error-light);
+    color: var(--color-error);
+}
+
+.study-action-delete .material-symbols-rounded {
+    font-size: 20px;
+    color: var(--text-primary);
+}
+
+/* Add activity - hidden by default */
+/* Add activity - hidden by default (needs !important to override .study-plan-item flex) */
+.study-plan-add-new {
+    display: none !important;
+}
+
+.study-action-add {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-gray-200);
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.study-action-add .material-symbols-rounded {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    color: var(--text-primary);
+    background: transparent;
+    border-radius: var(--radius-full);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.study-action-add:hover .material-symbols-rounded {
+    background: var(--color-gray-300);
+}
+
+.study-action-add:hover {
+    background: var(--color-gray-300);
+}
+
+.study-action-add .study-action-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+    text-align: left;
+}
+
+.study-plan-add-new .add-dot {
+    display: none;
+}
+
+/* In edit mode, add-new needs left margin to align with cards that have drag handles */
+.study-plan-default.edit-mode .study-plan-add-new {
+    margin-left: 32px; /* Width of drag handle + gap */
+}
+
+/* Edit mode styles */
+.study-plan-default.edit-mode .study-plan-dot {
+    display: none;
+}
+
+/* Hide timeline line in edit mode */
+.study-plan-default.edit-mode .study-plan-timeline::before {
+    display: none;
+}
+
+/* Remove padding from timeline in edit mode */
+.study-plan-default.edit-mode .study-plan-timeline {
+    padding-left: 0;
+}
+
+/* Allow overflow in edit mode so hover effects aren't clipped */
+body.option-b .panel-study-plan:has(.study-plan-default.edit-mode) {
+    overflow: visible;
+}
+
+/* Center drag handle vertically with card */
+.study-plan-default.edit-mode .study-plan-item {
+    align-items: center;
+}
+
+.study-plan-default.edit-mode .study-plan-drag-handle {
+    display: flex;
+}
+
+.study-plan-default.edit-mode .study-action-delete {
+    display: flex;
+}
+
+.study-plan-default.edit-mode .study-action-delete .material-symbols-rounded {
+    color: var(--text-primary);
+}
+
+.study-plan-default.edit-mode .study-plan-add-new {
+    display: flex !important;
+}
+
+/* Collapse expanded card in edit mode */
+.study-plan-default.edit-mode .study-action-card.expanded {
+    padding: var(--spacing-md) var(--spacing-lg);
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-header {
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: space-between;
+}
+
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-header .study-action-label {
+    order: 1;
+}
+
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-header .edit-mode-icon {
+    order: 2;
+}
+
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-cta,
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-illustration,
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-progress {
+    display: none;
+}
+
+/* Hide chevron icons and mode icons in edit mode for all cards */
+.study-plan-default.edit-mode .study-action-icon .chevron-icon,
+.study-plan-default.edit-mode .study-action-icon .mode-icon {
+    display: none;
+}
+
+/* Hide entire study-action-icon in edit mode */
+.study-plan-default.edit-mode .study-action-icon {
+    display: none;
+}
+
+/* Dragging state */
+.study-plan-item.dragging {
+    opacity: 0.5;
+}
+
+.study-plan-item.drag-over {
+    border-top: 2px solid var(--color-primary);
+}
+
+/* Edit mode: all cards have same compact layout */
+.study-plan-default.edit-mode .study-action-card {
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.study-plan-default.edit-mode .study-action-card .study-action-label {
+    flex: 1;
+}
+
+.study-plan-default.edit-mode .study-action-card .study-action-icon {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.study-plan-default.edit-mode .study-action-card .study-action-icon .mode-icon {
+    color: var(--text-muted);
+}
+
+/* Hide edit-mode-icon by default, show only in edit mode */
+.study-action-icon.edit-mode-icon {
+    display: none;
+}
+
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-icon.edit-mode-icon {
+    display: flex;
+}
+
+/* Hide mode icon wrapper in edit mode */
+.study-plan-default.edit-mode .mode-icon-wrapper {
+    display: none;
+}
+
+/* Add activity menu styling */
+.add-activity-menu {
+    min-width: 180px;
+}
+
+.add-activity-menu .dropdown-item {
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.add-activity-menu .dropdown-item:hover {
+    background: var(--color-gray-200);
+}
+
+.add-activity-menu .dropdown-item .checkbox-icon {
+    font-size: 20px;
+    color: var(--text-muted);
+}
+
+.add-activity-menu .dropdown-item.active {
+    background: var(--color-gray-100);
+    color: var(--text-primary);
+}
+
+.add-activity-menu .dropdown-item.active:hover {
+    background: var(--color-gray-200);
+}
+
+.add-activity-menu .dropdown-item.active .checkbox-icon {
+    color: var(--color-primary);
 }
 
 .study-plan-timeline {
@@ -5488,6 +5821,18 @@ body.resizing * {
 
 .study-plan-item {
     position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Study action card should fill width */
+.study-plan-item .study-action-card {
+    flex: 1;
+}
+
+/* Edit mode: item layout with drag handle */
+.study-plan-default.edit-mode .study-plan-item {
+    gap: var(--spacing-xs);
 }
 
 .study-plan-dot {
@@ -5522,6 +5867,8 @@ body.resizing * {
 
 .study-action-card:hover {
     transform: translateX(2px);
+    z-index: 10;
+    position: relative;
 }
 
 .study-action-label {
@@ -5537,7 +5884,7 @@ body.resizing * {
 }
 
 .study-action-icon .material-symbols-rounded {
-    font-size: 20px;
+    font-size: 32px;
 }
 
 .study-action-icon .material-symbols-rounded:last-child {
@@ -5545,13 +5892,21 @@ body.resizing * {
     color: var(--text-muted);
 }
 
-/* Flashcards - Featured/Recommended */
+/* Flashcards - background */
 .study-action-flashcards {
     background: linear-gradient(135deg, #E8F4FC 0%, #D4ECFB 100%);
+}
+
+/* Expanded/Recommended card styling (any mode) */
+.study-action-card.expanded {
     flex-direction: column;
     align-items: stretch;
     padding: var(--spacing-md);
     gap: var(--spacing-sm);
+}
+
+.study-action-card.expanded .study-action-icon {
+    display: none;
 }
 
 .study-action-header {
@@ -5581,12 +5936,34 @@ body.resizing * {
     align-items: center;
     justify-content: center;
     padding: var(--spacing-md) 0;
+    height: 100px;
 }
 
 .illustration-cards {
     position: relative;
     width: 80px;
     height: 60px;
+    display: none; /* Hide old CSS illustration */
+}
+
+/* Mode illustration image */
+.study-action-illustration {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.study-action-illustration-img {
+    width: 120px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.study-action-illustration-shadow {
+    width: 80px;
+    height: 16px;
+    object-fit: contain;
+    margin-top: -8px;
 }
 
 .illus-card {
@@ -5611,6 +5988,26 @@ body.resizing * {
     left: 0;
     transform: rotate(-5deg);
     box-shadow: 0 4px 12px rgba(66, 85, 255, 0.3);
+}
+
+/* Mode icon wrapper (collapsed state) */
+.mode-icon-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mode-icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.mode-icon-shadow {
+    width: 28px;
+    height: 10px;
+    object-fit: contain;
+    margin-top: 2px;
 }
 
 /* Learn */
@@ -5638,6 +6035,24 @@ body.resizing * {
 
 .study-action-test .material-symbols-rounded:first-child {
     color: var(--color-primary);
+}
+
+/* Match - same as Cheat Sheet */
+.study-action-match {
+    background: linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%);
+}
+
+.study-action-match .material-symbols-rounded:first-child {
+    color: #EC4899;
+}
+
+/* Write - same as Podcast */
+.study-action-write {
+    background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+}
+
+.study-action-write .material-symbols-rounded:first-child {
+    color: #A855F7;
 }
 
 /* Section Label */
@@ -8900,6 +9315,114 @@ input:checked + .custom-checkbox::after {
     box-shadow: var(--shadow-card);
 }
 
+/* Study mode plan view - Edit mode styles */
+.study-mode-plan-view.edit-mode .study-plan-dot {
+    display: none;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-timeline::before {
+    display: none;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-timeline {
+    padding-left: 0;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-item {
+    align-items: center;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-drag-handle {
+    display: flex;
+}
+
+.study-mode-plan-view.edit-mode .study-action-delete {
+    display: flex;
+}
+
+.study-mode-plan-view.edit-mode .study-action-delete .material-symbols-rounded {
+    color: var(--text-primary);
+}
+
+.study-mode-plan-view.edit-mode .study-plan-add-new {
+    display: flex !important;
+    margin-left: 24px; /* Align with cards that have drag handles */
+}
+
+.study-mode-plan-view.edit-mode .study-action-icon {
+    display: none;
+}
+
+/* Collapse expanded card in edit mode for study mode */
+.study-mode-plan-view.edit-mode .study-action-card.expanded {
+    padding: var(--spacing-md) var(--spacing-lg);
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-header {
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: space-between;
+}
+
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-header .study-action-label {
+    order: 1;
+}
+
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-header .edit-mode-icon {
+    order: 2;
+}
+
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-cta,
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-illustration,
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-progress,
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-progress-bar,
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-progress-fill,
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-mode-progress-fill {
+    display: none !important;
+}
+
+.study-mode-plan-view.edit-mode .study-action-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.study-mode-plan-view.edit-mode .study-action-card.expanded .study-action-icon.edit-mode-icon {
+    display: flex;
+}
+
+/* Hide mode icon wrapper in edit mode */
+.study-mode-plan-view.edit-mode .mode-icon-wrapper {
+    display: none;
+}
+
+/* Study mode plan view - Edit mode settings button */
+.study-mode-plan-view.edit-mode .study-plan-settings {
+    background: var(--color-primary);
+    color: white;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-settings:hover {
+    background: var(--color-primary-dark);
+}
+
+.study-mode-plan-view.edit-mode .study-plan-settings.disabled {
+    background: var(--color-gray-300);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-settings .settings-icon {
+    display: none;
+}
+
+.study-mode-plan-view.edit-mode .study-plan-settings .save-icon {
+    display: inline;
+}
+
 /* Progress bar inside study action card (study mode only) */
 .study-action-progress {
     display: flex;
@@ -8923,7 +9446,6 @@ input:checked + .custom-checkbox::after {
     background: var(--color-primary);
     border-radius: var(--radius-full);
     transition: width 0.3s ease;
-    min-width: 12px;
 }
 
 .study-action-progress-text {
