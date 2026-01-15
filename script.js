@@ -1926,6 +1926,38 @@ function initPanelStudyMode() {
         panelFilterBtn.addEventListener('click', () => togglePanelFilterMenu(panelFilterBtn));
     }
     
+    // Panel Search functionality
+    const panelSearchBtn = document.getElementById('panel-search-btn');
+    const panelSearchWrapper = document.getElementById('panel-search-wrapper');
+    const panelSearchInput = document.getElementById('panel-search-input');
+    
+    if (panelSearchBtn && panelSearchWrapper && panelSearchInput) {
+        panelSearchBtn.addEventListener('click', () => {
+            panelSearchWrapper.classList.add('expanded');
+            panelSearchInput.focus();
+        });
+        
+        panelSearchInput.addEventListener('input', (e) => {
+            filterPanelTerms(e.target.value);
+        });
+        
+        panelSearchInput.addEventListener('blur', () => {
+            if (panelSearchInput.value === '') {
+                panelSearchWrapper.classList.remove('expanded');
+            }
+        });
+        
+        // Close on Escape
+        panelSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                panelSearchInput.value = '';
+                filterPanelTerms('');
+                panelSearchWrapper.classList.remove('expanded');
+                panelSearchInput.blur();
+            }
+        });
+    }
+    
     // Initialize study plan edit mode
     initStudyPlanEditMode();
 }
@@ -3124,6 +3156,53 @@ function togglePanelFilterMenu(btn) {
         
         positionDropdown(menu, btn);
         document.body.appendChild(menu);
+    }
+}
+
+/**
+ * Filter panel terms list by search query
+ */
+function filterPanelTerms(query) {
+    const termsList = document.getElementById('panel-terms-list');
+    if (!termsList) return;
+    
+    const searchTerm = query.toLowerCase().trim();
+    
+    // Handle concepts view
+    const conceptSections = termsList.querySelectorAll('.panel-concept-section');
+    if (conceptSections.length > 0) {
+        conceptSections.forEach(section => {
+            const terms = section.querySelectorAll('.panel-term-item');
+            let visibleCount = 0;
+            
+            terms.forEach(term => {
+                const termText = term.querySelector('.panel-term-text')?.textContent.toLowerCase() || '';
+                const defText = term.querySelector('.panel-term-definition')?.textContent.toLowerCase() || '';
+                
+                if (searchTerm === '' || termText.includes(searchTerm) || defText.includes(searchTerm)) {
+                    term.style.display = '';
+                    visibleCount++;
+                } else {
+                    term.style.display = 'none';
+                }
+            });
+            
+            // Hide section if no visible terms
+            section.style.display = visibleCount === 0 && searchTerm !== '' ? 'none' : '';
+        });
+    } else {
+        // Handle flat terms view
+        const terms = termsList.querySelectorAll('.panel-term-item');
+        terms.forEach(term => {
+            const termText = term.querySelector('.panel-term-text')?.textContent.toLowerCase() || '';
+            const defText = term.querySelector('.panel-term-definition')?.textContent.toLowerCase() || '';
+            
+            if (searchTerm === '' || termText.includes(searchTerm) || defText.includes(searchTerm)) {
+                term.style.display = '';
+            } else {
+                term.style.display = 'none';
+            }
+        });
     }
 }
 
