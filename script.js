@@ -3172,11 +3172,11 @@ function filterPanelTerms(query) {
     const conceptSections = termsList.querySelectorAll('.panel-concept-section');
     if (conceptSections.length > 0) {
         conceptSections.forEach(section => {
-            const terms = section.querySelectorAll('.panel-term-item');
+            const terms = section.querySelectorAll('.panel-term-row');
             let visibleCount = 0;
             
             terms.forEach(term => {
-                const termText = term.querySelector('.panel-term-text')?.textContent.toLowerCase() || '';
+                const termText = term.querySelector('.panel-term-term')?.textContent.toLowerCase() || '';
                 const defText = term.querySelector('.panel-term-definition')?.textContent.toLowerCase() || '';
                 
                 if (searchTerm === '' || termText.includes(searchTerm) || defText.includes(searchTerm)) {
@@ -3192,9 +3192,9 @@ function filterPanelTerms(query) {
         });
     } else {
         // Handle flat terms view
-        const terms = termsList.querySelectorAll('.panel-term-item');
+        const terms = termsList.querySelectorAll('.panel-term-row');
         terms.forEach(term => {
-            const termText = term.querySelector('.panel-term-text')?.textContent.toLowerCase() || '';
+            const termText = term.querySelector('.panel-term-term')?.textContent.toLowerCase() || '';
             const defText = term.querySelector('.panel-term-definition')?.textContent.toLowerCase() || '';
             
             if (searchTerm === '' || termText.includes(searchTerm) || defText.includes(searchTerm)) {
