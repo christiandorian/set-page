@@ -3095,11 +3095,25 @@ function togglePanelFilterMenu(btn) {
     btn.classList.toggle('active');
     
     if (btn.classList.contains('active')) {
+        // Calculate counts for each filter option
+        const allCount = flashcards.length;
+        const starredCount = state.starredCards ? state.starredCards.size : 0;
+        let knowCount = 0;
+        let stillLearningCount = 0;
+        
+        for (let i = 0; i < flashcards.length; i++) {
+            if (isCardKnown(i)) {
+                knowCount++;
+            } else {
+                stillLearningCount++;
+            }
+        }
+        
         const menu = createDropdownMenu([
-            { id: 'all', label: 'All', icon: 'list' },
-            { id: 'starred', label: 'Starred', icon: 'star' },
-            { id: 'know', label: 'Know', icon: 'check' },
-            { id: 'still-learning', label: 'Still learning', icon: 'pending' }
+            { id: 'all', label: `${allCount} All`, icon: 'list' },
+            { id: 'starred', label: `${starredCount} Starred`, icon: 'star' },
+            { id: 'know', label: `${knowCount} Know`, icon: 'check' },
+            { id: 'still-learning', label: `${stillLearningCount} Still learning`, icon: 'pending' }
         ], panelViewState.filterBy, (option) => {
             panelViewState.filterBy = option;
             savePanelViewState();
