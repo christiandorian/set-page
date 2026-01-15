@@ -3547,12 +3547,13 @@ body.option-b .discovery-header {
 }
 
 body.option-b .panel-discovery .similar-title {
-    font-size: var(--ref-typography-size-subheading-five);
+    font-size: var(--ref-typography-size-subheading-four);
     font-weight: var(--ref-typography-weight-subheader);
-    line-height: var(--ref-typography-line-height-subheading-five);
+    line-height: var(--ref-typography-line-height-subheading-four);
     color: var(--text-secondary);
     margin: 0;
     padding: 0 var(--spacing-md);
+    text-align: left;
 }
 
 body.option-b .discovery-card {
