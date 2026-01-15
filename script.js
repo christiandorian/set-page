@@ -3013,10 +3013,25 @@ function togglePanelSortMenu(btn) {
     btn.classList.toggle('active');
     
     if (btn.classList.contains('active')) {
+        // Get counts for concepts and terms
+        const termsCount = flashcards.length;
+        let conceptsCount = 0;
+        try {
+            const saved = localStorage.getItem('flashcardContent');
+            if (saved) {
+                const content = JSON.parse(saved);
+                if (content.grouping && content.grouping.groups && Array.isArray(content.grouping.groups)) {
+                    conceptsCount = content.grouping.groups.length;
+                }
+            }
+        } catch (e) {
+            console.error('Error getting concepts count:', e);
+        }
+        
         // Both variants B and E show Concepts/Terms options
         const viewOptions = [
-            { id: 'concepts', label: 'Concepts', icon: 'category' },
-            { id: 'terms', label: 'Terms', icon: 'format_list_bulleted' }
+            { id: 'concepts', label: `${conceptsCount} Concepts`, icon: 'category' },
+            { id: 'terms', label: `${termsCount} Terms`, icon: 'format_list_bulleted' }
         ];
         
         const menu = createDropdownMenu(viewOptions, panelViewState.viewMode, (option) => {
