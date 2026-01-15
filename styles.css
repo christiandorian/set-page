@@ -5134,7 +5134,10 @@ body.resizing * {
 }
 
 .panel-search-input::placeholder {
-    color: var(--text-tertiary);
+    font-size: var(--ref-typography-size-subheading-five);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-five);
+    color: var(--text-secondary);
 }
 
 .panel-search-input:focus {
