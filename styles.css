@@ -3546,6 +3546,15 @@ body.option-b .discovery-header {
     display: none;
 }
 
+body.option-b .panel-discovery .similar-title {
+    font-size: var(--ref-typography-size-subheading-five);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-five);
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 0 var(--spacing-md);
+}
+
 body.option-b .discovery-card {
     box-shadow: none;
 }
