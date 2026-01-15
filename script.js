@@ -3069,7 +3069,7 @@ function toggleDiscoveryCardMenu(btn, set) {
         const menuOptions = [
             { id: 'preview', label: 'Preview', icon: 'visibility' },
             { id: 'save', label: 'Save', icon: 'bookmark' },
-            { id: 'share', label: 'Share', icon: 'share' },
+            { id: 'share', label: 'Share', icon: 'ios_share' },
             { id: 'divider', label: '', icon: '' },
             { id: 'show-less', label: 'Show less like this', icon: 'thumb_down' },
             { id: 'show-more', label: 'Show more like this', icon: 'thumb_up' },
