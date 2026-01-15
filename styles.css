@@ -5059,6 +5059,12 @@ body.resizing * {
     margin-bottom: var(--spacing-xs);
 }
 
+.panel-controls-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
 .panel-control-btn {
     display: flex;
     align-items: center;
@@ -5098,7 +5104,7 @@ body.resizing * {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: 0;
     background: none;
     border: none;
     border-radius: var(--radius-md);
@@ -5109,11 +5115,10 @@ body.resizing * {
 
 .panel-search-btn:hover {
     color: var(--text-primary);
-    background: var(--color-gray-100);
 }
 
 .panel-search-btn .material-symbols-rounded {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .panel-search-input {
