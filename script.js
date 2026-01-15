@@ -4560,33 +4560,52 @@ async function importFlashcards() {
         return;
     }
     
-    // Parse the content - each line is a card, tab separates term from definition
-    const lines = content.split('\n');
+    // Parse the content - supports multiple formats:
+    // - Rows: newline (\n) or semicolon (;)
+    // - Term/definition: tab (\t) or comma (,)
+    
+    // First, determine row separator: if content has newlines, use those; otherwise try semicolons
+    let rows;
+    if (content.includes('\n')) {
+        rows = content.split('\n');
+    } else if (content.includes(';')) {
+        rows = content.split(';');
+    } else {
+        rows = [content]; // Single card
+    }
+    
     const newCards = [];
     
-    for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) continue; // Skip empty lines
+    for (const row of rows) {
+        const trimmedRow = row.trim();
+        if (!trimmedRow) continue; // Skip empty rows
         
-        // Try tab separator (Quizlet export format)
-        let parts = trimmedLine.split('\t');
+        let term = '';
+        let definition = '';
         
-        if (parts.length >= 2) {
-            const term = parts[0].trim();
-            // Join remaining parts in case definition contained tabs
-            const definition = parts.slice(1).join('\t').trim();
-            
-            if (term && definition) {
-                newCards.push({
-                    term: term,
-                    definition: definition
-                });
-            }
+        // Try tab separator first (Quizlet export format)
+        if (trimmedRow.includes('\t')) {
+            const parts = trimmedRow.split('\t');
+            term = parts[0].trim();
+            definition = parts.slice(1).join('\t').trim();
+        }
+        // Then try comma separator
+        else if (trimmedRow.includes(',')) {
+            const parts = trimmedRow.split(',');
+            term = parts[0].trim();
+            definition = parts.slice(1).join(',').trim();
+        }
+        
+        if (term && definition) {
+            newCards.push({
+                term: term,
+                definition: definition
+            });
         }
     }
     
     if (newCards.length === 0) {
-        alert('Could not parse any flashcards from the content.\n\nMake sure each line has a question and answer separated by a tab character.');
+        alert('Could not parse any flashcards from the content.\n\nSupported formats:\n- Rows separated by newlines or semicolons\n- Term and definition separated by tab or comma');
         return;
     }
     
