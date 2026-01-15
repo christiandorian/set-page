@@ -3383,7 +3383,19 @@ function renderDiscoveryTabs(categories) {
     const tabsContainer = document.getElementById('discovery-tabs');
     if (!tabsContainer) return;
     
-    tabsContainer.innerHTML = `<button class="discovery-tab active" data-filter="all">All</button>`;
+    tabsContainer.innerHTML = '';
+    
+    // Create "All" tab
+    const allTab = document.createElement('button');
+    allTab.className = 'discovery-tab active';
+    allTab.dataset.filter = 'all';
+    allTab.textContent = 'All';
+    allTab.addEventListener('click', () => {
+        tabsContainer.querySelectorAll('.discovery-tab').forEach(t => t.classList.remove('active'));
+        allTab.classList.add('active');
+        filterDiscoverySets('all');
+    });
+    tabsContainer.appendChild(allTab);
     
     categories.forEach(category => {
         const tab = document.createElement('button');
