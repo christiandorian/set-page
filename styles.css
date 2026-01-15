@@ -5127,13 +5127,17 @@ body.resizing * {
     border: none;
     background: var(--color-gray-200);
     border-radius: var(--radius-full);
-    font-size: 13px;
+    font-family: var(--font-primary);
+    font-size: var(--ref-typography-size-subheading-five);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-five);
     color: var(--text-primary);
     opacity: 0;
     transition: all 0.2s ease;
 }
 
 .panel-search-input::placeholder {
+    font-family: var(--font-primary);
     font-size: var(--ref-typography-size-subheading-five);
     font-weight: var(--ref-typography-weight-subheader);
     line-height: var(--ref-typography-line-height-subheading-five);
