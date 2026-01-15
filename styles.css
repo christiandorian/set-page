@@ -1126,7 +1126,7 @@ body.has-study-progress .panel-study-btn {
     justify-content: space-between;
     align-items: center;
     margin-top: var(--spacing-md);
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-md);
 }
 
 .toc-control-btn {
@@ -5055,6 +5055,7 @@ body.resizing * {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: 28px;
     margin-top: 0;
     margin-bottom: var(--spacing-xs);
 }
@@ -5070,6 +5071,7 @@ body.resizing * {
     align-items: center;
     gap: var(--spacing-xxs);
     padding: 0;
+    height: 28px;
     background: none;
     border: none;
     border-radius: 0;
@@ -5097,6 +5099,7 @@ body.resizing * {
 .panel-search-wrapper {
     display: flex;
     align-items: center;
+    height: 28px;
     position: relative;
 }
 
@@ -5105,6 +5108,7 @@ body.resizing * {
     align-items: center;
     justify-content: center;
     padding: 0;
+    height: 28px;
     background: none;
     border: none;
     border-radius: var(--radius-md);
@@ -5154,7 +5158,8 @@ body.resizing * {
 
 .panel-search-wrapper.expanded .panel-search-input {
     width: 140px;
-    padding: 6px 12px;
+    height: 28px;
+    padding: 0 12px;
     opacity: 1;
 }
 
