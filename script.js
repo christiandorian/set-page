@@ -1981,6 +1981,18 @@ function enterStudyPlanEditMode() {
 }
 
 /**
+ * Close all open dropdown menus
+ */
+function closeAllMenus() {
+    document.querySelectorAll('.more-menu-dropdown.active').forEach(dropdown => {
+        dropdown.classList.remove('active');
+    });
+    document.querySelectorAll('.dropdown-menu.active').forEach(dropdown => {
+        dropdown.classList.remove('active');
+    });
+}
+
+/**
  * Exit edit mode
  */
 function exitStudyPlanEditMode() {
