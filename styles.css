@@ -3552,7 +3552,7 @@ body.option-b .panel-discovery .similar-title {
     line-height: var(--ref-typography-line-height-subheading-four);
     color: var(--text-secondary);
     margin: 0;
-    padding: 0 var(--spacing-md);
+    padding: 0;
     text-align: left;
 }
 
