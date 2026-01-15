@@ -3509,7 +3509,7 @@ body.option-b #discovery-list {
     flex: 1;
     overflow-y: auto;
     overflow-x: visible;
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-md);
     margin: 0 calc(var(--spacing-lg) * -1);
     position: relative;
 }
