@@ -3071,8 +3071,8 @@ function toggleDiscoveryCardMenu(btn, set) {
             { id: 'save', label: 'Save', icon: 'bookmark' },
             { id: 'share', label: 'Share', icon: 'ios_share' },
             { id: 'divider', label: '', icon: '' },
-            { id: 'show-less', label: 'Show less like this', icon: 'thumb_down' },
             { id: 'show-more', label: 'Show more like this', icon: 'thumb_up' },
+            { id: 'show-less', label: 'Show less like this', icon: 'thumb_down' },
             { id: 'divider2', label: '', icon: '' },
             { id: 'report', label: 'Report', icon: 'flag' }
         ];
