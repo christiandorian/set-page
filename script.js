@@ -3279,6 +3279,46 @@ function filterTocTopics(query) {
 }
 
 /**
+ * Filter Journey topics list by search query
+ */
+function filterJourneyTopics(query) {
+    const topicsContainer = document.getElementById('journey-topics-container');
+    if (!topicsContainer) return;
+    
+    const searchTerm = query.toLowerCase().trim();
+    
+    // Handle journey topic sections
+    const topicSections = topicsContainer.querySelectorAll('.journey-topic-section');
+    topicSections.forEach(section => {
+        const titleEl = section.querySelector('.journey-topic-title');
+        const title = titleEl?.textContent.toLowerCase() || '';
+        
+        // Check cards within sections
+        const cards = section.querySelectorAll('.journey-topic-card');
+        let hasMatchingCard = false;
+        
+        cards.forEach(card => {
+            const cardTerm = card.querySelector('.journey-card-term')?.textContent.toLowerCase() || '';
+            const cardDef = card.querySelector('.journey-card-definition')?.textContent.toLowerCase() || '';
+            
+            if (searchTerm === '' || cardTerm.includes(searchTerm) || cardDef.includes(searchTerm)) {
+                card.style.display = '';
+                hasMatchingCard = true;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show section if title matches or has matching cards
+        if (searchTerm === '' || title.includes(searchTerm) || hasMatchingCard) {
+            section.style.display = '';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+}
+
+/**
  * Toggle discovery card more menu
  */
 function toggleDiscoveryCardMenu(btn, set) {
@@ -3841,6 +3881,40 @@ function initJourneySidebarControls() {
     if (filterBtn && !filterBtn.hasAttribute('data-initialized')) {
         filterBtn.setAttribute('data-initialized', 'true');
         filterBtn.addEventListener('click', () => toggleJourneyFilterMenu(filterBtn));
+    }
+    
+    // Journey Search functionality
+    const journeySearchBtn = document.getElementById('journey-search-btn');
+    const journeySearchWrapper = document.getElementById('journey-search-wrapper');
+    const journeySearchInput = document.getElementById('journey-search-input');
+    
+    if (journeySearchBtn && journeySearchWrapper && journeySearchInput && !journeySearchBtn.hasAttribute('data-initialized')) {
+        journeySearchBtn.setAttribute('data-initialized', 'true');
+        
+        journeySearchBtn.addEventListener('click', () => {
+            journeySearchWrapper.classList.add('expanded');
+            journeySearchInput.focus();
+        });
+        
+        journeySearchInput.addEventListener('input', (e) => {
+            filterJourneyTopics(e.target.value);
+        });
+        
+        journeySearchInput.addEventListener('blur', () => {
+            if (journeySearchInput.value === '') {
+                journeySearchWrapper.classList.remove('expanded');
+            }
+        });
+        
+        // Close on Escape
+        journeySearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                journeySearchInput.value = '';
+                filterJourneyTopics('');
+                journeySearchWrapper.classList.remove('expanded');
+                journeySearchInput.blur();
+            }
+        });
     }
     
     // Study button
