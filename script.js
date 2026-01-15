@@ -1363,6 +1363,38 @@ function attachEventListeners() {
         filterBtn.addEventListener('click', () => toggleFilterMenu(filterBtn));
     }
     
+    // TOC Search functionality
+    const tocSearchBtn = document.getElementById('toc-search-btn');
+    const tocSearchWrapper = document.getElementById('toc-search-wrapper');
+    const tocSearchInput = document.getElementById('toc-search-input');
+    
+    if (tocSearchBtn && tocSearchWrapper && tocSearchInput) {
+        tocSearchBtn.addEventListener('click', () => {
+            tocSearchWrapper.classList.add('expanded');
+            tocSearchInput.focus();
+        });
+        
+        tocSearchInput.addEventListener('input', (e) => {
+            filterTocTopics(e.target.value);
+        });
+        
+        tocSearchInput.addEventListener('blur', () => {
+            if (tocSearchInput.value === '') {
+                tocSearchWrapper.classList.remove('expanded');
+            }
+        });
+        
+        // Close on Escape
+        tocSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                tocSearchInput.value = '';
+                filterTocTopics('');
+                tocSearchWrapper.classList.remove('expanded');
+                tocSearchInput.blur();
+            }
+        });
+    }
+    
     // More menu dropdowns (multiple instances)
     const moreMenuWrappers = document.querySelectorAll('.more-menu-wrapper');
     
@@ -3204,6 +3236,46 @@ function filterPanelTerms(query) {
             }
         });
     }
+}
+
+/**
+ * Filter TOC topics list by search query
+ */
+function filterTocTopics(query) {
+    const topicsContainer = document.querySelector('.topics-container');
+    if (!topicsContainer) return;
+    
+    const searchTerm = query.toLowerCase().trim();
+    
+    // Handle topic pills/sections
+    const topicItems = topicsContainer.querySelectorAll('.topic-pill, .topic-section');
+    topicItems.forEach(item => {
+        const titleEl = item.querySelector('.topic-title, .topic-pill-text');
+        const title = titleEl?.textContent.toLowerCase() || '';
+        
+        // Also check card content within collapsed sections
+        const cards = item.querySelectorAll('.topic-card');
+        let hasMatchingCard = false;
+        
+        cards.forEach(card => {
+            const cardTerm = card.querySelector('.topic-card-term')?.textContent.toLowerCase() || '';
+            const cardDef = card.querySelector('.topic-card-definition')?.textContent.toLowerCase() || '';
+            
+            if (searchTerm === '' || cardTerm.includes(searchTerm) || cardDef.includes(searchTerm)) {
+                card.style.display = '';
+                hasMatchingCard = true;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show section if title matches or has matching cards
+        if (searchTerm === '' || title.includes(searchTerm) || hasMatchingCard) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 }
 
 /**

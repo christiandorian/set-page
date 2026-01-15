@@ -1158,6 +1158,81 @@ body.has-study-progress .panel-study-btn {
     font-size: 18px;
 }
 
+/* TOC Controls Right Group */
+.toc-controls-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* TOC Search */
+.toc-search-wrapper {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    position: relative;
+}
+
+.toc-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    height: 28px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.toc-search-btn:hover {
+    color: var(--text-primary);
+}
+
+.toc-search-btn .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.toc-search-input {
+    width: 0;
+    padding: 0;
+    border: none;
+    background: var(--color-gray-200);
+    border-radius: var(--radius-full);
+    font-family: var(--font-primary);
+    font-size: var(--ref-typography-size-subheading-five);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-five);
+    color: var(--text-primary);
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.toc-search-input::placeholder {
+    font-family: var(--font-primary);
+    font-size: var(--ref-typography-size-subheading-five);
+    font-weight: var(--ref-typography-weight-subheader);
+    line-height: var(--ref-typography-line-height-subheading-five);
+    color: var(--text-secondary);
+}
+
+.toc-search-input:focus {
+    outline: none;
+}
+
+.toc-search-wrapper.expanded .toc-search-btn {
+    display: none;
+}
+
+.toc-search-wrapper.expanded .toc-search-input {
+    width: 140px;
+    height: 28px;
+    padding: 0 12px;
+    opacity: 1;
+}
+
 /* Dropdown Menu */
 .dropdown-menu {
     background: var(--surface-base);
