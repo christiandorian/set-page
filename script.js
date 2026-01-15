@@ -847,11 +847,11 @@ async function renderContentList(skipMigration = false) {
         return;
     }
     
-    // Sort alphabetically by title
+    // Sort alphabetically by tester name
     contentList.sort((a, b) => {
-        const titleA = (a.title || 'Untitled Set').toLowerCase();
-        const titleB = (b.title || 'Untitled Set').toLowerCase();
-        return titleA.localeCompare(titleB);
+        const nameA = (a.testerName || 'Anonymous').toLowerCase();
+        const nameB = (b.testerName || 'Anonymous').toLowerCase();
+        return nameA.localeCompare(nameB);
     });
     
     // Track which item is currently active (matches current loaded content)
