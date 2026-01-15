@@ -2077,7 +2077,8 @@ const STUDY_MODE_IMAGES = {
     games: 'images/games.png',
     test: 'images/test.png',
     match: 'images/match.png',
-    cheatsheet: 'images/cheatsheet.png'
+    cheatsheet: 'images/cheatsheet.png',
+    podcast: 'images/podcast.png'
 };
 
 /**
