@@ -3299,13 +3299,12 @@ async function loadRelatedSets(forceRefresh = false) {
       "isVerified": true,
       "sampleTerms": [
         {"term": "Term 1", "definition": "Definition 1"},
-        {"term": "Term 2", "definition": "Definition 2"},
-        {"term": "Term 3", "definition": "Definition 3"}
+        {"term": "Term 2", "definition": "Definition 2"}
       ]
     }
   ]
 }
-Generate 6-8 related study sets based on the topic. Make them realistic with varied authors, ratings (4.0-5.0), and studier counts (10-500). Include 2-4 category tags. Include 3 sample term/definition pairs for each set that are relevant to the set topic.`
+Generate 6-8 related study sets based on the topic. Make them realistic with varied authors, ratings (4.0-5.0), and studier counts (10-500). Include 2-4 category tags. Include 15-20 sample term/definition pairs for each set that are relevant to the set topic and would realistically appear in such a study set.`
             },
             {
                 role: 'user',
@@ -3519,7 +3518,7 @@ function renderSimilarSets(sets) {
                 </span>
             </div>
             <div class="card-terms-preview">
-                ${sampleTerms.slice(0, 3).map(t => `
+                ${sampleTerms.slice(0, 20).map(t => `
                     <div class="term-preview-item">
                         <span class="preview-term">${t.term}</span>
                         <span class="preview-definition">${t.definition}</span>
@@ -6457,6 +6456,8 @@ function openStudyModeScreenWithGroup(groupIndex = 'all', mode = 'flashcards') {
         if (progressView) progressView.style.display = 'none';
         if (planView) {
             planView.style.display = 'flex';
+            // Reset edit mode when showing the plan view
+            exitStudyModePlanEditMode(planView);
             // Hide the sidebar title row (title is now in the header)
             const planTitleRow = planView.querySelector('.study-mode-plan-title-row');
             if (planTitleRow) planTitleRow.style.display = 'none';

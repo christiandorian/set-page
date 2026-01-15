@@ -2408,7 +2408,7 @@ body.has-study-progress .panel-study-btn {
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
     flex: 1;
-    max-height: 180px;
+    max-height: 240px;
     overflow-y: auto;
 }
 
@@ -3750,7 +3750,7 @@ body.option-b .panel-flashcard-progress {
     display: none;
 }
 
-body.option-b.has-study-progress .panel-flashcard-progress {
+body.option-b.has-study-progress .study-action-card.expanded .panel-flashcard-progress {
     display: flex;
 }
 
@@ -5717,8 +5717,9 @@ body.option-b .panel-study-plan:has(.study-plan-default.edit-mode) {
 
 .study-plan-default.edit-mode .study-action-card.expanded .study-action-cta,
 .study-plan-default.edit-mode .study-action-card.expanded .study-action-illustration,
-.study-plan-default.edit-mode .study-action-card.expanded .study-action-progress {
-    display: none;
+.study-plan-default.edit-mode .study-action-card.expanded .study-action-progress,
+.study-plan-default.edit-mode .study-action-card.expanded .panel-flashcard-progress {
+    display: none !important;
 }
 
 /* Hide chevron icons and mode icons in edit mode for all cards */
@@ -6022,7 +6023,7 @@ body.option-b .panel-study-plan:has(.study-plan-default.edit-mode) {
     width: 28px;
     height: 10px;
     object-fit: contain;
-    margin-top: 2px;
+    margin-top: 0px;
 }
 
 /* Material icon fallback for modes without images */
