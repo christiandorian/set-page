@@ -847,6 +847,13 @@ async function renderContentList(skipMigration = false) {
         return;
     }
     
+    // Sort alphabetically by title
+    contentList.sort((a, b) => {
+        const titleA = (a.title || 'Untitled Set').toLowerCase();
+        const titleB = (b.title || 'Untitled Set').toLowerCase();
+        return titleA.localeCompare(titleB);
+    });
+    
     // Track which item is currently active (matches current loaded content)
     const currentCardCount = currentContent.flashcards ? currentContent.flashcards.length : 0;
     let activeFound = false;
@@ -900,6 +907,28 @@ async function renderContentList(skipMigration = false) {
             e.stopPropagation();
             deleteSavedContent(btn.dataset.contentId);
         });
+    });
+}
+
+/**
+ * Filter the content list based on search query
+ */
+function filterContentList(query) {
+    const container = document.getElementById('content-selector');
+    if (!container) return;
+    
+    const searchTerm = query.toLowerCase().trim();
+    const contentItems = container.querySelectorAll('.content-btn');
+    
+    contentItems.forEach(item => {
+        const title = item.querySelector('.content-desc')?.textContent.toLowerCase() || '';
+        const name = item.querySelector('.content-name')?.textContent.toLowerCase() || '';
+        
+        if (searchTerm === '' || title.includes(searchTerm) || name.includes(searchTerm)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
     });
 }
 
@@ -1299,6 +1328,14 @@ function attachEventListeners() {
         });
     }
     
+    // Content search input
+    const contentSearchInput = document.getElementById('content-search-input');
+    if (contentSearchInput) {
+        contentSearchInput.addEventListener('input', (e) => {
+            filterContentList(e.target.value);
+        });
+    }
+    
     // Close import modal with Escape key
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && elements.importModalOverlay.classList.contains('active')) {
@@ -1381,6 +1418,9 @@ async function openImportModal() {
         if (elements.importTextarea) elements.importTextarea.value = '';
         const testerInput = document.getElementById('import-tester-name');
         if (testerInput) testerInput.value = '';
+        // Clear search input
+        const searchInput = document.getElementById('content-search-input');
+        if (searchInput) searchInput.value = '';
     updateVariantButtonStates();
         await renderContentList();
     } catch (error) {

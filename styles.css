@@ -3019,6 +3019,52 @@ body.modal-open {
     margin-top: 0;
 }
 
+.content-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.content-header-row .import-label {
+    margin-bottom: 0;
+}
+
+.content-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.content-search-icon {
+    position: absolute;
+    left: 10px;
+    font-size: 18px;
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+.content-search-input {
+    padding: 6px 12px 6px 34px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--text-primary);
+    width: 180px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.content-search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(66, 85, 255, 0.1);
+}
+
+.content-search-input::placeholder {
+    color: var(--text-tertiary);
+}
+
 .content-selector {
     display: flex;
     flex-direction: column;
