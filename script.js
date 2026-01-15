@@ -2078,7 +2078,8 @@ const STUDY_MODE_IMAGES = {
     test: 'images/test.png',
     match: 'images/match.png',
     cheatsheet: 'images/cheatsheet.png',
-    podcast: 'images/podcast.png'
+    podcast: 'images/podcast.png',
+    video: 'images/video-overview.png'
 };
 
 /**
