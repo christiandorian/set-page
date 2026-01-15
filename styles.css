@@ -9440,7 +9440,12 @@ input:checked + .custom-checkbox::after {
 }
 
 /* Progress bar inside study action card (study mode only) */
-.study-action-progress {
+/* Hide progress bar on collapsed cards, only show on expanded */
+.study-action-card .study-action-progress {
+    display: none;
+}
+
+.study-action-card.expanded .study-action-progress {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
