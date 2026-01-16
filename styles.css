@@ -5054,7 +5054,7 @@ body.resizing * {
     gap: 6px;
     font-size: 15px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-secondary);
 }
 
 .panel-meta-item .material-symbols-rounded {
