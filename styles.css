@@ -5353,14 +5353,13 @@ body.resizing * {
     display: flex;
     align-items: flex-start;
     gap: var(--spacing-sm);
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 0;
     border-bottom: 1px solid var(--border-default);
-    cursor: pointer;
-    transition: background var(--transition-fast);
+    cursor: default;
 }
 
 .panel-term-row:hover {
-    background: var(--color-gray-200);
+    background: none;
 }
 
 .panel-term-row:last-child {
