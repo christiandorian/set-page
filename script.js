@@ -3247,7 +3247,23 @@ function filterTocTopics(query) {
     
     const searchTerm = query.toLowerCase().trim();
     
-    // Handle topic pills/sections
+    // Handle flat terms list view
+    const flatTermsList = topicsContainer.querySelector('.flat-terms-list');
+    if (flatTermsList) {
+        const termCards = flatTermsList.querySelectorAll('.term-card');
+        termCards.forEach(card => {
+            const termText = card.querySelector('.term-title')?.textContent.toLowerCase() || '';
+            const defText = card.querySelector('.term-definition')?.textContent.toLowerCase() || '';
+            
+            if (searchTerm === '' || termText.includes(searchTerm) || defText.includes(searchTerm)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    // Handle topic pills/sections (concepts view)
     const topicItems = topicsContainer.querySelectorAll('.topic-pill, .topic-section');
     topicItems.forEach(item => {
         const titleEl = item.querySelector('.topic-title, .topic-pill-text');
