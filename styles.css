@@ -3548,6 +3548,14 @@ body.option-a {
     /* This is the default, no changes needed */
 }
 
+/* Option A: Show full term definitions without truncation */
+body.option-a .term-definition {
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: visible;
+}
+
 /* Option B: 3 Panel */
 
 /* Color scheme for 3-panel */

@@ -5509,11 +5509,11 @@ function createTermCard(card, cardIndex, isProgressView = false) {
     
     const termTitle = document.createElement('div');
     termTitle.className = 'term-title';
-    termTitle.textContent = card.term.length > 60 ? card.term.substring(0, 57) + '...' : card.term;
+    termTitle.textContent = card.term; // Show full term without truncation
     
     const termDefinition = document.createElement('div');
     termDefinition.className = 'term-definition';
-    termDefinition.textContent = card.definition;
+    termDefinition.textContent = card.definition; // Show full definition
     
     content.appendChild(termTitle);
     content.appendChild(termDefinition);
