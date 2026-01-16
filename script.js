@@ -5302,6 +5302,11 @@ function updateTopicsList(cards) {
  * Update the active state in the TOC list
  */
 function updateActiveTocItem(autoExpand = false) {
+    // Skip for option-a (variant 1) - no interactivity between flashcard and TOC
+    if (document.body.classList.contains('option-a')) {
+        return;
+    }
+    
     const termCards = elements.topicsContainer?.querySelectorAll('.term-card[data-index]');
     if (!termCards || !termCards.length) return;
     
@@ -5493,6 +5498,10 @@ function createTermCard(card, cardIndex, isProgressView = false) {
     content.className = 'term-content';
     content.addEventListener('click', (e) => {
         e.stopPropagation();
+        // Skip flashcard update for option-a (variant 1) - no interactivity
+        if (document.body.classList.contains('option-a')) {
+            return;
+        }
         state.currentIndex = cardIndex;
         updateCard();
         updateActiveTocItem(true);
