@@ -6900,17 +6900,18 @@ body.option-c .journey-sidebar {
 /* Journey Sidebar Term Card Active State */
 .journey-sidebar .term-card {
     margin: var(--spacing-xs) 0;
-    padding: var(--spacing-md) var(--spacing-sm);
+    padding: var(--spacing-md) 0;
     border-radius: var(--radius-lg);
-    transition: background var(--transition-fast);
+    transition: transform var(--transition-fast);
     width: 100%;
     box-sizing: border-box;
     border-bottom: 1px solid transparent;
 }
 
 .journey-sidebar .term-card.active {
-    background: var(--color-gray-200);
+    background: none;
     border-bottom: 1px solid transparent;
+    transform: translateX(8px);
 }
 
 /* Journey Layout Container */
