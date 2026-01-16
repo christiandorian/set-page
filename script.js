@@ -3303,19 +3303,19 @@ function filterJourneyTopics(query) {
     
     const searchTerm = query.toLowerCase().trim();
     
-    // Handle journey topic sections
-    const topicSections = topicsContainer.querySelectorAll('.journey-topic-section');
+    // Handle topic sections (grouped view)
+    const topicSections = topicsContainer.querySelectorAll('.topic-section');
     topicSections.forEach(section => {
-        const titleEl = section.querySelector('.journey-topic-title');
+        const titleEl = section.querySelector('.topic-title');
         const title = titleEl?.textContent.toLowerCase() || '';
         
-        // Check cards within sections
-        const cards = section.querySelectorAll('.journey-topic-card');
+        // Check term cards within sections
+        const cards = section.querySelectorAll('.term-card');
         let hasMatchingCard = false;
         
         cards.forEach(card => {
-            const cardTerm = card.querySelector('.journey-card-term')?.textContent.toLowerCase() || '';
-            const cardDef = card.querySelector('.journey-card-definition')?.textContent.toLowerCase() || '';
+            const cardTerm = card.querySelector('.term-title')?.textContent.toLowerCase() || '';
+            const cardDef = card.querySelector('.term-definition')?.textContent.toLowerCase() || '';
             
             if (searchTerm === '' || cardTerm.includes(searchTerm) || cardDef.includes(searchTerm)) {
                 card.style.display = '';
@@ -3332,6 +3332,21 @@ function filterJourneyTopics(query) {
             section.style.display = 'none';
         }
     });
+    
+    // Handle flat terms list (if no grouped sections)
+    if (topicSections.length === 0) {
+        const termCards = topicsContainer.querySelectorAll('.term-card');
+        termCards.forEach(card => {
+            const cardTerm = card.querySelector('.term-title')?.textContent.toLowerCase() || '';
+            const cardDef = card.querySelector('.term-definition')?.textContent.toLowerCase() || '';
+            
+            if (searchTerm === '' || cardTerm.includes(searchTerm) || cardDef.includes(searchTerm)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
 }
 
 /**
