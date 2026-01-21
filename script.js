@@ -34,7 +34,7 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
 // ============================================
 // AI API Service
 // ============================================
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 const aiService = {
     /**
