@@ -3080,6 +3080,44 @@ body.modal-open {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    overflow: hidden;
+    max-height: 1000px;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 1;
+}
+
+.variant-selector.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Accordion Label */
+.accordion-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.accordion-label:hover {
+    color: var(--text-primary);
+}
+
+.accordion-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.archived-field .accordion-label .accordion-icon {
+    transform: rotate(-90deg);
+}
+
+.archived-field.expanded .accordion-label .accordion-icon {
+    transform: rotate(0deg);
 }
 
 /* Modal Section Divider */
@@ -3561,7 +3599,7 @@ body.option-a .term-definition {
 /* Color scheme for 3-panel */
 body.option-b {
     background: var(--ref-color-gray-100);
-    overflow: hidden;
+    overflow: visible;
 }
 
 body.option-b .top-nav {
@@ -3578,10 +3616,10 @@ body.option-b .three-panel-layout {
     background: var(--ref-color-gray-100);
     padding: var(--spacing-xl);
     gap: var(--spacing-sm);
-    align-items: stretch;
-    height: calc(100vh - 64px);
+    align-items: flex-start;
+    min-height: calc(100vh - 64px);
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
 }
 
 body.option-b .three-panel-layout > * {
@@ -3608,20 +3646,11 @@ body.option-b .panel-study-plan {
 }
 
 body.option-b .panel-resize-handle[data-resize="right"] {
-    order: 4;
-    display: block;
+    display: none;
 }
 
 body.option-b .panel-discovery {
-    order: 5;
-    flex: 1 1 33.333%;
-    min-width: 240px;
-    max-width: none;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    padding: 0 var(--spacing-md);
-    margin: 0 calc(var(--spacing-md) * -1);
+    display: none;
 }
 
 body.option-b .discovery-tabs {
@@ -3702,19 +3731,11 @@ body.option-b .panel-main {
     border-radius: 0;
     padding: 0;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 body.option-b .panel-main::before {
-    content: '';
-    position: absolute;
-    bottom: 56px;
-    left: 0;
-    right: 0;
-    height: 25px;
-    background: linear-gradient(to top, #fff 0%, #fff 30%, transparent 100%);
-    pointer-events: none;
-    z-index: 10;
+    display: none;
 }
 
 body.option-b #panel-terms-list {
@@ -3729,15 +3750,7 @@ body.option-b .panel-main-header {
 }
 
 body.option-b .panel-main-header::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    left: 0;
-    right: 0;
-    height: 25px;
-    background: linear-gradient(to bottom, #fff 0%, #fff 30%, transparent 100%);
-    pointer-events: none;
-    z-index: 10;
+    display: none;
 }
 
 body.option-b .panel-add-term-btn {
@@ -3772,34 +3785,24 @@ body.option-b .panel-main-actions .panel-action-btn:hover {
 }
 
 body.option-b .panel-study-plan {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08);
+    box-shadow: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 body.option-b .panel-study-plan::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 50px;
-    background: linear-gradient(to top, var(--surface-base) 0%, var(--surface-base) 30%, transparent 100%);
-    pointer-events: none;
-    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-    z-index: 10;
+    display: none;
 }
 
 body.option-b .panel-study-plan #study-plan-default {
-    overflow-y: auto;
-    height: 100%;
+    overflow-y: visible;
+    height: auto;
     padding-bottom: 40px;
     padding-left: 8px;
 }
 
 body.option-b .panel-study-plan .study-plan-header {
-    position: sticky;
-    top: 0;
+    position: static;
     background: var(--surface-base);
     z-index: 5;
     padding-bottom: var(--spacing-xs);
@@ -3807,15 +3810,7 @@ body.option-b .panel-study-plan .study-plan-header {
 }
 
 body.option-b .panel-study-plan .study-plan-header::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    left: 0;
-    right: 0;
-    height: 25px;
-    background: linear-gradient(to bottom, var(--surface-base) 0%, var(--surface-base) 30%, transparent 100%);
-    pointer-events: none;
-    z-index: 10;
+    display: none;
 }
 
 body.option-b .panel-main-header {

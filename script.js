@@ -1297,6 +1297,18 @@ function attachEventListeners() {
         resetPlanBtn.addEventListener('click', resetStudyPlan);
     }
     
+    // Archived accordion toggle
+    const archivedAccordionLabel = document.getElementById('archived-accordion-label');
+    const archivedField = archivedAccordionLabel?.closest('.archived-field');
+    const archivedSelector = document.getElementById('variant-selector-archived');
+    
+    if (archivedAccordionLabel && archivedField && archivedSelector) {
+        archivedAccordionLabel.addEventListener('click', () => {
+            archivedField.classList.toggle('expanded');
+            archivedSelector.classList.toggle('collapsed');
+        });
+    }
+    
     // Import modal step navigation
     const importOpenBtn = document.getElementById('import-open-btn');
     const importBackBtn = document.getElementById('import-back-btn');
@@ -1343,10 +1355,15 @@ function attachEventListeners() {
         }
     });
     
-    // Variant selector buttons
-    elements.variantSelector?.querySelectorAll('.variant-btn').forEach(btn => {
+    // Variant selector buttons (main and archived)
+    const allVariantButtons = document.querySelectorAll('.variant-btn');
+    allVariantButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            const variant = btn.dataset.variant;
+            let variant = btn.dataset.variant;
+            // Map archived variants to their base variants
+            if (variant.endsWith('-archived')) {
+                variant = variant.replace(/-archived$/, '');
+            }
             setDesignVariant(variant);
         });
     });
@@ -1606,6 +1623,12 @@ function getFilteredPanelIndices() {
         indices = indices.filter(i => !isCardKnown(i));
     }
     
+    // Apply sorting
+    if (panelViewState.sortBy === 'alphabetical') {
+        indices.sort((a, b) => flashcards[a].term.localeCompare(flashcards[b].term));
+    }
+    // 'original' keeps the default order
+    
     return indices;
 }
 
@@ -1821,6 +1844,12 @@ function updatePanelConceptsView() {
         } else if (panelViewState.filterBy === 'still-learning') {
             filteredIndices = filteredIndices.filter(i => !isCardKnown(i));
         }
+        
+        // Apply sorting
+        if (panelViewState.sortBy === 'alphabetical') {
+            filteredIndices.sort((a, b) => flashcards[a].term.localeCompare(flashcards[b].term));
+        }
+        // 'original' keeps the default order
         
         // Skip empty groups after filtering
         if (filteredIndices.length === 0) return;
@@ -3117,29 +3146,11 @@ function togglePanelSortMenu(btn) {
     btn.classList.toggle('active');
     
     if (btn.classList.contains('active')) {
-        // Get counts for concepts and terms
-        const termsCount = flashcards.length;
-        let conceptsCount = 0;
-        try {
-            const saved = localStorage.getItem('flashcardContent');
-            if (saved) {
-                const content = JSON.parse(saved);
-                if (content.grouping && content.grouping.groups && Array.isArray(content.grouping.groups)) {
-                    conceptsCount = content.grouping.groups.length;
-                }
-            }
-        } catch (e) {
-            console.error('Error getting concepts count:', e);
-        }
-        
-        // Both variants B and E show Concepts/Terms options
-        const viewOptions = [
-            { id: 'concepts', label: `${conceptsCount} Concepts`, icon: 'category' },
-            { id: 'terms', label: `${termsCount} Terms`, icon: 'format_list_bulleted' }
-        ];
-        
-        const menu = createDropdownMenu(viewOptions, panelViewState.viewMode, (option) => {
-            panelViewState.viewMode = option;
+        const menu = createDropdownMenu([
+            { id: 'original', label: 'Original', icon: 'swap_vert' },
+            { id: 'alphabetical', label: 'Alphabetical', icon: 'sort_by_alpha' }
+        ], panelViewState.sortBy, (option) => {
+            panelViewState.sortBy = option;
             savePanelViewState();
             updatePanelTermsList();
             btn.classList.remove('active');
@@ -3464,8 +3475,6 @@ function applyPanelSortFilter() {
     // Apply sort
     if (sortFilterState.sortBy === 'alphabetical') {
         filteredIndices.sort((a, b) => cards[a].term.localeCompare(cards[b].term));
-    } else if (sortFilterState.sortBy === 'alphabetical-reverse') {
-        filteredIndices.sort((a, b) => cards[b].term.localeCompare(cards[a].term));
     }
     // 'original' sort keeps default order
     
@@ -4602,9 +4611,9 @@ function updateJourneyMap() {
  * Load the saved design variant
  */
 function loadDesignVariant() {
-    // Load saved variant from localStorage, default to option-a
+    // Load saved variant from localStorage, default to option-d
     const savedVariant = localStorage.getItem('designVariant');
-    const variant = savedVariant && VARIANTS.includes(savedVariant) ? savedVariant : 'option-a';
+    const variant = savedVariant && VARIANTS.includes(savedVariant) ? savedVariant : 'option-d';
     setDesignVariant(variant);
 }
 
@@ -4612,12 +4621,14 @@ function loadDesignVariant() {
  * Update variant button active states
  */
 function updateVariantButtonStates() {
-    const currentVariant = localStorage.getItem('designVariant') || 'option-a';
-    const buttons = elements.variantSelector?.querySelectorAll('.variant-btn');
+    const currentVariant = localStorage.getItem('designVariant') || 'option-d';
+    const buttons = document.querySelectorAll('.variant-btn');
     
     buttons?.forEach(btn => {
-        const btnVariant = btn.dataset.variant;
-        btn.classList.toggle('active', btnVariant === currentVariant);
+        let btnVariant = btn.dataset.variant;
+        // Map archived variants to their base variants for comparison
+        const baseVariant = btnVariant.replace(/-archived$/, '');
+        btn.classList.toggle('active', baseVariant === currentVariant);
     });
 }
 
@@ -6372,9 +6383,9 @@ function attachTableEventListeners() {
 // ============================================
 
 const sortFilterState = {
-    sortBy: 'original', // 'original', 'alphabetical', 'alphabetical-reverse'
+    sortBy: 'original', // 'original' or 'alphabetical'
     filterBy: 'all', // 'all', 'starred', 'know', 'still-learning'
-    viewMode: 'concepts' // 'concepts' or 'terms' (for Variant A)
+    viewMode: 'terms' // Always show flat terms list (no concept groupings)
 };
 
 // Variant E specific state (legacy - now using panelViewState)
@@ -6385,7 +6396,8 @@ const variantEState = {
 // Panel view state for Variants B and E
 const panelViewState = {
     viewMode: 'concepts', // 'concepts' or 'terms'
-    filterBy: 'all' // 'all', 'starred', 'know', 'still-learning'
+    filterBy: 'all', // 'all', 'starred', 'know', 'still-learning'
+    sortBy: 'original' // 'original' or 'alphabetical'
 };
 
 /**
@@ -6405,6 +6417,7 @@ function loadPanelViewState() {
             const state = JSON.parse(saved);
             if (state.viewMode) panelViewState.viewMode = state.viewMode;
             if (state.filterBy) panelViewState.filterBy = state.filterBy;
+            if (state.sortBy) panelViewState.sortBy = state.sortBy;
         } catch (e) {
             console.error('Error loading panel view state:', e);
         }
@@ -6422,26 +6435,11 @@ function toggleSortMenu(btn) {
     btn.classList.toggle('active');
     
     if (btn.classList.contains('active')) {
-        // Get counts for concepts and terms
-        const termsCount = flashcards.length;
-        let conceptsCount = 0;
-        try {
-            const saved = localStorage.getItem('flashcardContent');
-            if (saved) {
-                const content = JSON.parse(saved);
-                if (content.grouping && content.grouping.groups && Array.isArray(content.grouping.groups)) {
-                    conceptsCount = content.grouping.groups.length;
-                }
-            }
-        } catch (e) {
-            console.error('Error getting concepts count:', e);
-        }
-        
         const menu = createDropdownMenu([
-            { id: 'concepts', label: `${conceptsCount} Concepts`, icon: 'category' },
-            { id: 'terms', label: `${termsCount} Terms`, icon: 'list' }
-        ], sortFilterState.viewMode, (option) => {
-            sortFilterState.viewMode = option;
+            { id: 'original', label: 'Original', icon: 'swap_vert' },
+            { id: 'alphabetical', label: 'Alphabetical', icon: 'sort_by_alpha' }
+        ], sortFilterState.sortBy, (option) => {
+            sortFilterState.sortBy = option;
             saveSortFilterState();
             updateVariantAViewMode();
             btn.classList.remove('active');
@@ -6581,30 +6579,14 @@ function updateVariantAViewMode() {
             filteredIndices = filteredIndices.filter(i => !isCardKnown(i));
         }
         
-        // If view mode is 'concepts', show grouped view with filtered cards
-        if (sortFilterState.viewMode === 'concepts') {
-            // Get groups from saved content (stored in content.grouping.groups)
-            const groups = content.grouping?.groups;
-            if (groups && groups.length > 0) {
-                // Filter groups to only include cards that match the filter
-                const filteredGroups = groups.map(group => ({
-                    ...group,
-                    cardIndices: group.cardIndices.filter(i => filteredIndices.includes(i))
-                })).filter(group => group.cardIndices.length > 0);
-                
-                if (filteredGroups.length > 0) {
-                    updateGroupedTopicsList(cards, filteredGroups);
-                } else {
-                    showEmptyFilterMessage();
-                }
-            } else {
-                // No groups, fall back to flat list
-                updateFlatTermsListVariantA(cards, filteredIndices);
-            }
-        } else {
-            // View mode is 'terms', show flat list
-            updateFlatTermsListVariantA(cards, filteredIndices);
+        // Apply sorting
+        if (sortFilterState.sortBy === 'alphabetical') {
+            filteredIndices.sort((a, b) => cards[a].term.localeCompare(cards[b].term));
         }
+        // 'original' keeps the default order (no sorting needed)
+        
+        // Always show flat terms list (no concept groupings)
+        updateFlatTermsListVariantA(cards, filteredIndices);
         
     } catch (e) {
         console.error('Error updating Variant A view:', e);
@@ -6691,7 +6673,8 @@ function updateFlatTermsListVariantA(cards, indices) {
 function saveSortFilterState() {
     const stateToSave = {
         viewMode: sortFilterState.viewMode,
-        filterBy: sortFilterState.filterBy
+        filterBy: sortFilterState.filterBy,
+        sortBy: sortFilterState.sortBy
     };
     localStorage.setItem('sortFilterState', JSON.stringify(stateToSave));
 }
@@ -6704,8 +6687,10 @@ function loadSortFilterState() {
     if (saved) {
         try {
             const state = JSON.parse(saved);
-            if (state.viewMode) sortFilterState.viewMode = state.viewMode;
+            // Always force viewMode to 'terms' (no concept groupings)
+            sortFilterState.viewMode = 'terms';
             if (state.filterBy) sortFilterState.filterBy = state.filterBy;
+            if (state.sortBy) sortFilterState.sortBy = state.sortBy;
     } catch (e) {
             console.error('Error loading sort/filter state:', e);
     }
@@ -6748,8 +6733,7 @@ function updateFilteredTopicsList(cards, indices) {
     
     const filterLabel = sortFilterState.filterBy === 'starred' ? 'Starred' : 
                         sortFilterState.filterBy === 'unstarred' ? 'Not Starred' : 'All';
-    const sortLabel = sortFilterState.sortBy === 'alphabetical' ? '(A-Z)' :
-                      sortFilterState.sortBy === 'alphabetical-reverse' ? '(Z-A)' : '';
+    const sortLabel = sortFilterState.sortBy === 'alphabetical' ? '(A-Z)' : '';
     
     const topicTitle = document.createElement('h2');
     topicTitle.className = 'topic-title';
