@@ -5253,52 +5253,17 @@ function updateTopicsList(cards) {
     
     const isProgressView = state.hasEngagedWithStudy;
     
-    // Create a single topic section with all the terms
-    const topicSection = document.createElement('div');
-    topicSection.className = 'topic-section collapsed';
-    if (isProgressView) {
-        topicSection.classList.add('progress-view');
-    }
+    // Create a flat terms list (no collapsible sections or headers)
+    const termsContainer = document.createElement('div');
+    termsContainer.className = 'flat-terms-list';
     
-    // Create header
-    const topicHeader = document.createElement('div');
-    topicHeader.className = 'topic-header';
-    topicHeader.addEventListener('click', () => {
-        topicSection.classList.toggle('collapsed');
-    });
-    
-    // Add progress ring if in progress view
-    if (isProgressView) {
-        const allIndices = cards.map((_, i) => i);
-        const progressPercent = getGroupProgress(allIndices);
-        const progressRing = createProgressRing(progressPercent, 24);
-        topicHeader.appendChild(progressRing);
-    }
-    
-    const topicTitle = document.createElement('h2');
-    topicTitle.className = 'topic-title';
-    topicTitle.textContent = `All Cards (${cards.length})`;
-    
-    const toggleIcon = document.createElement('div');
-    toggleIcon.className = 'topic-toggle';
-    toggleIcon.innerHTML = `<span class="material-symbols-rounded">expand_more</span>`;
-    
-    topicHeader.appendChild(topicTitle);
-    topicHeader.appendChild(toggleIcon);
-    topicSection.appendChild(topicHeader);
-    
-    // Create cards container
-    const topicCards = document.createElement('div');
-    topicCards.className = 'topic-cards';
-    
-    // Add each card
+    // Add each card directly
     cards.forEach((card, index) => {
         const termCard = createTermCard(card, index, isProgressView);
-        topicCards.appendChild(termCard);
+        termsContainer.appendChild(termCard);
     });
     
-    topicSection.appendChild(topicCards);
-    elements.topicsContainer.appendChild(topicSection);
+    elements.topicsContainer.appendChild(termsContainer);
     
     // Set the first item as active
     updateActiveTocItem();
@@ -5366,71 +5331,34 @@ function updateActiveTocItem(autoExpand = false) {
  * Update the sidebar with AI-grouped categories (accordion style with term cards)
  */
 function updateGroupedTopicsList(cards, groups) {
+    // Show flat list instead of grouped sections (no concept groupings)
+    // Collect all card indices from all groups in order
+    const allCardIndices = [];
+    groups.forEach(group => {
+        group.cardIndices.forEach(cardIndex => {
+            if (cardIndex >= 0 && cardIndex < cards.length && !allCardIndices.includes(cardIndex)) {
+                allCardIndices.push(cardIndex);
+            }
+        });
+    });
+    
     // Clear existing topics
     elements.topicsContainer.innerHTML = '';
     
     const isProgressView = state.hasEngagedWithStudy;
     
-    groups.forEach((group, groupIndex) => {
-        const topicSection = document.createElement('div');
-        topicSection.className = 'topic-section collapsed';
-        if (isProgressView) {
-            topicSection.classList.add('progress-view');
-        }
-        // All sections collapsed by default
-        
-        // Create clickable header with title and toggle icon
-        const topicHeader = document.createElement('div');
-        topicHeader.className = 'topic-header';
-        topicHeader.addEventListener('click', () => {
-            const isCurrentlyCollapsed = topicSection.classList.contains('collapsed');
-            
-            // Collapse all sections first
-            elements.topicsContainer.querySelectorAll('.topic-section').forEach(section => {
-                section.classList.add('collapsed');
-            });
-            
-            // If this section was collapsed, expand it
-            if (isCurrentlyCollapsed) {
-                topicSection.classList.remove('collapsed');
-            }
-        });
-        
-        // Add progress ring if in progress view
-        if (isProgressView) {
-            const progressPercent = getGroupProgress(group.cardIndices);
-            const progressRing = createProgressRing(progressPercent, 24);
-            topicHeader.appendChild(progressRing);
-        }
-        
-        const topicTitle = document.createElement('h2');
-        topicTitle.className = 'topic-title';
-        topicTitle.textContent = group.title;
-        
-        const toggleIcon = document.createElement('div');
-        toggleIcon.className = 'topic-toggle';
-        toggleIcon.innerHTML = `<span class="material-symbols-rounded">expand_more</span>`;
-        
-        topicHeader.appendChild(topicTitle);
-        topicHeader.appendChild(toggleIcon);
-        topicSection.appendChild(topicHeader);
-        
-        // Create cards container
-        const topicCards = document.createElement('div');
-        topicCards.className = 'topic-cards';
-        
-        // Add each card in this group
-        group.cardIndices.forEach(cardIndex => {
-            if (cardIndex >= 0 && cardIndex < cards.length) {
-                const card = cards[cardIndex];
-                const termCard = createTermCard(card, cardIndex, isProgressView);
-                topicCards.appendChild(termCard);
-            }
-        });
-        
-        topicSection.appendChild(topicCards);
-        elements.topicsContainer.appendChild(topicSection);
+    // Create a flat terms list (no collapsible sections or headers)
+    const termsContainer = document.createElement('div');
+    termsContainer.className = 'flat-terms-list';
+    
+    // Add each card directly
+    allCardIndices.forEach(cardIndex => {
+        const card = cards[cardIndex];
+        const termCard = createTermCard(card, cardIndex, isProgressView);
+        termsContainer.appendChild(termCard);
     });
+    
+    elements.topicsContainer.appendChild(termsContainer);
     
     // Set the first item as active
     updateActiveTocItem();
