@@ -11060,6 +11060,7 @@ body.option-a-sheets .mobile-sheets-layout {
     position: relative;
     overflow: visible;
     min-height: 0;
+    height: 100%;
     transition: opacity 0.3s ease;
     padding-top: 12px;
 }
@@ -11270,22 +11271,25 @@ body.option-a-sheets .table-layout {
 
 /* Terms Module - Takes remaining space, scrollable */
 .mobile-terms-sheet {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
+    height: auto;
 }
 
 .mobile-terms-sheet[data-state="peek"] {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 300px;
 }
 
 /* Actions Module - Fixed height at bottom */
 .mobile-actions-sheet {
     height: 136px;
-    flex-shrink: 0;
+    flex: 0 0 136px;
 }
 
 .mobile-actions-sheet[data-state="peek"] {
     height: 136px;
+    flex: 0 0 136px;
 }
 
 /* Sheet Handle */
