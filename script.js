@@ -7428,6 +7428,7 @@ function updateStudyModeCard() {
 function updateStudyModeProgress() {
     const fillEl = document.getElementById('study-mode-progress-fill');
     const textEl = document.getElementById('study-mode-progress-text');
+    const screen = document.getElementById('study-mode-screen');
     
     // Calculate overall progress across ALL flashcards (not just selected group)
     const total = flashcards.length;
@@ -7444,6 +7445,11 @@ function updateStudyModeProgress() {
     
     if (fillEl) fillEl.style.width = `${percent}%`;
     if (textEl) textEl.textContent = `${percent}% Complete`;
+    
+    // Update mobile header progress bar via CSS variable
+    if (screen) {
+        screen.style.setProperty('--progress-width', `${percent}%`);
+    }
     
     // Also update flashcard progress in study plan view (for option-b variant)
     const flashcardProgressFill = document.getElementById('study-mode-flashcard-progress');
@@ -8467,6 +8473,16 @@ function initMobileSheetsLayout() {
     studyModeCards.forEach(card => {
         card.addEventListener('click', () => {
             openStudyModeScreen();
+        });
+    });
+    
+    // Study plan start buttons - launch study experience
+    const planStartButtons = document.querySelectorAll('.mobile-plan-start-btn');
+    planStartButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const mode = btn.closest('[data-mode]')?.dataset.mode || 'flashcards';
+            openStudyModeScreen(mode);
         });
     });
     
