@@ -1439,7 +1439,65 @@
                         <span class="material-symbols-rounded">search</span>
                     </button>
                     <button class="mobile-action-btn" id="mobile-filter-btn">
-                        <span class="material-symbols-rounded">tune</span>
+                        <span class="material-symbols-rounded">filter_list</span>
+                    </button>
+                </div>
+                <div class="mobile-search-container" id="mobile-search-container">
+                    <span class="material-symbols-rounded mobile-search-icon">search</span>
+                    <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="Search terms...">
+                    <button class="mobile-search-close" id="mobile-search-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Filter Menu -->
+            <div class="mobile-filter-menu" id="mobile-filter-menu">
+                <div class="mobile-filter-header">
+                    <h3 class="mobile-filter-title">Filter terms</h3>
+                    <button class="mobile-filter-close" id="mobile-filter-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="mobile-filter-options">
+                    <button class="mobile-filter-option active" data-filter="all">
+                        <span class="material-symbols-rounded">select_all</span>
+                        <span>All terms</span>
+                        <span class="mobile-filter-count" id="mobile-filter-all-count">22</span>
+                    </button>
+                    <button class="mobile-filter-option" data-filter="starred">
+                        <span class="material-symbols-rounded">star</span>
+                        <span>Starred</span>
+                        <span class="mobile-filter-count" id="mobile-filter-starred-count">0</span>
+                    </button>
+                    <button class="mobile-filter-option" data-filter="unstarred">
+                        <span class="material-symbols-rounded">star_outline</span>
+                        <span>Not starred</span>
+                        <span class="mobile-filter-count" id="mobile-filter-unstarred-count">22</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Sort Menu -->
+            <div class="mobile-sort-menu" id="mobile-sort-menu">
+                <div class="mobile-sort-header">
+                    <h3 class="mobile-sort-title">Sort terms</h3>
+                    <button class="mobile-sort-close" id="mobile-sort-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="mobile-sort-options">
+                    <button class="mobile-sort-option active" data-sort="original">
+                        <span class="material-symbols-rounded">reorder</span>
+                        <span>Original order</span>
+                    </button>
+                    <button class="mobile-sort-option" data-sort="alphabetical">
+                        <span class="material-symbols-rounded">sort_by_alpha</span>
+                        <span>Alphabetical</span>
+                    </button>
+                    <button class="mobile-sort-option" data-sort="random">
+                        <span class="material-symbols-rounded">shuffle</span>
+                        <span>Random</span>
                     </button>
                 </div>
             </div>
@@ -1465,7 +1523,7 @@
                 </button>
                 <h2 class="mobile-sheet-title">Study plan</h2>
                 <button class="mobile-header-filter-btn">
-                    <span class="material-symbols-rounded">tune</span>
+                    <span class="material-symbols-rounded">filter_list</span>
                 </button>
             </div>
 

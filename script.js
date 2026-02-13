@@ -8482,6 +8482,104 @@ function initMobileSheetsLayout() {
         initTermsScrollUpExpand(termsContent, termsSheet);
     }
     
+    // Search button handler
+    const searchBtn = document.getElementById('mobile-search-btn');
+    const searchContainer = document.getElementById('mobile-search-container');
+    const searchInput = document.getElementById('mobile-search-input');
+    const searchClose = document.getElementById('mobile-search-close');
+    
+    if (searchBtn && searchContainer && searchInput) {
+        searchBtn.addEventListener('click', () => {
+            searchContainer.classList.add('active');
+            setTimeout(() => searchInput.focus(), 100);
+        });
+        
+        if (searchClose) {
+            searchClose.addEventListener('click', () => {
+                searchContainer.classList.remove('active');
+                searchInput.value = '';
+                filterMobileTerms('');
+            });
+        }
+        
+        searchInput.addEventListener('input', (e) => {
+            filterMobileTerms(e.target.value);
+        });
+    }
+    
+    // Filter button handler
+    const filterBtn = document.getElementById('mobile-filter-btn');
+    const filterMenu = document.getElementById('mobile-filter-menu');
+    const filterClose = document.getElementById('mobile-filter-close');
+    const filterOptions = document.querySelectorAll('.mobile-filter-option');
+    
+    if (filterBtn && filterMenu) {
+        filterBtn.addEventListener('click', () => {
+            filterMenu.classList.toggle('active');
+            // Close sort menu if open
+            const sortMenu = document.getElementById('mobile-sort-menu');
+            if (sortMenu) sortMenu.classList.remove('active');
+        });
+        
+        if (filterClose) {
+            filterClose.addEventListener('click', () => {
+                filterMenu.classList.remove('active');
+            });
+        }
+        
+        filterOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const filter = option.dataset.filter;
+                
+                // Update active state
+                filterOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                // Apply filter
+                applyMobileFilter(filter);
+                
+                // Close menu
+                filterMenu.classList.remove('active');
+            });
+        });
+    }
+    
+    // Sort dropdown handler
+    const termsDropdown = document.getElementById('mobile-terms-dropdown');
+    const sortMenu = document.getElementById('mobile-sort-menu');
+    const sortClose = document.getElementById('mobile-sort-close');
+    const sortOptions = document.querySelectorAll('.mobile-sort-option');
+    
+    if (termsDropdown && sortMenu) {
+        termsDropdown.addEventListener('click', () => {
+            sortMenu.classList.toggle('active');
+            // Close filter menu if open
+            if (filterMenu) filterMenu.classList.remove('active');
+        });
+        
+        if (sortClose) {
+            sortClose.addEventListener('click', () => {
+                sortMenu.classList.remove('active');
+            });
+        }
+        
+        sortOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const sortType = option.dataset.sort;
+                
+                // Update active state
+                sortOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                // Apply sort
+                applyMobileSort(sortType);
+                
+                // Close menu
+                sortMenu.classList.remove('active');
+            });
+        });
+    }
+    
     console.log('[DEBUG] ===== initMobileSheetsLayout completed successfully =====');
 }
 
@@ -8777,6 +8875,96 @@ function initTermsScrollUpExpand(termsContent, sheet) {
 }
 
 /**
+ * Filter mobile terms based on search query
+ */
+function filterMobileTerms(query) {
+    const termCards = document.querySelectorAll('.mobile-term-card');
+    const searchLower = query.toLowerCase().trim();
+    
+    termCards.forEach(card => {
+        const termText = card.querySelector('.mobile-term-text')?.textContent.toLowerCase() || '';
+        const defText = card.querySelector('.mobile-term-definition')?.textContent.toLowerCase() || '';
+        
+        const matches = termText.includes(searchLower) || defText.includes(searchLower);
+        
+        if (searchLower === '' || matches) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * Apply filter to mobile terms
+ */
+function applyMobileFilter(filter) {
+    const termCards = document.querySelectorAll('.mobile-term-card');
+    
+    termCards.forEach(card => {
+        const index = parseInt(card.dataset.index);
+        const flashcard = flashcards[index];
+        
+        if (!flashcard) {
+            card.style.display = 'flex';
+            return;
+        }
+        
+        const isStarred = flashcard.starred || false;
+        
+        if (filter === 'all') {
+            card.style.display = 'flex';
+        } else if (filter === 'starred') {
+            card.style.display = isStarred ? 'flex' : 'none';
+        } else if (filter === 'unstarred') {
+            card.style.display = !isStarred ? 'flex' : 'none';
+        }
+    });
+    
+    // Update filter counts
+    updateMobileFilterCounts();
+}
+
+/**
+ * Update filter counts
+ */
+function updateMobileFilterCounts() {
+    const allCount = flashcards.length;
+    const starredCount = flashcards.filter(f => f.starred).length;
+    const unstarredCount = allCount - starredCount;
+    
+    const allCountEl = document.getElementById('mobile-filter-all-count');
+    const starredCountEl = document.getElementById('mobile-filter-starred-count');
+    const unstarredCountEl = document.getElementById('mobile-filter-unstarred-count');
+    
+    if (allCountEl) allCountEl.textContent = allCount;
+    if (starredCountEl) starredCountEl.textContent = starredCount;
+    if (unstarredCountEl) unstarredCountEl.textContent = unstarredCount;
+}
+
+/**
+ * Apply sort to mobile terms
+ */
+function applyMobileSort(sortType) {
+    if (sortType === 'original') {
+        // Reset to original order
+        flashcards.sort((a, b) => (a.originalIndex || 0) - (b.originalIndex || 0));
+    } else if (sortType === 'alphabetical') {
+        // Sort alphabetically by term
+        flashcards.sort((a, b) => a.term.localeCompare(b.term));
+    } else if (sortType === 'random') {
+        // Shuffle randomly
+        for (let i = flashcards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [flashcards[i], flashcards[j]] = [flashcards[j], flashcards[i]];
+        }
+    }
+    
+    // Re-render the terms list
+    updateMobileTermsList();
+}
+
+/**
  * Update mobile terms list
  */
 function updateMobileTermsList() {
@@ -8791,6 +8979,13 @@ function updateMobileTermsList() {
         console.error('[DEBUG] termsList element not found!');
         return;
     }
+    
+    // Ensure all flashcards have an originalIndex
+    flashcards.forEach((card, index) => {
+        if (card.originalIndex === undefined) {
+            card.originalIndex = index;
+        }
+    });
     
     // Clear existing
     termsList.innerHTML = '';
@@ -8848,6 +9043,9 @@ function updateMobileTermsList() {
     
     console.log('[DEBUG] Added', flashcards.length, 'term cards to mobile-terms-list');
     console.log('[DEBUG] termsList now has', termsList.children.length, 'children');
+    
+    // Update filter counts
+    updateMobileFilterCounts();
 }
 
 /**

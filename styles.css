@@ -11114,7 +11114,7 @@ body.option-a-sheets .table-layout {
 .mobile-header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .mobile-trial-btn {
@@ -11155,9 +11155,9 @@ body.option-a-sheets .table-layout {
 
 
 .mobile-set-title {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--sys-text-primary);
     margin: 0 0 8px 0;
 }
 
@@ -11172,15 +11172,15 @@ body.option-a-sheets .table-layout {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--color-blue-500);
-    font-size: var(--ref-typography-size-subheading-five);
+    color: var(--sys-text-secondary);
+    font-size: var(--ref-typography-size-subheading-four);
     font-weight: var(--ref-typography-weight-subheader);
-    line-height: var(--ref-typography-line-height-subheading-five);
+    line-height: var(--ref-typography-line-height-subheading-four);
 }
 
 .mobile-author-icon {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -11195,14 +11195,14 @@ body.option-a-sheets .table-layout {
     display: flex;
     align-items: center;
     gap: 4px;
-    color: var(--text-secondary);
-    font-size: var(--ref-typography-size-subheading-five);
+    color: var(--sys-text-secondary);
+    font-size: var(--ref-typography-size-subheading-four);
     font-weight: var(--ref-typography-weight-subheader);
-    line-height: var(--ref-typography-line-height-subheading-five);
+    line-height: var(--ref-typography-line-height-subheading-four);
 }
 
 .mobile-stat .material-symbols-rounded {
-    font-size: 18px;
+    font-size: 24px;
     color: var(--text-secondary);
 }
 
@@ -11219,16 +11219,16 @@ body.option-a-sheets .table-layout {
 }
 
 .mobile-star-icon {
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
     display: block;
 }
 
 .mobile-stat-count {
-    color: var(--text-secondary);
-    font-size: var(--ref-typography-size-subheading-five);
+    color: var(--sys-text-secondary);
+    font-size: var(--ref-typography-size-subheading-four);
     font-weight: var(--ref-typography-weight-subheader);
-    line-height: var(--ref-typography-line-height-subheading-five);
+    line-height: var(--ref-typography-line-height-subheading-four);
     margin-left: 4px;
 }
 
@@ -11499,6 +11499,296 @@ body.option-a-sheets .table-layout {
     font-size: 20px;
 }
 
+/* Mobile Search Container */
+.mobile-search-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface-base);
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    z-index: 5;
+}
+
+.mobile-search-container.active {
+    display: flex;
+}
+
+.mobile-search-icon {
+    font-size: 20px;
+    color: var(--sys-text-secondary);
+    flex-shrink: 0;
+}
+
+.mobile-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--sys-text-primary);
+    outline: none;
+    padding: 8px 0;
+}
+
+.mobile-search-input::placeholder {
+    color: var(--sys-text-secondary);
+    font-weight: 500;
+}
+
+.mobile-search-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sys-text-secondary);
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+}
+
+.mobile-search-close:active {
+    background: var(--sys-interactive-bg-tertiary-press);
+    transform: scale(0.92);
+}
+
+.mobile-search-close .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Mobile Filter Menu */
+.mobile-filter-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface-base);
+    border-bottom: 1px solid var(--border-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 4;
+}
+
+.mobile-filter-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.mobile-filter-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--sys-text-primary);
+    margin: 0;
+}
+
+.mobile-filter-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sys-text-secondary);
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-filter-close:active {
+    background: var(--sys-interactive-bg-tertiary-press);
+    transform: scale(0.92);
+}
+
+.mobile-filter-close .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.mobile-filter-options {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+}
+
+.mobile-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--sys-text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    text-align: left;
+}
+
+.mobile-filter-option:active {
+    background: var(--sys-interactive-bg-tertiary-press);
+}
+
+.mobile-filter-option.active {
+    background: var(--sys-interactive-bg-secondary-default);
+    color: var(--sys-interactive-fg-secondary-default);
+}
+
+.mobile-filter-option .material-symbols-rounded {
+    font-size: 20px;
+    color: var(--sys-text-secondary);
+}
+
+.mobile-filter-option.active .material-symbols-rounded {
+    color: var(--sys-interactive-fg-secondary-default);
+}
+
+.mobile-filter-option span:nth-child(2) {
+    flex: 1;
+}
+
+.mobile-filter-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sys-text-secondary);
+    background: var(--sys-interactive-bg-tertiary-default);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.mobile-filter-option.active .mobile-filter-count {
+    background: var(--sys-interactive-bg-secondary-press);
+    color: var(--sys-interactive-fg-secondary-default);
+}
+
+/* Mobile Sort Menu */
+.mobile-sort-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface-base);
+    border-bottom: 1px solid var(--border-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 4;
+}
+
+.mobile-sort-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-sort-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.mobile-sort-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--sys-text-primary);
+    margin: 0;
+}
+
+.mobile-sort-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sys-text-secondary);
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-sort-close:active {
+    background: var(--sys-interactive-bg-tertiary-press);
+    transform: scale(0.92);
+}
+
+.mobile-sort-close .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.mobile-sort-options {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+}
+
+.mobile-sort-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--sys-text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    text-align: left;
+}
+
+.mobile-sort-option:active {
+    background: var(--sys-interactive-bg-tertiary-press);
+}
+
+.mobile-sort-option.active {
+    background: var(--sys-interactive-bg-secondary-default);
+    color: var(--sys-interactive-fg-secondary-default);
+}
+
+.mobile-sort-option .material-symbols-rounded {
+    font-size: 20px;
+    color: var(--sys-text-secondary);
+}
+
+.mobile-sort-option.active .material-symbols-rounded {
+    color: var(--sys-interactive-fg-secondary-default);
+}
+
+.mobile-sort-option span:nth-child(2) {
+    flex: 1;
+}
+
 /* Sheet Content - Always Scrollable */
 .mobile-sheet-content {
     flex: 1;
@@ -11764,8 +12054,8 @@ body.option-a-sheets .table-layout {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 70px;
-    height: 70px;
+    width: 64px;
+    height: 64px;
     background: var(--sys-interactive-bg-secondary-default);
     border: none;
     border-radius: 50%;
@@ -11900,8 +12190,8 @@ body.option-a-sheets.sheet-fullscreen .mobile-sheet:not([data-state="fullscreen"
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 70px;
-    height: 70px;
+    width: 64px;
+    height: 64px;
     background: #4F46E5;
     border: none;
     border-radius: 50%;
@@ -12136,7 +12426,7 @@ body.option-a-sheets.sheet-fullscreen .mobile-sheet:not([data-state="fullscreen"
 /* Responsive adjustments for different phone sizes */
 @media (max-width: 414px) {
     .mobile-set-title {
-        font-size: 24px;
+        font-size: 26px;
     }
     
     .mobile-sheet[data-state="peek"] {
@@ -12150,7 +12440,7 @@ body.option-a-sheets.sheet-fullscreen .mobile-sheet:not([data-state="fullscreen"
     }
     
     .mobile-set-title {
-        font-size: 24px;
+        font-size: 26px;
         margin-bottom: 8px;
     }
 }
