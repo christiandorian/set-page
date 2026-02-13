@@ -388,6 +388,17 @@ function nextCard() {
 function flipCard() {
     elements.flashcard.classList.toggle('flipped');
     state.isFlipped = !state.isFlipped;
+    
+    // Mark as viewed when flipped (for study mode progress)
+    if (state.isFlipped && studyModeState.viewedCards) {
+        const currentIndex = studyModeState.currentIndex;
+        const currentCard = studyModeState.cards[currentIndex];
+        if (currentCard && currentCard.originalIndex !== undefined) {
+            studyModeState.viewedCards.add(currentCard.originalIndex);
+            localStorage.setItem('studyModeViewed', JSON.stringify([...studyModeState.viewedCards]));
+            updateStudyModeProgress();
+        }
+    }
 }
 
 /**
@@ -7517,9 +7528,38 @@ function updateStudyModeTabs() {
  */
 function studyModeNextCard() {
     if (studyModeState.currentIndex < studyModeState.cards.length - 1) {
-        studyModeState.currentIndex++;
-        updateStudyModeCard();
-        updateStudyModeTermsList();
+        const cardEl = document.getElementById('study-mode-card');
+        
+        if (cardEl && window.innerWidth <= 768) {
+            // Animate card off to the left on mobile
+            cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            cardEl.style.transform = 'translateX(-100%) rotate(-15deg)';
+            cardEl.style.opacity = '0';
+            
+            setTimeout(() => {
+                studyModeState.currentIndex++;
+                updateStudyModeCard();
+                updateStudyModeTermsList();
+                
+                // Reset position for next card entrance
+                setTimeout(() => {
+                    cardEl.style.transition = 'none';
+                    cardEl.style.transform = 'translateX(100%) rotate(15deg)';
+                    cardEl.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        cardEl.style.transform = 'translateX(0) rotate(0deg)';
+                        cardEl.style.opacity = '1';
+                    }, 50);
+                }, 50);
+            }, 300);
+        } else {
+            // Desktop - no animation
+            studyModeState.currentIndex++;
+            updateStudyModeCard();
+            updateStudyModeTermsList();
+        }
     }
 }
 
@@ -7528,9 +7568,38 @@ function studyModeNextCard() {
  */
 function studyModePrevCard() {
     if (studyModeState.currentIndex > 0) {
-        studyModeState.currentIndex--;
-        updateStudyModeCard();
-        updateStudyModeTermsList();
+        const cardEl = document.getElementById('study-mode-card');
+        
+        if (cardEl && window.innerWidth <= 768) {
+            // Animate card off to the right on mobile
+            cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            cardEl.style.transform = 'translateX(100%) rotate(15deg)';
+            cardEl.style.opacity = '0';
+            
+            setTimeout(() => {
+                studyModeState.currentIndex--;
+                updateStudyModeCard();
+                updateStudyModeTermsList();
+                
+                // Reset position for previous card entrance
+                setTimeout(() => {
+                    cardEl.style.transition = 'none';
+                    cardEl.style.transform = 'translateX(-100%) rotate(-15deg)';
+                    cardEl.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        cardEl.style.transform = 'translateX(0) rotate(0deg)';
+                        cardEl.style.opacity = '1';
+                    }, 50);
+                }, 50);
+            }, 300);
+        } else {
+            // Desktop - no animation
+            studyModeState.currentIndex--;
+            updateStudyModeCard();
+            updateStudyModeTermsList();
+        }
     }
 }
 
@@ -7542,6 +7611,16 @@ function studyModeFlipCard() {
     if (cardEl) {
         studyModeState.isFlipped = !studyModeState.isFlipped;
         cardEl.classList.toggle('flipped', studyModeState.isFlipped);
+        
+        // Mark card as viewed when flipped to back
+        if (studyModeState.isFlipped) {
+            const originalIndex = getStudyModeOriginalIndex(studyModeState.currentIndex);
+            if (originalIndex !== null) {
+                studyModeState.viewedCards.add(originalIndex);
+                localStorage.setItem('studyModeViewed', JSON.stringify([...studyModeState.viewedCards]));
+                updateStudyModeProgress();
+            }
+        }
     }
 }
 
@@ -7626,6 +7705,11 @@ function initStudyModeScreen() {
         }
         studyModeFlipCard();
     });
+    
+    // Initialize card swipe/drag for mobile
+    if (cardEl) {
+        initStudyCardSwipe(cardEl);
+    }
     
     // Navigation
     const prevBtn = document.getElementById('study-mode-prev');
@@ -8791,6 +8875,97 @@ function setSheetState(sheet, state, sheetType = 'terms') {
         }
         document.body.classList.add('sheet-fullscreen');
     }
+}
+
+/**
+ * Initialize card swipe/drag for study mode
+ */
+function initStudyCardSwipe(card) {
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isDragging = false;
+    let hasMoved = false;
+    
+    const handleStart = (e) => {
+        const touch = e.touches ? e.touches[0] : e;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        currentX = startX;
+        isDragging = true;
+        hasMoved = false;
+        
+        card.style.transition = 'none';
+    };
+    
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        
+        const touch = e.touches ? e.touches[0] : e;
+        currentX = touch.clientX;
+        const currentY = touch.clientY;
+        
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        
+        // Only drag horizontally if horizontal movement is dominant
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            hasMoved = true;
+            e.preventDefault();
+            
+            // Apply drag transform with rotation
+            const rotation = deltaX * 0.05; // Slight rotation based on drag
+            const opacity = 1 - Math.abs(deltaX) / 600; // Fade as dragged
+            card.style.transform = `translateX(${deltaX}px) rotate(${rotation}deg)`;
+            card.style.opacity = Math.max(0.5, opacity);
+        }
+    };
+    
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaX = currentX - startX;
+        const swipeThreshold = 100;
+        
+        if (hasMoved && Math.abs(deltaX) > swipeThreshold) {
+            // Determine direction
+            if (deltaX < 0) {
+                // Swiped left - next card
+                card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                card.style.transform = 'translateX(-100%) rotate(-15deg)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    studyModeNextCard();
+                    resetCardPosition();
+                }, 300);
+            } else {
+                // Swiped right - previous card
+                card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                card.style.transform = 'translateX(100%) rotate(15deg)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    studyModePrevCard();
+                    resetCardPosition();
+                }, 300);
+            }
+        } else {
+            // Snap back
+            resetCardPosition();
+        }
+    };
+    
+    const resetCardPosition = () => {
+        card.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease';
+        card.style.transform = 'translateX(0) rotate(0deg)';
+        card.style.opacity = '1';
+    };
+    
+    card.addEventListener('touchstart', handleStart, { passive: false });
+    card.addEventListener('touchmove', handleMove, { passive: false });
+    card.addEventListener('touchend', handleEnd, { passive: false });
 }
 
 /**
