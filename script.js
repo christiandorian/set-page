@@ -7531,9 +7531,9 @@ function studyModeNextCard() {
         const cardEl = document.getElementById('study-mode-card');
         
         if (cardEl && window.innerWidth <= 768) {
-            // Animate card off to the left on mobile
-            cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            cardEl.style.transform = 'translateX(-100%) rotate(-15deg)';
+            // Animate card off to the left on mobile - shorter distance, faster
+            cardEl.style.transition = 'transform 0.2s ease-out, opacity 0.15s ease-out';
+            cardEl.style.transform = 'translateX(-50%) rotate(-8deg)';
             cardEl.style.opacity = '0';
             
             setTimeout(() => {
@@ -7544,16 +7544,16 @@ function studyModeNextCard() {
                 // Reset position for next card entrance
                 setTimeout(() => {
                     cardEl.style.transition = 'none';
-                    cardEl.style.transform = 'translateX(100%) rotate(15deg)';
+                    cardEl.style.transform = 'translateX(50%) rotate(8deg)';
                     cardEl.style.opacity = '0';
                     
                     setTimeout(() => {
-                        cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        cardEl.style.transition = 'transform 0.2s ease-out, opacity 0.15s ease-in';
                         cardEl.style.transform = 'translateX(0) rotate(0deg)';
                         cardEl.style.opacity = '1';
-                    }, 50);
-                }, 50);
-            }, 300);
+                    }, 20);
+                }, 20);
+            }, 200);
         } else {
             // Desktop - no animation
             studyModeState.currentIndex++;
@@ -7571,9 +7571,9 @@ function studyModePrevCard() {
         const cardEl = document.getElementById('study-mode-card');
         
         if (cardEl && window.innerWidth <= 768) {
-            // Animate card off to the right on mobile
-            cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            cardEl.style.transform = 'translateX(100%) rotate(15deg)';
+            // Animate card off to the right on mobile - shorter distance, faster
+            cardEl.style.transition = 'transform 0.2s ease-out, opacity 0.15s ease-out';
+            cardEl.style.transform = 'translateX(50%) rotate(8deg)';
             cardEl.style.opacity = '0';
             
             setTimeout(() => {
@@ -7584,16 +7584,16 @@ function studyModePrevCard() {
                 // Reset position for previous card entrance
                 setTimeout(() => {
                     cardEl.style.transition = 'none';
-                    cardEl.style.transform = 'translateX(-100%) rotate(-15deg)';
+                    cardEl.style.transform = 'translateX(-50%) rotate(-8deg)';
                     cardEl.style.opacity = '0';
                     
                     setTimeout(() => {
-                        cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        cardEl.style.transition = 'transform 0.2s ease-out, opacity 0.15s ease-in';
                         cardEl.style.transform = 'translateX(0) rotate(0deg)';
                         cardEl.style.opacity = '1';
-                    }, 50);
-                }, 50);
-            }, 300);
+                    }, 20);
+                }, 20);
+            }, 200);
         } else {
             // Desktop - no animation
             studyModeState.currentIndex--;
@@ -8913,11 +8913,13 @@ function initStudyCardSwipe(card) {
             hasMoved = true;
             e.preventDefault();
             
-            // Apply drag transform with rotation
-            const rotation = deltaX * 0.05; // Slight rotation based on drag
-            const opacity = 1 - Math.abs(deltaX) / 600; // Fade as dragged
-            card.style.transform = `translateX(${deltaX}px) rotate(${rotation}deg)`;
-            card.style.opacity = Math.max(0.5, opacity);
+            // Apply drag transform with rotation - reduced movement
+            const dragRatio = 0.5; // Reduce drag distance to half
+            const adjustedDelta = deltaX * dragRatio;
+            const rotation = adjustedDelta * 0.08; // Slight rotation based on drag
+            const opacity = 1 - Math.abs(adjustedDelta) / 300; // Fade as dragged
+            card.style.transform = `translateX(${adjustedDelta}px) rotate(${rotation}deg)`;
+            card.style.opacity = Math.max(0.3, opacity);
         }
     };
     
@@ -8926,39 +8928,39 @@ function initStudyCardSwipe(card) {
         isDragging = false;
         
         const deltaX = currentX - startX;
-        const swipeThreshold = 100;
+        const swipeThreshold = 80;
         
         if (hasMoved && Math.abs(deltaX) > swipeThreshold) {
             // Determine direction
             if (deltaX < 0) {
-                // Swiped left - next card
-                card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                card.style.transform = 'translateX(-100%) rotate(-15deg)';
+                // Swiped left - next card (reduced movement and faster)
+                card.style.transition = 'transform 0.2s ease-out, opacity 0.15s ease-out';
+                card.style.transform = 'translateX(-50%) rotate(-8deg)';
                 card.style.opacity = '0';
                 
                 setTimeout(() => {
                     studyModeNextCard();
                     resetCardPosition();
-                }, 300);
+                }, 200);
             } else {
-                // Swiped right - previous card
-                card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                card.style.transform = 'translateX(100%) rotate(15deg)';
+                // Swiped right - previous card (reduced movement and faster)
+                card.style.transition = 'transform 0.2s ease-out, opacity 0.15s ease-out';
+                card.style.transform = 'translateX(50%) rotate(8deg)';
                 card.style.opacity = '0';
                 
                 setTimeout(() => {
                     studyModePrevCard();
                     resetCardPosition();
-                }, 300);
+                }, 200);
             }
         } else {
-            // Snap back
+            // Snap back faster
             resetCardPosition();
         }
     };
     
     const resetCardPosition = () => {
-        card.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease';
+        card.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease';
         card.style.transform = 'translateX(0) rotate(0deg)';
         card.style.opacity = '1';
     };
