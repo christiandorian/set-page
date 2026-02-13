@@ -1203,20 +1203,26 @@
             <div class="import-modal-content">
                 <!-- Step 1: Main Menu -->
                 <div class="modal-step" id="modal-step-main" data-step="main">
-                <!-- Design Variant Selector -->
-                    <div class="import-field variant-field">
-                        <label class="import-label">Select prototype</label>
-                    <div class="variant-selector" id="variant-selector">
-                        <button class="variant-btn active" data-variant="option-a-archived">
+                    <!-- Prototype Selection Heading -->
+                    <h3 class="prototype-selection-heading">Select prototype</h3>
+                    
+                    <!-- Desktop Prototypes Section -->
+                    <div class="import-field variant-field desktop-field expanded">
+                        <label class="import-label accordion-label" id="desktop-accordion-label">
+                            <span>Desktop</span>
+                            <span class="material-symbols-rounded accordion-icon">expand_more</span>
+                        </label>
+                        <div class="variant-selector" id="variant-selector-desktop">
+                            <button class="variant-btn active" data-variant="option-a-archived">
                                 <span class="variant-icon">
                                     <span class="material-symbols-rounded">view_carousel</span>
                                 </span>
                                 <span class="variant-btn-text">
-                            <span class="variant-name">Option A</span>
+                                    <span class="variant-name">Option A</span>
                                     <span class="variant-desc">Preview</span>
                                 </span>
-                        </button>
-                        <button class="variant-btn" data-variant="option-b-archived">
+                            </button>
+                            <button class="variant-btn" data-variant="option-b-archived">
                                 <span class="variant-icon">
                                     <span class="material-symbols-rounded">view_column</span>
                                 </span>
@@ -1224,9 +1230,28 @@
                                     <span class="variant-name">Option B</span>
                                     <span class="variant-desc">Study plan</span>
                                 </span>
-                        </button>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                    
+                    <!-- Mobile Prototypes Section -->
+                    <div class="import-field variant-field mobile-field">
+                        <label class="import-label accordion-label" id="mobile-accordion-label">
+                            <span>Mobile</span>
+                            <span class="material-symbols-rounded accordion-icon">expand_more</span>
+                        </label>
+                        <div class="variant-selector collapsed" id="variant-selector-mobile">
+                            <button class="variant-btn" data-variant="option-a-sheets">
+                                <span class="variant-icon">
+                                    <span class="material-symbols-rounded">layers</span>
+                                </span>
+                                <span class="variant-btn-text">
+                                    <span class="variant-name">Option A — Sheets</span>
+                                    <span class="variant-desc">Mobile bottom sheet design</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 
                     <!-- Archived Section -->
                     <div class="import-field variant-field archived-field">
@@ -1342,6 +1367,196 @@
                             Delete set
                 </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sheets Layout (Option A — Sheets) -->
+    <div class="mobile-sheets-layout" id="mobile-sheets-layout">
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <button class="mobile-header-btn mobile-back-btn">
+                <span class="material-symbols-rounded">arrow_back</span>
+            </button>
+            <div class="mobile-header-right">
+                <button class="mobile-trial-btn">Free trial</button>
+                <button class="mobile-header-btn mobile-bookmark-btn">
+                    <span class="material-symbols-rounded">bookmark</span>
+                </button>
+                <button class="mobile-header-btn mobile-more-btn">
+                    <span class="material-symbols-rounded">more_horiz</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mobile Set Info -->
+        <div class="mobile-set-info">
+            <h1 class="mobile-set-title" id="mobile-set-title">BIO 110, Exam 1</h1>
+            <div class="mobile-set-meta">
+                <div class="mobile-set-author">
+                    <img src="images/Avatar.png" alt="Author" class="mobile-author-icon">
+                    <span class="mobile-author-name" id="mobile-author-name">By AllStudyNoSleep</span>
+                </div>
+                <div class="mobile-set-stats">
+                    <span class="mobile-stat">
+                        <span class="material-symbols-rounded">trending_up</span>
+                        <span id="mobile-studiers-count">12 Studiers today</span>
+                    </span>
+                    <span class="mobile-stat">
+                        <span class="mobile-stat-stars">
+                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                        </span>
+                        <span class="mobile-stat-count" id="mobile-rating">(3)</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Background (for dimming when modules are fullscreen) -->
+        <div class="mobile-background"></div>
+
+        <!-- Modules Container -->
+        <div class="mobile-modules-container">
+        <!-- Module: Terms List -->
+        <div class="mobile-sheet mobile-terms-sheet" id="mobile-terms-sheet" data-state="peek">
+            <div class="mobile-sheet-handle" data-sheet="terms"></div>
+            
+            <div class="mobile-sheet-header">
+                <button class="mobile-fullscreen-close" id="mobile-fullscreen-close">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+                <button class="mobile-terms-dropdown" id="mobile-terms-dropdown">
+                    <span id="mobile-terms-count">72 terms</span>
+                    <span class="material-symbols-rounded">expand_more</span>
+                </button>
+                <div class="mobile-sheet-actions">
+                    <button class="mobile-action-btn" id="mobile-search-btn">
+                        <span class="material-symbols-rounded">search</span>
+                    </button>
+                    <button class="mobile-action-btn" id="mobile-filter-btn">
+                        <span class="material-symbols-rounded">tune</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mobile-sheet-content" id="mobile-terms-content">
+                <div class="mobile-terms-list" id="mobile-terms-list">
+                    <!-- Terms will be populated here -->
+                </div>
+                
+                <button class="mobile-add-cards-btn" id="mobile-add-cards-btn">
+                    Add cards or upload notes
+                </button>
+            </div>
+        </div>
+
+        <!-- Module: Actions/Study Modes -->
+        <div class="mobile-sheet mobile-actions-sheet" id="mobile-actions-sheet" data-state="peek">
+            <div class="mobile-sheet-handle" data-sheet="actions"></div>
+            
+            <div class="mobile-sheet-header">
+                <button class="mobile-fullscreen-close" id="mobile-actions-fullscreen-close">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+                <h2 class="mobile-sheet-title">Study plan</h2>
+                <button class="mobile-header-filter-btn">
+                    <span class="material-symbols-rounded">tune</span>
+                </button>
+            </div>
+
+            <div class="mobile-sheet-content mobile-actions-content" id="mobile-actions-content">
+                <!-- Collapsed view (peek state) -->
+                <div class="mobile-actions-peek" id="mobile-actions-peek">
+                    <div class="mobile-mode-info">
+                        <img src="images/flashcards.png" alt="Flashcards" class="mobile-mode-icon">
+                        <div class="mobile-mode-text">
+                            <div class="mobile-mode-name">Flashcards</div>
+                            <div class="mobile-mode-progress" id="mobile-mode-progress">0 of 37 cards completed</div>
+                        </div>
+                    </div>
+                    <div class="mobile-actions-buttons">
+                        <button class="mobile-sort-btn-circle" id="mobile-sort-btn">
+                            <span class="material-symbols-rounded">swap_vert</span>
+                        </button>
+                        <button class="mobile-play-btn" id="mobile-play-btn">
+                            <span class="material-symbols-rounded filled">play_arrow</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expanded view (when opened) -->
+                <div class="mobile-actions-expanded" id="mobile-actions-expanded">
+                    <div class="mobile-study-plan-timeline">
+                        <!-- Flashcards Mode -->
+                        <div class="mobile-plan-item" data-mode="flashcards">
+                            <div class="mobile-plan-dot"></div>
+                            <div class="mobile-plan-connector"></div>
+                            <div class="mobile-plan-card">
+                                <div class="mobile-plan-card-header">
+                                    <img src="images/flashcards.png" alt="Flashcards" class="mobile-plan-mode-icon flashcards-icon">
+                                    <div class="mobile-plan-mode-name">Flashcards</div>
+                                    <button class="mobile-plan-start-btn flashcards-btn">
+                                        <span class="material-symbols-rounded">play_arrow</span>
+                                        <span>Start flashcards</span>
+                                    </button>
+                                </div>
+                                <div class="mobile-plan-card-preview">
+                                    <div class="mobile-preview-card">
+                                        <div class="mobile-preview-term">Isomers</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Learn Mode -->
+                        <div class="mobile-plan-item" data-mode="learn">
+                            <div class="mobile-plan-dot"></div>
+                            <div class="mobile-plan-connector"></div>
+                            <div class="mobile-plan-card">
+                                <div class="mobile-plan-card-header">
+                                    <img src="images/learn.png" alt="Learn" class="mobile-plan-mode-icon learn-icon">
+                                    <div class="mobile-plan-mode-name">Learn</div>
+                                    <button class="mobile-plan-start-btn learn-btn">
+                                        <span class="material-symbols-rounded">play_arrow</span>
+                                        <span>Start Learn</span>
+                                    </button>
+                                </div>
+                                <div class="mobile-plan-card-preview">
+                                    <div class="mobile-learn-question">What country is partially in Europe?</div>
+                                    <div class="mobile-learn-options">
+                                        <div class="mobile-learn-option">rural</div>
+                                        <div class="mobile-learn-option">Turkey</div>
+                                        <div class="mobile-learn-option">Yemen</div>
+                                        <div class="mobile-learn-option">Iran</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div><!-- End modules container -->
+
+        <!-- Module: Study Plan (hidden by default, can be triggered) -->
+        <div class="mobile-sheet mobile-plan-sheet" id="mobile-plan-sheet" data-state="hidden">
+            <div class="mobile-sheet-handle" data-sheet="plan"></div>
+            
+            <div class="mobile-sheet-header">
+                <h2 class="mobile-sheet-title">Study Plan</h2>
+                <button class="mobile-sheet-close-btn" data-sheet="plan">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+
+            <div class="mobile-sheet-content" id="mobile-plan-content">
+                <div class="mobile-plan-list" id="mobile-plan-list">
+                    <!-- Study plan items will be populated here -->
                 </div>
             </div>
         </div>

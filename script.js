@@ -311,6 +311,16 @@ async function init() {
     initStudyModeScreen();
     initCreateSetScreen();
     
+    // Initialize variant-specific features if already loaded
+    const currentVariant = localStorage.getItem('designVariant');
+    console.log('[DEBUG] Current variant on init:', currentVariant);
+    console.log('[DEBUG] Flashcards count:', flashcards.length);
+    if (currentVariant === 'option-a-sheets') {
+        console.log('[DEBUG] Initializing mobile sheets layout...');
+        initMobileSheetsLayout();
+        console.log('[DEBUG] Mobile sheets layout initialized');
+    }
+    
     // Load related/similar sets for all layouts (slight delay to ensure content is ready)
     setTimeout(() => {
         if (flashcards.length > 0) {
@@ -1297,6 +1307,30 @@ function attachEventListeners() {
         resetPlanBtn.addEventListener('click', resetStudyPlan);
     }
     
+    // Desktop accordion toggle
+    const desktopAccordionLabel = document.getElementById('desktop-accordion-label');
+    const desktopField = desktopAccordionLabel?.closest('.desktop-field');
+    const desktopSelector = document.getElementById('variant-selector-desktop');
+    
+    if (desktopAccordionLabel && desktopField && desktopSelector) {
+        desktopAccordionLabel.addEventListener('click', () => {
+            desktopField.classList.toggle('expanded');
+            desktopSelector.classList.toggle('collapsed');
+        });
+    }
+    
+    // Mobile accordion toggle
+    const mobileAccordionLabel = document.getElementById('mobile-accordion-label');
+    const mobileField = mobileAccordionLabel?.closest('.mobile-field');
+    const mobileSelector = document.getElementById('variant-selector-mobile');
+    
+    if (mobileAccordionLabel && mobileField && mobileSelector) {
+        mobileAccordionLabel.addEventListener('click', () => {
+            mobileField.classList.toggle('expanded');
+            mobileSelector.classList.toggle('collapsed');
+        });
+    }
+    
     // Archived accordion toggle
     const archivedAccordionLabel = document.getElementById('archived-accordion-label');
     const archivedField = archivedAccordionLabel?.closest('.archived-field');
@@ -1361,7 +1395,8 @@ function attachEventListeners() {
         btn.addEventListener('click', () => {
             let variant = btn.dataset.variant;
             // Map archived variants to their base variants
-            if (variant.endsWith('-archived')) {
+            // but keep special variants like "option-a-sheets" intact
+            if (variant.endsWith('-archived') && !variant.includes('sheets')) {
                 variant = variant.replace(/-archived$/, '');
             }
             setDesignVariant(variant);
@@ -1481,7 +1516,7 @@ async function openImportModal() {
 // Design Variant Functions
 // ============================================
 
-const VARIANTS = ['option-a', 'option-b', 'option-c', 'option-d', 'option-e'];
+const VARIANTS = ['option-a', 'option-b', 'option-c', 'option-d', 'option-e', 'option-a-sheets'];
 
 /**
  * Set the design variant
@@ -1530,6 +1565,11 @@ function setDesignVariant(variant) {
     // If switching to Table, initialize the table view
     if (variant === 'option-d') {
         initTableView();
+    }
+    
+    // If switching to Mobile Sheets, initialize the mobile layout
+    if (variant === 'option-a-sheets') {
+        initMobileSheetsLayout();
     }
     
     console.log(`Design variant set to: ${variant}`);
@@ -4627,8 +4667,12 @@ function updateVariantButtonStates() {
     buttons?.forEach(btn => {
         let btnVariant = btn.dataset.variant;
         // Map archived variants to their base variants for comparison
-        const baseVariant = btnVariant.replace(/-archived$/, '');
-        btn.classList.toggle('active', baseVariant === currentVariant);
+        // but keep special variants like "option-a-sheets" intact
+        let compareVariant = btnVariant;
+        if (btnVariant.endsWith('-archived') && !btnVariant.includes('sheets')) {
+            compareVariant = btnVariant.replace(/-archived$/, '');
+        }
+        btn.classList.toggle('active', compareVariant === currentVariant);
     });
 }
 
@@ -8337,6 +8381,557 @@ function clearAiChat() {
                 }
             });
         });
+    }
+}
+
+// ============================================
+// Mobile Sheets Layout Functions
+// ============================================
+
+/**
+ * Initialize mobile sheets layout
+ */
+function initMobileSheetsLayout() {
+    console.log('[DEBUG] ===== initMobileSheetsLayout called =====');
+    const termsSheet = document.getElementById('mobile-terms-sheet');
+    const actionsSheet = document.getElementById('mobile-actions-sheet');
+    const planSheet = document.getElementById('mobile-plan-sheet');
+    const background = document.querySelector('.mobile-background');
+    
+    console.log('[DEBUG] termsSheet:', termsSheet);
+    console.log('[DEBUG] actionsSheet:', actionsSheet);
+    console.log('[DEBUG] planSheet:', planSheet);
+    
+    if (!termsSheet) {
+        console.error('[DEBUG] termsSheet not found! Cannot initialize mobile sheets layout');
+        return;
+    }
+    
+    // Initialize sheet dragging
+    initSheetDragging(termsSheet, 'terms');
+    if (actionsSheet) initSheetDragging(actionsSheet, 'actions');
+    if (planSheet) initSheetDragging(planSheet, 'plan');
+    
+    // Populate terms list
+    updateMobileTermsList();
+    
+    // Update mobile set info
+    updateMobileSetInfo();
+    
+    // Back button opens debug menu
+    const backBtn = document.querySelector('.mobile-back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            openImportModal();
+        });
+    }
+    
+    // Terms fullscreen close button
+    const fullscreenCloseBtn = document.getElementById('mobile-fullscreen-close');
+    if (fullscreenCloseBtn) {
+        fullscreenCloseBtn.addEventListener('click', () => {
+            setSheetState(termsSheet, 'peek', 'terms');
+        });
+    }
+    
+    // Actions fullscreen close button
+    const actionsFullscreenCloseBtn = document.getElementById('mobile-actions-fullscreen-close');
+    if (actionsFullscreenCloseBtn) {
+        actionsFullscreenCloseBtn.addEventListener('click', () => {
+            setSheetState(actionsSheet, 'peek', 'actions');
+        });
+    }
+    
+    
+    // Play button opens study mode
+    const playBtn = document.getElementById('mobile-play-btn');
+    if (playBtn) {
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openStudyModeScreen();
+        });
+    }
+    
+    
+    // Sort button handler - expands actions sheet to fullscreen
+    const sortBtn = document.getElementById('mobile-sort-btn');
+    if (sortBtn) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSheetState(actionsSheet, 'fullscreen', 'actions');
+        });
+    }
+    
+    // Study mode card clicks
+    const studyModeCards = document.querySelectorAll('.mobile-study-mode-card');
+    studyModeCards.forEach(card => {
+        card.addEventListener('click', () => {
+            openStudyModeScreen();
+        });
+    });
+    
+    // Initialize swipe-down to collapse on timeline
+    const timeline = document.querySelector('.mobile-study-plan-timeline');
+    if (timeline && actionsSheet) {
+        initTimelineSwipeDown(timeline, actionsSheet);
+    }
+    
+    // Initialize scroll-up to expand on terms content
+    const termsContent = document.getElementById('mobile-terms-content');
+    if (termsContent && termsSheet) {
+        initTermsScrollUpExpand(termsContent, termsSheet);
+    }
+    
+    console.log('[DEBUG] ===== initMobileSheetsLayout completed successfully =====');
+}
+
+/**
+ * Initialize module swipe-to-expand behavior
+ */
+function initSheetDragging(sheet, sheetType = 'terms') {
+    const handle = sheet.querySelector('.mobile-sheet-handle');
+    if (!handle) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let hasMoved = false;
+    let initialHeight = 0;
+    
+    const handleStart = (e) => {
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        currentY = startY;
+        isDragging = true;
+        hasMoved = false;
+        
+        // Store initial height
+        const rect = sheet.getBoundingClientRect();
+        initialHeight = rect.height;
+        
+        // Disable transitions during drag
+        sheet.style.transition = 'none';
+    };
+    
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        
+        e.preventDefault(); // Prevent scrolling while dragging
+        
+        currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = currentY - startY;
+        
+        // Mark as moved if dragged more than 5px
+        if (Math.abs(deltaY) > 5) {
+            hasMoved = true;
+        }
+        
+        // Update height in real-time as user drags
+        const currentState = sheet.dataset.state || 'peek';
+        if (currentState === 'peek' && deltaY < 0) {
+            // Dragging up - grow the module from bottom (top edge moves up)
+            const maxHeight = window.innerHeight;
+            const dragDistance = Math.abs(deltaY);
+            const newHeight = Math.min(initialHeight + dragDistance, maxHeight);
+            
+            // Use transform to move the top edge up while keeping bottom anchored
+            sheet.style.height = `${newHeight}px`;
+            sheet.style.flex = 'none'; // Override flex during drag
+            sheet.style.marginTop = `-${dragDistance}px`; // Move top edge up
+        } else if (currentState === 'fullscreen' && deltaY > 0) {
+            // Dragging down from fullscreen - shrink with resistance
+            const dragAmount = deltaY * 0.5; // Add resistance
+            sheet.style.transform = `translateY(${dragAmount}px)`;
+        }
+    };
+    
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = currentY - startY;
+        const currentState = sheet.dataset.state || 'peek';
+        
+        // Only trigger if user actually dragged (not just tapped)
+        if (hasMoved) {
+            // Reduced threshold - drag 100px to snap to fullscreen
+            if (deltaY < -100 && currentState === 'peek') {
+                // Re-enable transitions for snap
+                sheet.style.transition = '';
+                sheet.style.transform = '';
+                sheet.style.height = '';
+                sheet.style.flex = '';
+                sheet.style.marginTop = '';
+                setSheetState(sheet, 'fullscreen', sheetType);
+            }
+            // Swipe down to exit fullscreen
+            else if (deltaY > 100 && currentState === 'fullscreen') {
+                sheet.style.transition = '';
+                sheet.style.transform = '';
+                sheet.style.height = '';
+                sheet.style.flex = '';
+                sheet.style.marginTop = '';
+                setSheetState(sheet, 'peek', sheetType);
+            } else {
+                // Snap back to original state
+                sheet.style.transition = '';
+                sheet.style.transform = '';
+                sheet.style.height = '';
+                sheet.style.flex = '';
+                sheet.style.marginTop = '';
+            }
+        } else {
+            // No drag, just restore
+            sheet.style.transition = '';
+            sheet.style.transform = '';
+            sheet.style.height = '';
+            sheet.style.flex = '';
+            sheet.style.marginTop = '';
+        }
+        
+        hasMoved = false;
+    };
+    
+    // Touch events
+    handle.addEventListener('touchstart', handleStart, { passive: false });
+    handle.addEventListener('touchmove', handleMove, { passive: false });
+    handle.addEventListener('touchend', handleEnd, { passive: false });
+    
+    // Mouse events for desktop testing
+    handle.addEventListener('mousedown', handleStart);
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+}
+
+/**
+ * Initialize drag-to-dismiss for fullscreen modules
+ */
+function initFullscreenDragDismiss(sheet, sheetType) {
+    if (!sheet) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    
+    const handleStart = (e) => {
+        // Only enable drag-to-dismiss when in fullscreen
+        if (sheet.dataset.state !== 'fullscreen') return;
+        
+        // Check if scrolled to top
+        const content = sheet.querySelector('.mobile-sheet-content');
+        if (content && content.scrollTop > 0) return;
+        
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        currentY = startY;
+        isDragging = true;
+        sheet.style.transition = 'none';
+    };
+    
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        
+        currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = currentY - startY;
+        
+        // Only allow dragging down
+        if (deltaY > 0) {
+            e.preventDefault();
+            sheet.style.transform = `translateY(${deltaY}px)`;
+        }
+    };
+    
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = currentY - startY;
+        
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        
+        // If dragged down more than 100px, exit fullscreen
+        if (deltaY > 100) {
+            setSheetState(sheet, 'peek', sheetType);
+        }
+    };
+    
+    // Add listeners to the sheet itself
+    sheet.addEventListener('touchstart', handleStart, { passive: false });
+    sheet.addEventListener('touchmove', handleMove, { passive: false });
+    sheet.addEventListener('touchend', handleEnd, { passive: false });
+}
+
+/**
+ * Set module state (peek or fullscreen only)
+ */
+function setSheetState(sheet, state, sheetType = 'terms') {
+    sheet.dataset.state = state;
+    
+    // Update body classes based on module type and state
+    document.body.classList.remove('terms-fullscreen', 'actions-fullscreen', 'sheet-fullscreen');
+    
+    if (state === 'fullscreen') {
+        if (sheetType === 'terms') {
+            document.body.classList.add('terms-fullscreen');
+        } else if (sheetType === 'actions') {
+            document.body.classList.add('actions-fullscreen');
+        }
+        document.body.classList.add('sheet-fullscreen');
+    }
+}
+
+/**
+ * Initialize swipe down to collapse on timeline
+ */
+function initTimelineSwipeDown(timeline, sheet) {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let startScrollTop = 0;
+    
+    const handleStart = (e) => {
+        // Only handle if at the top of scroll
+        const scrollTop = timeline.scrollTop || 0;
+        
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        currentY = startY;
+        startScrollTop = scrollTop;
+        isDragging = true;
+    };
+    
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        
+        currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = currentY - startY;
+        
+        // Only allow swipe down when at top of scroll
+        if (startScrollTop === 0 && deltaY > 0) {
+            e.preventDefault();
+        }
+    };
+    
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = currentY - startY;
+        
+        // If swiped down more than 100px from the top, collapse
+        if (startScrollTop === 0 && deltaY > 100) {
+            setSheetState(sheet, 'peek', 'actions');
+        }
+    };
+    
+    timeline.addEventListener('touchstart', handleStart, { passive: false });
+    timeline.addEventListener('touchmove', handleMove, { passive: false });
+    timeline.addEventListener('touchend', handleEnd, { passive: false });
+}
+
+/**
+ * Initialize scroll up to expand on terms content
+ */
+function initTermsScrollUpExpand(termsContent, sheet) {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let startScrollTop = 0;
+    
+    const handleStart = (e) => {
+        const scrollTop = termsContent.scrollTop || 0;
+        
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        currentY = startY;
+        startScrollTop = scrollTop;
+        isDragging = true;
+    };
+    
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        
+        currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = currentY - startY;
+        
+        // Only prevent default when scrolling up from top in peek state
+        const currentState = sheet.dataset.state || 'peek';
+        if (currentState === 'peek' && startScrollTop === 0 && deltaY < 0) {
+            e.preventDefault();
+        }
+    };
+    
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = currentY - startY;
+        const currentState = sheet.dataset.state || 'peek';
+        
+        // If scrolled up more than 100px from the top while in peek state, expand to fullscreen
+        if (currentState === 'peek' && startScrollTop === 0 && deltaY < -100) {
+            setSheetState(sheet, 'fullscreen', 'terms');
+        }
+    };
+    
+    termsContent.addEventListener('touchstart', handleStart, { passive: false });
+    termsContent.addEventListener('touchmove', handleMove, { passive: false });
+    termsContent.addEventListener('touchend', handleEnd, { passive: false });
+}
+
+/**
+ * Update mobile terms list
+ */
+function updateMobileTermsList() {
+    const termsList = document.getElementById('mobile-terms-list');
+    const termsCount = document.getElementById('mobile-terms-count');
+    
+    console.log('[DEBUG] updateMobileTermsList called');
+    console.log('[DEBUG] termsList element:', termsList);
+    console.log('[DEBUG] flashcards.length:', flashcards.length);
+    
+    if (!termsList) {
+        console.error('[DEBUG] termsList element not found!');
+        return;
+    }
+    
+    // Clear existing
+    termsList.innerHTML = '';
+    
+    // Update count
+    if (termsCount) {
+        termsCount.textContent = `${flashcards.length} terms`;
+    }
+    
+    // Populate terms
+    flashcards.forEach((card, index) => {
+        const termCard = document.createElement('div');
+        termCard.className = 'mobile-term-card';
+        termCard.dataset.index = index;
+        
+        const termContent = document.createElement('div');
+        termContent.className = 'mobile-term-content';
+        
+        const termTitle = document.createElement('div');
+        termTitle.className = 'mobile-term-title';
+        termTitle.textContent = card.term;
+        
+        const termDef = document.createElement('div');
+        termDef.className = 'mobile-term-definition';
+        termDef.textContent = card.definition;
+        
+        termContent.appendChild(termTitle);
+        termContent.appendChild(termDef);
+        
+        const termActions = document.createElement('div');
+        termActions.className = 'mobile-term-actions';
+        
+        const speakerBtn = document.createElement('button');
+        speakerBtn.className = 'mobile-term-action-btn';
+        speakerBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
+        speakerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        const starBtn = document.createElement('button');
+        starBtn.className = 'mobile-term-action-btn';
+        starBtn.innerHTML = '<span class="material-symbols-rounded">star</span>';
+        starBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        termActions.appendChild(speakerBtn);
+        termActions.appendChild(starBtn);
+        
+        termCard.appendChild(termContent);
+        termCard.appendChild(termActions);
+        
+        termsList.appendChild(termCard);
+    });
+    
+    console.log('[DEBUG] Added', flashcards.length, 'term cards to mobile-terms-list');
+    console.log('[DEBUG] termsList now has', termsList.children.length, 'children');
+}
+
+/**
+ * Initialize drag-to-dismiss for fullscreen modules
+ */
+function initFullscreenDragDismiss(sheet, sheetType) {
+    if (!sheet) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    
+    const handleStart = (e) => {
+        // Only enable drag-to-dismiss when in fullscreen
+        if (sheet.dataset.state !== 'fullscreen') return;
+        
+        // Check if scrolled to top
+        const content = sheet.querySelector('.mobile-sheet-content');
+        if (content && content.scrollTop > 0) return;
+        
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        currentY = startY;
+        isDragging = true;
+    };
+    
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        
+        currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = currentY - startY;
+        
+        // Only allow dragging down
+        if (deltaY > 0) {
+            e.preventDefault();
+            sheet.style.transform = `translateY(${deltaY}px)`;
+        }
+    };
+    
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = currentY - startY;
+        
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        
+        // If dragged down more than 100px, exit fullscreen
+        if (deltaY > 100) {
+            setSheetState(sheet, 'peek', sheetType);
+        }
+    };
+    
+    // Add listeners to the sheet content area
+    const content = sheet.querySelector('.mobile-sheet-content');
+    if (content) {
+        content.addEventListener('touchstart', handleStart, { passive: false });
+        content.addEventListener('touchmove', handleMove, { passive: false });
+        content.addEventListener('touchend', handleEnd, { passive: false });
+    }
+}
+
+/**
+ * Update mobile set info
+ */
+function updateMobileSetInfo() {
+    const titleEl = document.getElementById('mobile-set-title');
+    const authorEl = document.getElementById('mobile-author-name');
+    const progressEl = document.getElementById('mobile-mode-progress');
+    
+    if (titleEl) {
+        const currentTitle = localStorage.getItem('currentTitle') || 'Study Set';
+        titleEl.textContent = currentTitle;
+    }
+    
+    if (authorEl) {
+        const testerName = localStorage.getItem('currentTesterName') || 'Anonymous';
+        authorEl.textContent = `By ${testerName}`;
+    }
+    
+    if (progressEl) {
+        const knownCount = Array.from(state.knownCards).length;
+        const totalCards = flashcards.length;
+        progressEl.textContent = `${knownCount} of ${totalCards} cards completed`;
     }
 }
 
