@@ -8892,8 +8892,8 @@ function initMobileOptionCBottomSheet() {
         const state = sheet.dataset.state;
         startState = state;
         
-        // In fullscreen, only allow dragging if list is scrolled to top
-        if (state === 'fullscreen' && termsList && termsList.scrollTop > 2) {
+        // Disable dragging entirely in fullscreen mode
+        if (state === 'fullscreen') {
             isDraggingSheet = false;
             return;
         }
@@ -8962,24 +8962,21 @@ function initMobileOptionCBottomSheet() {
                 targetState = 'fullscreen';
             }
         } else if (dy < -50) {
-            // Swipe down - collapse
-            if (currentState === 'fullscreen') {
-                if (!termsList || termsList.scrollTop <= 2) {
-                    targetState = 'peek';
-                }
-            } else if (currentState === 'peek') {
+            // Swipe down - collapse (only from peek to collapsed)
+            if (currentState === 'peek') {
                 targetState = 'collapsed';
             }
         } else {
             // Small drag - snap to nearest state based on current height
+            // (only collapsed or peek, since we don't allow dragging from fullscreen)
             const toPeek = Math.abs(currentHeight - peekHeight);
             const toCollapsed = Math.abs(currentHeight - collapsedHeight);
-            const toFullscreen = Math.abs(currentHeight - fullscreenHeight);
             
-            const minDist = Math.min(toPeek, toCollapsed, toFullscreen);
-            if (minDist === toCollapsed) targetState = 'collapsed';
-            else if (minDist === toPeek) targetState = 'peek';
-            else targetState = 'fullscreen';
+            if (toCollapsed < toPeek) {
+                targetState = 'collapsed';
+            } else {
+                targetState = 'peek';
+            }
         }
         
         // Reset inline height and apply state
@@ -9021,12 +9018,27 @@ function initMobileOptionCBottomSheet() {
     const searchWrap = document.getElementById('option-c-search-wrap');
     const searchInput = document.getElementById('option-c-search-input');
     const searchClear = document.getElementById('option-c-search-clear');
+    const searchCancel = document.getElementById('option-c-search-cancel');
+
+    function closeSearch() {
+        searchWrap.classList.remove('active');
+        searchInput.value = '';
+        filterOptionCTerms('');
+        searchClear.classList.remove('visible');
+        searchInput.blur();
+    }
 
     if (searchTrigger && searchWrap && searchInput) {
         searchTrigger.addEventListener('click', () => {
+            // Trigger reflow to ensure transition works
+            searchWrap.offsetHeight;
             searchWrap.classList.add('active');
-            setTimeout(() => searchInput.focus(), 80);
+            setTimeout(() => searchInput.focus(), 100);
         });
+    }
+
+    if (searchCancel) {
+        searchCancel.addEventListener('click', closeSearch);
     }
 
     if (searchInput) {

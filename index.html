@@ -2049,6 +2049,18 @@
 
             <!-- Fullscreen body -->
             <div class="option-c-sheet-body" id="option-c-sheet-body">
+                <!-- Inline search bar (appears when search triggered, replaces header) -->
+                <div class="option-c-search-wrap" id="option-c-search-wrap">
+                    <div class="option-c-search-input-container">
+                        <span class="material-symbols-rounded option-c-search-icon">search</span>
+                        <input type="text" id="option-c-search-input" class="option-c-search-input" placeholder="Search terms...">
+                        <button id="option-c-search-clear" class="option-c-search-clear">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+                    <button class="option-c-search-cancel" id="option-c-search-cancel">Cancel</button>
+                </div>
+
                 <!-- Fullscreen header: chevron-down | N terms | edit · search · filter -->
                 <div class="option-c-sheet-full-header">
                     <button class="option-c-collapse-btn" id="option-c-close-sheet-btn" aria-label="Collapse">
@@ -2066,15 +2078,6 @@
                             <span class="material-symbols-rounded">filter_list</span>
                         </button>
                     </div>
-                </div>
-
-                <!-- Inline search bar (appears when search triggered) -->
-                <div class="option-c-search-wrap" id="option-c-search-wrap">
-                    <span class="material-symbols-rounded option-c-search-icon">search</span>
-                    <input type="text" id="option-c-search-input" class="option-c-search-input" placeholder="Search terms...">
-                    <button id="option-c-search-clear" class="option-c-search-clear">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
                 </div>
 
                 <!-- Scrollable terms list -->
