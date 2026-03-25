@@ -8867,7 +8867,7 @@ function initMobileOptionCBottomSheet() {
     });
 
     // Draggable sheet with visual feedback
-    let touchStartY = 0;
+    let startY = 0;
     let isDraggingSheet = false;
     let startHeight = 0;
     let startState = 'peek';
@@ -8888,7 +8888,7 @@ function initMobileOptionCBottomSheet() {
         return vh * 0.5;
     }
     
-    sheet.addEventListener('touchstart', (e) => {
+    function handleDragStart(clientY) {
         const state = sheet.dataset.state;
         startState = state;
         
@@ -8898,20 +8898,18 @@ function initMobileOptionCBottomSheet() {
             return;
         }
         
-        touchStartY = e.touches[0].clientY;
+        startY = clientY;
         isDraggingSheet = true;
         startHeight = getCurrentHeight();
         
         // Disable transition during drag
         sheet.style.transition = 'none';
-    });
+    }
     
-    sheet.addEventListener('touchmove', (e) => {
+    function handleDragMove(clientY) {
         if (!isDraggingSheet) return;
         
-        const state = sheet.dataset.state;
-        const currentY = e.touches[0].clientY;
-        const deltaY = currentY - touchStartY;
+        const deltaY = clientY - startY;
         
         // Calculate new height (dragging up = negative deltaY = increase height)
         let newHeight = startHeight - deltaY;
@@ -8933,16 +8931,16 @@ function initMobileOptionCBottomSheet() {
         newHeight = Math.max(40, Math.min(maxHeight + 100, newHeight));
         
         sheet.style.height = `${newHeight}px`;
-    });
+    }
     
-    sheet.addEventListener('touchend', (e) => {
+    function handleDragEnd(clientY) {
         if (!isDraggingSheet) return;
         isDraggingSheet = false;
         
         // Re-enable transition
         sheet.style.transition = '';
         
-        const dy = touchStartY - e.changedTouches[0].clientY;
+        const dy = startY - clientY;
         const currentState = sheet.dataset.state;
         const currentHeight = getCurrentHeight();
         
@@ -8988,6 +8986,39 @@ function initMobileOptionCBottomSheet() {
             setSheetToPeek();
         } else {
             collapseSheet();
+        }
+    }
+    
+    // Touch events
+    sheet.addEventListener('touchstart', (e) => {
+        handleDragStart(e.touches[0].clientY);
+    }, { passive: true });
+    
+    sheet.addEventListener('touchmove', (e) => {
+        handleDragMove(e.touches[0].clientY);
+    }, { passive: true });
+    
+    sheet.addEventListener('touchend', (e) => {
+        handleDragEnd(e.changedTouches[0].clientY);
+    }, { passive: true });
+    
+    // Mouse events for trackpad/mouse support
+    sheet.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        handleDragStart(e.clientY);
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (isDraggingSheet) {
+            e.preventDefault();
+            handleDragMove(e.clientY);
+        }
+    });
+    
+    document.addEventListener('mouseup', (e) => {
+        if (isDraggingSheet) {
+            e.preventDefault();
+            handleDragEnd(e.clientY);
         }
     });
 
