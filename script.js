@@ -8869,9 +8869,24 @@ function initMobileOptionCBottomSheet() {
     // Draggable sheet with visual feedback
     let touchStartY = 0;
     let isDraggingSheet = false;
-    let currentTranslate = 0;
+    let startHeight = 0;
     let startState = 'peek';
     const termsList = document.getElementById('option-c-terms-list');
+    
+    // Get current height in pixels
+    function getCurrentHeight() {
+        const rect = sheet.getBoundingClientRect();
+        return rect.height;
+    }
+    
+    // Get target heights for each state
+    function getStateHeight(state) {
+        const vh = window.innerHeight;
+        if (state === 'collapsed') return 60;
+        if (state === 'peek') return vh * 0.5;
+        if (state === 'fullscreen') return vh;
+        return vh * 0.5;
+    }
     
     sheet.addEventListener('touchstart', (e) => {
         const state = sheet.dataset.state;
@@ -8885,7 +8900,7 @@ function initMobileOptionCBottomSheet() {
         
         touchStartY = e.touches[0].clientY;
         isDraggingSheet = true;
-        currentTranslate = 0;
+        startHeight = getCurrentHeight();
         
         // Disable transition during drag
         sheet.style.transition = 'none';
@@ -8898,22 +8913,26 @@ function initMobileOptionCBottomSheet() {
         const currentY = e.touches[0].clientY;
         const deltaY = currentY - touchStartY;
         
-        // Allow natural dragging with some bounds
-        let translate = deltaY;
+        // Calculate new height (dragging up = negative deltaY = increase height)
+        let newHeight = startHeight - deltaY;
         
-        // Apply resistance at the edges
-        if (state === 'collapsed' && deltaY > 0) {
-            translate = deltaY * 0.3; // Heavy resistance when pulling down from collapsed
-        } else if (state === 'fullscreen' && deltaY < 0) {
-            translate = deltaY * 0.3; // Heavy resistance when pulling up from fullscreen
-        } else if (Math.abs(deltaY) > 300) {
-            // Add resistance when dragging too far
-            const excess = Math.abs(deltaY) - 300;
-            translate = deltaY > 0 ? 300 + excess * 0.2 : -300 + excess * 0.2;
+        // Get bounds for current state
+        const minHeight = 60;
+        const maxHeight = window.innerHeight;
+        
+        // Apply resistance at boundaries
+        if (newHeight < minHeight) {
+            const excess = minHeight - newHeight;
+            newHeight = minHeight - excess * 0.2;
+        } else if (newHeight > maxHeight) {
+            const excess = newHeight - maxHeight;
+            newHeight = maxHeight + excess * 0.2;
         }
         
-        currentTranslate = translate;
-        sheet.style.transform = `translateY(${translate}px)`;
+        // Clamp to reasonable bounds
+        newHeight = Math.max(40, Math.min(maxHeight + 100, newHeight));
+        
+        sheet.style.height = `${newHeight}px`;
     });
     
     sheet.addEventListener('touchend', (e) => {
@@ -8922,29 +8941,56 @@ function initMobileOptionCBottomSheet() {
         
         // Re-enable transition
         sheet.style.transition = '';
-        sheet.style.transform = '';
         
         const dy = touchStartY - e.changedTouches[0].clientY;
         const currentState = sheet.dataset.state;
+        const currentHeight = getCurrentHeight();
         
-        // Swipe up (positive dy) - expand
+        // Determine target state based on drag distance and direction
+        let targetState = currentState;
+        
+        // Calculate thresholds
+        const collapsedHeight = 60;
+        const peekHeight = window.innerHeight * 0.5;
+        const fullscreenHeight = window.innerHeight;
+        
         if (dy > 50) {
+            // Swipe up - expand
             if (currentState === 'collapsed') {
-                setSheetToPeek();
+                targetState = 'peek';
             } else if (currentState === 'peek') {
-                openSheet();
+                targetState = 'fullscreen';
             }
-        }
-        // Swipe down (negative dy) - collapse
-        else if (dy < -50) {
+        } else if (dy < -50) {
+            // Swipe down - collapse
             if (currentState === 'fullscreen') {
-                // Only collapse if the terms list is scrolled to top
                 if (!termsList || termsList.scrollTop <= 2) {
-                    setSheetToPeek();
+                    targetState = 'peek';
                 }
             } else if (currentState === 'peek') {
-                collapseSheet();
+                targetState = 'collapsed';
             }
+        } else {
+            // Small drag - snap to nearest state based on current height
+            const toPeek = Math.abs(currentHeight - peekHeight);
+            const toCollapsed = Math.abs(currentHeight - collapsedHeight);
+            const toFullscreen = Math.abs(currentHeight - fullscreenHeight);
+            
+            const minDist = Math.min(toPeek, toCollapsed, toFullscreen);
+            if (minDist === toCollapsed) targetState = 'collapsed';
+            else if (minDist === toPeek) targetState = 'peek';
+            else targetState = 'fullscreen';
+        }
+        
+        // Reset inline height and apply state
+        sheet.style.height = '';
+        
+        if (targetState === 'fullscreen') {
+            openSheet();
+        } else if (targetState === 'peek') {
+            setSheetToPeek();
+        } else {
+            collapseSheet();
         }
     });
 
