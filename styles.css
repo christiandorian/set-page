@@ -13045,7 +13045,11 @@ body.option-c-bottom-sheet .option-c-terms-sheet[data-state="peek"] .option-c-sh
 body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] {
     height: 100vh;
     border-radius: 0;
-    padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Add padding to sheet body in fullscreen to account for browser chrome */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] .option-c-sheet-body {
+    padding-top: max(env(safe-area-inset-top, 0px), 44px);
 }
 
 /* Hide drag handle in fullscreen */
@@ -13522,12 +13526,24 @@ body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] .optio
     align-items: center;
     gap: 10px;
     padding: 10px 16px 10px;
-    border-bottom: 1px solid var(--sys-border-primary);
     flex-shrink: 0;
     opacity: 1;
     transform: translateY(0);
     transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                 transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.option-c-sheet-full-header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0), var(--surface-base, #fff));
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* Hide header when search is active */
@@ -13595,7 +13611,6 @@ body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] .optio
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    border-bottom: 1px solid var(--sys-border-primary);
     background: var(--surface-base, #fff);
     flex-shrink: 0;
     opacity: 0;
@@ -13608,12 +13623,24 @@ body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] .optio
     left: 0;
     right: 0;
     z-index: 10;
+    height: 59px;
 }
 .option-c-search-wrap.active { 
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
-    position: relative;
+}
+
+.option-c-search-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0), var(--surface-base, #fff));
+    pointer-events: none;
+    z-index: 1;
 }
 
 .option-c-search-input-container {
