@@ -1250,6 +1250,24 @@
                                     <span class="variant-desc">Mobile bottom sheet design</span>
                                 </span>
                             </button>
+                            <button class="variant-btn" data-variant="option-b-inline">
+                                <span class="variant-icon">
+                                    <span class="material-symbols-rounded">view_agenda</span>
+                                </span>
+                                <span class="variant-btn-text">
+                                    <span class="variant-name">Option B — Inline</span>
+                                    <span class="variant-desc">Timeline inline with single sheet</span>
+                                </span>
+                            </button>
+                            <button class="variant-btn" data-variant="option-c-bottom-sheet">
+                                <span class="variant-icon">
+                                    <span class="material-symbols-rounded">vertical_align_bottom</span>
+                                </span>
+                                <span class="variant-btn-text">
+                                    <span class="variant-name">Option C — Bottom sheet</span>
+                                    <span class="variant-desc">Hero card with terms sheet</span>
+                                </span>
+                            </button>
                         </div>
                     </div>
                 
@@ -1384,41 +1402,283 @@
                 <button class="mobile-header-btn mobile-bookmark-btn">
                     <span class="material-symbols-rounded">bookmark</span>
                 </button>
+                <button type="button" class="mobile-header-btn mobile-download-btn" aria-label="Download">
+                    <span class="material-symbols-rounded">download</span>
+                </button>
                 <button class="mobile-header-btn mobile-more-btn">
-                    <span class="material-symbols-rounded">more_horiz</span>
+                    <span class="material-symbols-rounded mobile-more-icon--default">more_horiz</span>
+                    <span class="material-symbols-rounded mobile-more-icon--option-c">more_vert</span>
                 </button>
             </div>
         </header>
 
-        <!-- Mobile Set Info -->
-        <div class="mobile-set-info">
-            <h1 class="mobile-set-title" id="mobile-set-title">BIO 110, Exam 1</h1>
-            <div class="mobile-set-meta">
-                <div class="mobile-set-author">
-                    <img src="images/Avatar.png" alt="Author" class="mobile-author-icon">
-                    <span class="mobile-author-name" id="mobile-author-name">By AllStudyNoSleep</span>
-                </div>
-                <div class="mobile-set-stats">
-                    <span class="mobile-stat">
-                        <span class="material-symbols-rounded">trending_up</span>
-                        <span id="mobile-studiers-count">12 Studiers today</span>
-                    </span>
-                    <span class="mobile-stat">
-                        <span class="mobile-stat-stars">
-                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
-                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
-                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
-                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
-                            <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+        <!-- Scrollable wrapper for set info and timeline (Option B — Inline) -->
+        <div class="mobile-scrollable-header">
+            <!-- Mobile Set Info -->
+            <div class="mobile-set-info">
+                <h1 class="mobile-set-title" id="mobile-set-title">BIO 110, Exam 1</h1>
+                <div class="mobile-set-meta">
+                    <div class="mobile-set-author">
+                        <img src="images/Avatar.png" alt="Author" class="mobile-author-icon">
+                        <span class="mobile-author-name" id="mobile-author-name">By AllStudyNoSleep</span>
+                    </div>
+                    <div class="mobile-set-stats">
+                        <span class="mobile-stat">
+                            <span class="material-symbols-rounded">trending_up</span>
+                            <span id="mobile-studiers-count">12 Studiers today</span>
                         </span>
-                        <span class="mobile-stat-count" id="mobile-rating">(3)</span>
-                    </span>
+                        <span class="mobile-stat">
+                            <span class="mobile-stat-stars">
+                                <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                                <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                                <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                                <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                                <img src="images/star-filled.png" alt="star" class="mobile-star-icon">
+                            </span>
+                            <span class="mobile-stat-count" id="mobile-rating">(3)</span>
+                        </span>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Inline Timeline Container (Option B — Inline only) -->
+            <div class="mobile-inline-timeline-container" id="mobile-inline-timeline-container">
+                <!-- Timeline items will be populated here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Option C — Bottom sheet: hero flashcard + flashcards row (variant only) -->
+        <div class="mobile-option-c-hero" id="mobile-option-c-hero">
+            <div class="mobile-option-c-progress-row">
+                <div class="mobile-option-c-mode-icon-wrap" aria-hidden="true">
+                    <img src="images/flashcards.png" alt="" class="mobile-option-c-mode-icon">
+                </div>
+                <div class="mobile-option-c-mode-text">
+                    <div class="mobile-option-c-mode-name">Flashcards</div>
+                    <div class="mobile-option-c-mode-progress" id="mobile-option-c-mode-progress">0 of 37 completed</div>
+                </div>
+                <button type="button" class="mobile-option-c-start-btn" id="mobile-option-c-play-btn">
+                    <span class="material-symbols-rounded filled">play_arrow</span>
+                    <span>Start</span>
+                </button>
+            </div>
+            <div class="mobile-option-c-flashcard" id="mobile-option-c-flashcard">
+                <span class="mobile-option-c-flashcard-term" id="mobile-option-c-hero-term">Isomers</span>
             </div>
         </div>
 
         <!-- Mobile Background (for dimming when modules are fullscreen) -->
         <div class="mobile-background"></div>
+
+        <!-- Option C — Scrollable page (single-scroll + one bottom sheet layout) -->
+        <div class="option-c-page" id="option-c-page">
+            <!-- Set title + stats -->
+            <h1 class="option-c-title" id="option-c-title">BIO 110, Exam 1</h1>
+            <div class="option-c-meta">
+                <span class="option-c-meta-item">
+                    <span class="material-symbols-rounded option-c-trending-icon">trending_up</span>
+                    <span id="option-c-studiers">12 Studiers today</span>
+                </span>
+                <span class="option-c-meta-item">
+                    <span class="option-c-stars">
+                        <img src="images/star-filled.png" alt="★" class="option-c-star">
+                        <img src="images/star-filled.png" alt="★" class="option-c-star">
+                        <img src="images/star-filled.png" alt="★" class="option-c-star">
+                        <img src="images/star-filled.png" alt="★" class="option-c-star">
+                        <img src="images/star-filled.png" alt="★" class="option-c-star">
+                    </span>
+                    <span class="option-c-rating">(3)</span>
+                </span>
+            </div>
+
+            <!-- Activities timeline -->
+            <div class="option-c-activities">
+
+                <!-- Flashcards (first / active step) -->
+                <div class="option-c-step option-c-step--fc">
+                    <div class="option-c-step-rail">
+                        <div class="option-c-step-dot option-c-step-dot--filled"></div>
+                        <div class="option-c-step-line"></div>
+                    </div>
+                    <div class="option-c-step-body">
+                        <div class="option-c-fc-header">
+                            <div class="option-c-fc-icon-wrap">
+                                <img src="images/flashcards.png" alt="" class="option-c-fc-icon-img">
+                            </div>
+                            <div class="option-c-fc-text">
+                                <div class="option-c-fc-mode-name">Flashcards</div>
+                                <div class="option-c-fc-progress" id="option-c-fc-progress">0 of 37 completed</div>
+                            </div>
+                            <button class="option-c-fc-start-btn" id="option-c-fc-start-btn">
+                                <span class="material-symbols-rounded filled">play_arrow</span>
+                                <span>Start</span>
+                            </button>
+                        </div>
+                        <div class="option-c-fc-card">
+                            <span class="option-c-fc-term" id="option-c-fc-term">Isomers</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learn -->
+                <div class="option-c-step option-c-step--mode">
+                    <div class="option-c-step-rail">
+                        <div class="option-c-step-line"></div>
+                        <div class="option-c-step-dot"></div>
+                        <div class="option-c-step-line"></div>
+                    </div>
+                    <button class="option-c-mode-pill option-c-mode-row" data-mode="learn">
+                        <div class="option-c-mode-icon-wrap option-c-mode--learn">
+                            <span class="material-symbols-rounded">school</span>
+                        </div>
+                        <span class="option-c-mode-name">Learn</span>
+                    </button>
+                </div>
+
+                <!-- Blocks -->
+                <div class="option-c-step option-c-step--mode">
+                    <div class="option-c-step-rail">
+                        <div class="option-c-step-line"></div>
+                        <div class="option-c-step-dot"></div>
+                        <div class="option-c-step-line"></div>
+                    </div>
+                    <button class="option-c-mode-pill option-c-mode-row" data-mode="blocks">
+                        <div class="option-c-mode-icon-wrap option-c-mode--blocks">
+                            <span class="material-symbols-rounded">grid_on</span>
+                        </div>
+                        <span class="option-c-mode-name">Blocks</span>
+                    </button>
+                </div>
+
+                <!-- Blast -->
+                <div class="option-c-step option-c-step--mode">
+                    <div class="option-c-step-rail">
+                        <div class="option-c-step-line"></div>
+                        <div class="option-c-step-dot"></div>
+                        <div class="option-c-step-line"></div>
+                    </div>
+                    <button class="option-c-mode-pill option-c-mode-row" data-mode="blast">
+                        <div class="option-c-mode-icon-wrap option-c-mode--blast">
+                            <span class="material-symbols-rounded">bolt</span>
+                        </div>
+                        <span class="option-c-mode-name">Blast</span>
+                    </button>
+                </div>
+
+                <!-- Match -->
+                <div class="option-c-step option-c-step--mode">
+                    <div class="option-c-step-rail">
+                        <div class="option-c-step-line"></div>
+                        <div class="option-c-step-dot"></div>
+                        <div class="option-c-step-line"></div>
+                    </div>
+                    <button class="option-c-mode-pill option-c-mode-row" data-mode="match">
+                        <div class="option-c-mode-icon-wrap option-c-mode--match">
+                            <span class="material-symbols-rounded">shuffle</span>
+                        </div>
+                        <span class="option-c-mode-name">Match</span>
+                    </button>
+                </div>
+
+                <!-- Test (last — no line below) -->
+                <div class="option-c-step option-c-step--mode option-c-step--last">
+                    <div class="option-c-step-rail">
+                        <div class="option-c-step-line"></div>
+                        <div class="option-c-step-dot"></div>
+                    </div>
+                    <button class="option-c-mode-pill option-c-mode-row" data-mode="test">
+                        <div class="option-c-mode-icon-wrap option-c-mode--test">
+                            <span class="material-symbols-rounded">list_alt</span>
+                        </div>
+                        <span class="option-c-mode-name">Test</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Description -->
+            <div class="option-c-desc-section">
+                <p class="option-c-desc-text" id="option-c-desc-text">This flashcard set includes key concepts and foundational knowledge for your BIO 110 Exam 1. Review essential terms and principles to ensure you're well-prepared!</p>
+            </div>
+
+            <!-- Author -->
+            <div class="option-c-author">
+                <div class="option-c-author-avatar-wrap">
+                    <img src="images/Avatar-photo.png" alt="Author" class="option-c-author-avatar-img">
+                </div>
+                <div class="option-c-author-info">
+                    <div class="option-c-author-name" id="option-c-author-name">AllStudyNoSleep</div>
+                    <div class="option-c-author-badges">
+                        <span class="option-c-badge option-c-badge--verified">
+                            <span class="material-symbols-rounded">verified</span>
+                            Verified
+                        </span>
+                        <span class="option-c-badge option-c-badge--creator">
+                            <span class="material-symbols-rounded">workspace_premium</span>
+                            Top creator
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students also studied -->
+            <div class="option-c-related">
+                <h3 class="option-c-related-title">Students also studied</h3>
+                <div class="option-c-related-list" id="option-c-related-list">
+                    <div class="option-c-related-card">
+                        <div class="option-c-related-thumb">
+                            <span class="material-symbols-rounded">description</span>
+                        </div>
+                        <div class="option-c-related-info">
+                            <div class="option-c-related-badge">
+                                <span class="material-symbols-rounded">trending_up</span>
+                                12 studiers today
+                            </div>
+                            <div class="option-c-related-name">Human Anatomy — Skeletal System Overview</div>
+                            <div class="option-c-related-meta">28 cards · by mark_corrigan</div>
+                        </div>
+                        <button class="option-c-related-more" aria-label="More options">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="option-c-related-card">
+                        <div class="option-c-related-thumb">
+                            <span class="material-symbols-rounded">description</span>
+                        </div>
+                        <div class="option-c-related-info">
+                            <div class="option-c-related-badge">
+                                <span class="material-symbols-rounded">trending_up</span>
+                                12 studiers today
+                            </div>
+                            <div class="option-c-related-name">Human Anatomy — Skeletal System Overview</div>
+                            <div class="option-c-related-meta">28 cards · by mark_corrigan</div>
+                        </div>
+                        <button class="option-c-related-more" aria-label="More options">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="option-c-related-card">
+                        <div class="option-c-related-thumb">
+                            <span class="material-symbols-rounded">description</span>
+                        </div>
+                        <div class="option-c-related-info">
+                            <div class="option-c-related-badge">
+                                <span class="material-symbols-rounded">trending_up</span>
+                                12 studiers today
+                            </div>
+                            <div class="option-c-related-name">Human Anatomy — Skeletal System</div>
+                            <div class="option-c-related-meta">28 cards · by mark_corrigan</div>
+                        </div>
+                        <button class="option-c-related-more" aria-label="More options">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spacer so content doesn't hide under fixed sheet -->
+            <div class="option-c-bottom-spacer"></div>
+        </div>
 
         <!-- Modules Container -->
         <div class="mobile-modules-container">
@@ -1432,9 +1692,16 @@
                 </button>
                 <button class="mobile-terms-dropdown" id="mobile-terms-dropdown">
                     <span id="mobile-terms-count">72 terms</span>
-                    <span class="material-symbols-rounded">expand_more</span>
+                    <span class="mobile-terms-sort-icons" aria-hidden="true">
+                        <span class="material-symbols-rounded">arrow_upward</span>
+                        <span class="material-symbols-rounded">arrow_downward</span>
+                    </span>
+                    <span class="material-symbols-rounded mobile-terms-dropdown-chevron">expand_more</span>
                 </button>
                 <div class="mobile-sheet-actions">
+                    <button type="button" class="mobile-action-btn mobile-terms-edit-btn" id="mobile-terms-edit-btn" aria-label="Edit set">
+                        <span class="material-symbols-rounded">edit</span>
+                    </button>
                     <button class="mobile-action-btn" id="mobile-search-btn">
                         <span class="material-symbols-rounded">search</span>
                     </button>
@@ -1521,10 +1788,82 @@
                 <button class="mobile-fullscreen-close" id="mobile-actions-fullscreen-close">
                     <span class="material-symbols-rounded">close</span>
                 </button>
-                <h2 class="mobile-sheet-title">Study plan</h2>
-                <button class="mobile-header-filter-btn">
+                <h2 class="mobile-sheet-title mobile-actions-title">Study plan</h2>
+                <button class="mobile-header-filter-btn mobile-actions-filter-btn">
                     <span class="material-symbols-rounded">filter_list</span>
                 </button>
+                
+                <!-- Terms header elements (for option-b-inline) -->
+                <button class="mobile-terms-dropdown mobile-inline-terms-dropdown" id="mobile-inline-terms-dropdown" style="display: none;">
+                    <span id="mobile-inline-terms-count">22 terms</span>
+                    <span class="material-symbols-rounded">expand_more</span>
+                </button>
+                <div class="mobile-sheet-actions mobile-inline-sheet-actions" style="display: none;">
+                    <button class="mobile-action-btn" id="mobile-inline-search-btn">
+                        <span class="material-symbols-rounded">search</span>
+                    </button>
+                    <button class="mobile-action-btn" id="mobile-inline-filter-btn">
+                        <span class="material-symbols-rounded">filter_list</span>
+                    </button>
+                </div>
+                <div class="mobile-search-container" id="mobile-inline-search-container">
+                    <span class="material-symbols-rounded mobile-search-icon">search</span>
+                    <input type="text" class="mobile-search-input" id="mobile-inline-search-input" placeholder="Search terms...">
+                    <button class="mobile-search-close" id="mobile-inline-search-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Filter Menu (for inline variant) -->
+            <div class="mobile-filter-menu" id="mobile-inline-filter-menu">
+                <div class="mobile-filter-header">
+                    <h3 class="mobile-filter-title">Filter terms</h3>
+                    <button class="mobile-filter-close" id="mobile-inline-filter-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="mobile-filter-options">
+                    <button class="mobile-filter-option active" data-filter="all">
+                        <span class="material-symbols-rounded">select_all</span>
+                        <span>All terms</span>
+                        <span class="mobile-filter-count" id="mobile-inline-filter-all-count">22</span>
+                    </button>
+                    <button class="mobile-filter-option" data-filter="starred">
+                        <span class="material-symbols-rounded">star</span>
+                        <span>Starred</span>
+                        <span class="mobile-filter-count" id="mobile-inline-filter-starred-count">0</span>
+                    </button>
+                    <button class="mobile-filter-option" data-filter="unstarred">
+                        <span class="material-symbols-rounded">star_outline</span>
+                        <span>Not starred</span>
+                        <span class="mobile-filter-count" id="mobile-inline-filter-unstarred-count">22</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Sort Menu (for inline variant) -->
+            <div class="mobile-sort-menu" id="mobile-inline-sort-menu">
+                <div class="mobile-sort-header">
+                    <h3 class="mobile-sort-title">Sort terms</h3>
+                    <button class="mobile-sort-close" id="mobile-inline-sort-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="mobile-sort-options">
+                    <button class="mobile-sort-option active" data-sort="original">
+                        <span class="material-symbols-rounded">reorder</span>
+                        <span>Original order</span>
+                    </button>
+                    <button class="mobile-sort-option" data-sort="alphabetical">
+                        <span class="material-symbols-rounded">sort_by_alpha</span>
+                        <span>Alphabetical</span>
+                    </button>
+                    <button class="mobile-sort-option" data-sort="random">
+                        <span class="material-symbols-rounded">shuffle</span>
+                        <span>Random</span>
+                    </button>
+                </div>
             </div>
 
             <div class="mobile-sheet-content mobile-actions-content" id="mobile-actions-content">
@@ -1684,6 +2023,75 @@
             <div class="mobile-sheet-content" id="mobile-plan-content">
                 <div class="mobile-plan-list" id="mobile-plan-list">
                     <!-- Study plan items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Option C — Fixed terms bottom sheet -->
+        <div class="option-c-terms-sheet" id="option-c-terms-sheet" data-state="peek">
+            <div class="option-c-sheet-handle"></div>
+
+            <!-- Peek bar: "N terms | Find a term" -->
+            <div class="option-c-peek-bar" id="option-c-peek-bar">
+                <div class="option-c-peek-left">
+                    <span class="option-c-terms-count" id="option-c-terms-count">64 terms</span>
+                    <span class="option-c-sort-icons" aria-hidden="true">
+                        <span class="material-symbols-rounded">arrow_upward</span>
+                        <span class="material-symbols-rounded">arrow_downward</span>
+                    </span>
+                </div>
+                <button class="option-c-find-btn" id="option-c-find-btn">
+                    <span class="material-symbols-rounded">search</span>
+                    <span>Find a term</span>
+                </button>
+            </div>
+
+            <!-- Fullscreen body -->
+            <div class="option-c-sheet-body" id="option-c-sheet-body">
+                <!-- Fullscreen header: chevron-down | N terms | edit · search · filter -->
+                <div class="option-c-sheet-full-header">
+                    <button class="option-c-collapse-btn" id="option-c-close-sheet-btn" aria-label="Collapse">
+                        <span class="material-symbols-rounded">expand_more</span>
+                    </button>
+                    <span class="option-c-sheet-full-count" id="option-c-sheet-full-count">64 terms</span>
+                    <div class="option-c-sheet-actions-row">
+                        <button class="option-c-sheet-action-btn" id="option-c-edit-btn" aria-label="Edit">
+                            <span class="material-symbols-rounded">edit</span>
+                        </button>
+                        <button class="option-c-sheet-action-btn option-c-search-trigger" id="option-c-search-trigger" aria-label="Search">
+                            <span class="material-symbols-rounded">search</span>
+                        </button>
+                        <button class="option-c-sheet-action-btn" id="option-c-filter-btn" aria-label="Filter">
+                            <span class="material-symbols-rounded">filter_list</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inline search bar (appears when search triggered) -->
+                <div class="option-c-search-wrap" id="option-c-search-wrap">
+                    <span class="material-symbols-rounded option-c-search-icon">search</span>
+                    <input type="text" id="option-c-search-input" class="option-c-search-input" placeholder="Search terms...">
+                    <button id="option-c-search-clear" class="option-c-search-clear">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+
+                <!-- Scrollable terms list -->
+                <div class="option-c-terms-list" id="option-c-terms-list">
+                    <!-- Terms populated by JS -->
+                </div>
+
+                <!-- Sticky bottom bar -->
+                <div class="option-c-sheet-footer">
+                    <button class="option-c-add-cards-btn" id="option-c-add-cards-btn">
+                        <span class="material-symbols-rounded">upload</span>
+                        <span>Add cards</span>
+                    </button>
+                    <button class="option-c-start-btn-footer" id="option-c-start-btn-footer">
+                        <span class="material-symbols-rounded filled">play_arrow</span>
+                        <span>Start</span>
+                    </button>
                 </div>
             </div>
         </div>

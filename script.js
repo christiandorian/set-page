@@ -315,7 +315,13 @@ async function init() {
     const currentVariant = localStorage.getItem('designVariant');
     console.log('[DEBUG] Current variant on init:', currentVariant);
     console.log('[DEBUG] Flashcards count:', flashcards.length);
-    if (currentVariant === 'option-a-sheets') {
+    
+    // Save original actions content before any modifications
+    if (currentVariant === 'option-a-sheets' || currentVariant === 'option-b-inline') {
+        saveOriginalActionsContent();
+    }
+    
+    if (currentVariant === 'option-a-sheets' || currentVariant === 'option-b-inline' || currentVariant === 'option-c-bottom-sheet') {
         console.log('[DEBUG] Initializing mobile sheets layout...');
         initMobileSheetsLayout();
         console.log('[DEBUG] Mobile sheets layout initialized');
@@ -354,6 +360,8 @@ function updateCard(autoExpand = true) {
     
     // Sync sidebar highlight with current card
     updateActiveTocItem(autoExpand);
+    
+    syncMobileOptionCHeroTerm();
 }
 
 /**
@@ -1085,6 +1093,8 @@ async function loadSavedContentById(contentId) {
         return;
     }
     
+    console.log('[DEBUG] Loading content:', contentItem.title, 'with', contentItem.flashcards.length, 'cards');
+    
     // Update flashcards array
     flashcards.length = 0;
     flashcards.push(...contentItem.flashcards);
@@ -1127,6 +1137,15 @@ async function loadSavedContentById(contentId) {
     
     if (document.body.classList.contains('option-d')) {
         initTableView();
+    }
+    
+    // Update mobile variants
+    if (document.body.classList.contains('option-a-sheets') || document.body.classList.contains('option-b-inline') || document.body.classList.contains('option-c-bottom-sheet')) {
+        console.log('[DEBUG] Updating mobile views after content selection');
+        updateMobileTermsList();
+        updateMobileSetInfo();
+        syncMobileOptionCHeroTerm();
+        if (document.body.classList.contains('option-c-bottom-sheet')) updateOptionCPage();
     }
     
     // Update content list to show active state
@@ -1527,12 +1546,29 @@ async function openImportModal() {
 // Design Variant Functions
 // ============================================
 
-const VARIANTS = ['option-a', 'option-b', 'option-c', 'option-d', 'option-e', 'option-a-sheets'];
+const VARIANTS = [
+    'option-a', 
+    'option-b', 
+    'option-c', 
+    'option-d', 
+    'option-e', 
+    'option-a-sheets',
+    'option-b-inline',
+    'option-c-bottom-sheet',
+    'option-a-archived',
+    'option-b-archived',
+    'option-c-archived',
+    'option-a-archived-v2',
+    'option-b-archived-v2'
+];
 
 /**
  * Set the design variant
  */
 function setDesignVariant(variant) {
+    // Store current variant BEFORE changing it
+    const previousVariant = localStorage.getItem('designVariant');
+    
     // Remove all variant classes
     VARIANTS.forEach(v => document.body.classList.remove(v));
     
@@ -1578,8 +1614,15 @@ function setDesignVariant(variant) {
         initTableView();
     }
     
-    // If switching to Mobile Sheets, initialize the mobile layout
-    if (variant === 'option-a-sheets') {
+    // Handle mobile variant switching
+    if (variant === 'option-a-sheets' || variant === 'option-b-inline' || variant === 'option-c-bottom-sheet') {
+        // If switching between mobile variants, restore original content first
+        if (previousVariant === 'option-b-inline' && (variant === 'option-a-sheets' || variant === 'option-c-bottom-sheet')) {
+            console.log('[DEBUG] Switching from option-b-inline — restoring original actions content');
+            restoreOriginalActionsContent();
+        }
+        
+        // Initialize the appropriate mobile layout
         initMobileSheetsLayout();
     }
     
@@ -8478,19 +8521,101 @@ function clearAiChat() {
 // Mobile Sheets Layout Functions
 // ============================================
 
+// Store original HTML content for mobile-actions-content
+let originalActionsContentHTML = null;
+
+/**
+ * Save original actions content HTML
+ */
+function saveOriginalActionsContent() {
+    if (originalActionsContentHTML === null) {
+        const actionsContent = document.getElementById('mobile-actions-content');
+        if (actionsContent) {
+            originalActionsContentHTML = actionsContent.innerHTML;
+            console.log('[DEBUG] Saved original actions content HTML');
+        }
+    }
+}
+
+/**
+ * Restore original actions content HTML
+ */
+function restoreOriginalActionsContent() {
+    if (originalActionsContentHTML !== null) {
+        const actionsContent = document.getElementById('mobile-actions-content');
+        if (actionsContent) {
+            actionsContent.innerHTML = originalActionsContentHTML;
+            console.log('[DEBUG] Restored original actions content HTML');
+            
+            // Re-attach event listeners to the restored elements
+            const playBtn = document.getElementById('mobile-play-btn');
+            if (playBtn) {
+                playBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openStudyModeScreen();
+                });
+            }
+            
+            const sortBtn = document.getElementById('mobile-sort-btn');
+            if (sortBtn) {
+                sortBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const actionsSheet = document.getElementById('mobile-actions-sheet');
+                    setSheetState(actionsSheet, 'fullscreen', 'actions');
+                });
+            }
+            
+            const planStartButtons = document.querySelectorAll('.mobile-plan-start-btn');
+            planStartButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const mode = btn.closest('[data-mode]')?.dataset.mode || 'flashcards';
+                    openStudyModeScreen(mode);
+                });
+            });
+        }
+    }
+}
+
 /**
  * Initialize mobile sheets layout
  */
 function initMobileSheetsLayout() {
     console.log('[DEBUG] ===== initMobileSheetsLayout called =====');
+    
+    const variant = localStorage.getItem('designVariant');
+    console.log('[DEBUG] Current variant detected:', variant);
+    
+    // Handle option-b-inline variant differently
+    if (variant === 'option-b-inline') {
+        console.log('[DEBUG] Routing to initMobileInlineLayout()');
+        initMobileInlineLayout();
+        return;
+    }
+    
+    if (variant === 'option-c-bottom-sheet') {
+        console.log('[DEBUG] Routing to initMobileOptionCBottomSheet()');
+        initMobileOptionCBottomSheet();
+        return;
+    }
+    
+    console.log('[DEBUG] Continuing with option-a-sheets layout');
+    
     const termsSheet = document.getElementById('mobile-terms-sheet');
     const actionsSheet = document.getElementById('mobile-actions-sheet');
     const planSheet = document.getElementById('mobile-plan-sheet');
     const background = document.querySelector('.mobile-background');
+    const actionsContent = document.getElementById('mobile-actions-content');
+    const actionsPeek = document.getElementById('mobile-actions-peek');
+    const actionsExpanded = document.getElementById('mobile-actions-expanded');
     
     console.log('[DEBUG] termsSheet:', termsSheet);
     console.log('[DEBUG] actionsSheet:', actionsSheet);
     console.log('[DEBUG] planSheet:', planSheet);
+    console.log('[DEBUG] actionsContent:', actionsContent);
+    console.log('[DEBUG] actionsPeek exists:', !!actionsPeek);
+    console.log('[DEBUG] actionsExpanded exists:', !!actionsExpanded);
+    console.log('[DEBUG] actionsContent.children.length:', actionsContent?.children.length);
     
     if (!termsSheet) {
         console.error('[DEBUG] termsSheet not found! Cannot initialize mobile sheets layout');
@@ -8681,6 +8806,421 @@ function initMobileSheetsLayout() {
     }
     
     console.log('[DEBUG] ===== initMobileSheetsLayout completed successfully =====');
+}
+
+/**
+ * Option C — Bottom sheet: hero flashcard + single terms sheet (mock-aligned)
+ */
+function initMobileOptionCBottomSheet() {
+    const sheet = document.getElementById('option-c-terms-sheet');
+    if (!sheet) {
+        console.error('[Option C] option-c-terms-sheet not found');
+        return;
+    }
+
+    // Sync content
+    updateMobileSetInfo();
+    updateOptionCPage();
+
+    // Back button → open import/options modal
+    const backBtn = document.querySelector('.mobile-back-btn');
+    if (backBtn) backBtn.addEventListener('click', () => openImportModal());
+
+    // Flashcard Start button
+    const startBtn = document.getElementById('option-c-fc-start-btn');
+    if (startBtn) startBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openStudyModeScreen();
+    });
+
+    // Mode rows → launch study mode
+    document.querySelectorAll('.option-c-mode-row').forEach(row => {
+        row.addEventListener('click', () => {
+            const mode = row.dataset.mode || 'flashcards';
+            openStudyModeScreen(mode);
+        });
+    });
+
+    // ---- Bottom sheet expand / collapse ----
+    function openSheet() {
+        sheet.dataset.state = 'fullscreen';
+    }
+    function setSheetToPeek() {
+        sheet.dataset.state = 'peek';
+        const searchWrap = document.getElementById('option-c-search-wrap');
+        if (searchWrap) searchWrap.classList.remove('active');
+        const input = document.getElementById('option-c-search-input');
+        if (input) { input.value = ''; filterOptionCTerms(''); }
+        const clearBtn = document.getElementById('option-c-search-clear');
+        if (clearBtn) clearBtn.classList.remove('visible');
+    }
+    function collapseSheet() {
+        sheet.dataset.state = 'collapsed';
+    }
+
+    // Tap on handle → expand to next state
+    const handle = sheet.querySelector('.option-c-sheet-handle');
+    if (handle) handle.addEventListener('click', () => {
+        const state = sheet.dataset.state;
+        if (state === 'collapsed') setSheetToPeek();
+        else if (state === 'peek') openSheet();
+    });
+
+    // Draggable sheet with visual feedback
+    let touchStartY = 0;
+    let isDraggingSheet = false;
+    let currentTranslate = 0;
+    let startState = 'peek';
+    const termsList = document.getElementById('option-c-terms-list');
+    
+    sheet.addEventListener('touchstart', (e) => {
+        const state = sheet.dataset.state;
+        startState = state;
+        
+        // In fullscreen, only allow dragging if list is scrolled to top
+        if (state === 'fullscreen' && termsList && termsList.scrollTop > 2) {
+            isDraggingSheet = false;
+            return;
+        }
+        
+        touchStartY = e.touches[0].clientY;
+        isDraggingSheet = true;
+        currentTranslate = 0;
+        
+        // Disable transition during drag
+        sheet.style.transition = 'none';
+    });
+    
+    sheet.addEventListener('touchmove', (e) => {
+        if (!isDraggingSheet) return;
+        
+        const state = sheet.dataset.state;
+        const currentY = e.touches[0].clientY;
+        const deltaY = currentY - touchStartY;
+        
+        // Allow natural dragging with some bounds
+        let translate = deltaY;
+        
+        // Apply resistance at the edges
+        if (state === 'collapsed' && deltaY > 0) {
+            translate = deltaY * 0.3; // Heavy resistance when pulling down from collapsed
+        } else if (state === 'fullscreen' && deltaY < 0) {
+            translate = deltaY * 0.3; // Heavy resistance when pulling up from fullscreen
+        } else if (Math.abs(deltaY) > 300) {
+            // Add resistance when dragging too far
+            const excess = Math.abs(deltaY) - 300;
+            translate = deltaY > 0 ? 300 + excess * 0.2 : -300 + excess * 0.2;
+        }
+        
+        currentTranslate = translate;
+        sheet.style.transform = `translateY(${translate}px)`;
+    });
+    
+    sheet.addEventListener('touchend', (e) => {
+        if (!isDraggingSheet) return;
+        isDraggingSheet = false;
+        
+        // Re-enable transition
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        
+        const dy = touchStartY - e.changedTouches[0].clientY;
+        const currentState = sheet.dataset.state;
+        
+        // Swipe up (positive dy) - expand
+        if (dy > 50) {
+            if (currentState === 'collapsed') {
+                setSheetToPeek();
+            } else if (currentState === 'peek') {
+                openSheet();
+            }
+        }
+        // Swipe down (negative dy) - collapse
+        else if (dy < -50) {
+            if (currentState === 'fullscreen') {
+                // Only collapse if the terms list is scrolled to top
+                if (!termsList || termsList.scrollTop <= 2) {
+                    setSheetToPeek();
+                }
+            } else if (currentState === 'peek') {
+                collapseSheet();
+            }
+        }
+    });
+
+    // Chevron-down collapse button
+    const closeBtn = document.getElementById('option-c-close-sheet-btn');
+    if (closeBtn) closeBtn.addEventListener('click', setSheetToPeek);
+
+    // Edit button → import modal
+    const editBtn = document.getElementById('option-c-edit-btn');
+    if (editBtn) editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openImportModal();
+    });
+
+    // Filter button (placeholder for now)
+    const filterBtn = document.getElementById('option-c-filter-btn');
+    if (filterBtn) filterBtn.addEventListener('click', (e) => { e.stopPropagation(); });
+
+    // Footer buttons
+    const addCardsBtn = document.getElementById('option-c-add-cards-btn');
+    if (addCardsBtn) addCardsBtn.addEventListener('click', () => openImportModal());
+
+    const startFooterBtn = document.getElementById('option-c-start-btn-footer');
+    if (startFooterBtn) startFooterBtn.addEventListener('click', () => openStudyModeScreen());
+
+    // Search trigger
+    const searchTrigger = document.getElementById('option-c-search-trigger');
+    const searchWrap = document.getElementById('option-c-search-wrap');
+    const searchInput = document.getElementById('option-c-search-input');
+    const searchClear = document.getElementById('option-c-search-clear');
+
+    if (searchTrigger && searchWrap && searchInput) {
+        searchTrigger.addEventListener('click', () => {
+            searchWrap.classList.add('active');
+            setTimeout(() => searchInput.focus(), 80);
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            filterOptionCTerms(e.target.value);
+            if (searchClear) {
+                searchClear.classList.toggle('visible', e.target.value.length > 0);
+            }
+        });
+    }
+
+    if (searchClear) {
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            filterOptionCTerms('');
+            searchClear.classList.remove('visible');
+            searchInput.focus();
+        });
+    }
+
+    // Find a term button: expand + open search
+    const findBtn = document.getElementById('option-c-find-btn');
+    if (findBtn) {
+        findBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openSheet();
+            setTimeout(() => {
+                if (searchWrap) searchWrap.classList.add('active');
+                if (searchInput) searchInput.focus();
+            }, 120);
+        });
+    }
+}
+
+/**
+ * Initialize mobile inline layout (Option B — Inline)
+ */
+function initMobileInlineLayout() {
+    console.log('[DEBUG] ===== initMobileInlineLayout called =====');
+    
+    const actionsSheet = document.getElementById('mobile-actions-sheet');
+    const inlineTimelineContainer = document.getElementById('mobile-inline-timeline-container');
+    const actionsContent = document.getElementById('mobile-actions-content');
+    
+    console.log('[DEBUG] BEFORE modification - actionsContent.children.length:', actionsContent?.children.length);
+    console.log('[DEBUG] BEFORE modification - actionsContent.innerHTML.length:', actionsContent?.innerHTML.length);
+    
+    if (!actionsSheet || !inlineTimelineContainer || !actionsContent) {
+        console.error('[DEBUG] Required elements not found for inline layout');
+        return;
+    }
+    
+    // Clone timeline items into inline container
+    const originalTimeline = document.querySelector('.mobile-actions-expanded .mobile-study-plan-timeline');
+    if (originalTimeline) {
+        const clonedTimeline = originalTimeline.cloneNode(true);
+        inlineTimelineContainer.appendChild(clonedTimeline);
+        
+        // Add event listeners to cloned start buttons
+        const clonedButtons = clonedTimeline.querySelectorAll('.mobile-plan-start-btn');
+        clonedButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const mode = btn.closest('[data-mode]')?.dataset.mode || 'flashcards';
+                openStudyModeScreen(mode);
+            });
+        });
+    }
+    
+    // Update mobile set info
+    updateMobileSetInfo();
+    
+    // Populate terms list BEFORE cloning
+    updateMobileTermsList();
+    
+    // Move terms list UI into actions content
+    const termsList = document.getElementById('mobile-terms-list');
+    const addCardsBtn = document.getElementById('mobile-add-cards-btn');
+    
+    if (termsList && actionsContent) {
+        console.log('[DEBUG] Replacing actionsContent with terms list for option-b-inline');
+        
+        // Save original content before replacing it
+        saveOriginalActionsContent();
+        
+        // Clone the terms list and add button (now populated)
+        const clonedTermsList = termsList.cloneNode(true);
+        const clonedAddBtn = addCardsBtn ? addCardsBtn.cloneNode(true) : null;
+        
+        actionsContent.innerHTML = '';
+        actionsContent.appendChild(clonedTermsList);
+        if (clonedAddBtn) {
+            actionsContent.appendChild(clonedAddBtn);
+            
+            // Re-attach click event to add cards button
+            clonedAddBtn.addEventListener('click', () => {
+                showImportModal();
+            });
+        }
+        console.log('[DEBUG] AFTER replacement - actionsContent.children.length:', actionsContent.children.length);
+        console.log('[DEBUG] Terms list cloned with', clonedTermsList.children.length, 'term cards');
+        
+        // Re-attach event listeners to cloned term cards
+        const clonedTermCards = clonedTermsList.querySelectorAll('.mobile-term-card');
+        clonedTermCards.forEach((termCard, index) => {
+            const speakerBtn = termCard.querySelector('.mobile-term-action-btn:first-child');
+            const starBtn = termCard.querySelector('.mobile-term-action-btn:last-child');
+            
+            if (speakerBtn) {
+                speakerBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Add text-to-speech functionality here if needed
+                });
+            }
+            
+            if (starBtn) {
+                starBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Add star/favorite functionality here if needed
+                });
+            }
+        });
+    }
+    
+    // Search, filter, sort handlers for the new location
+    const searchBtn = document.getElementById('mobile-search-btn');
+    const searchContainer = document.getElementById('mobile-search-container');
+    const searchInput = document.getElementById('mobile-search-input');
+    const searchClose = document.getElementById('mobile-search-close');
+    
+    if (searchBtn && searchContainer && searchInput) {
+        searchBtn.addEventListener('click', () => {
+            searchContainer.classList.add('active');
+            setTimeout(() => searchInput.focus(), 100);
+        });
+        
+        if (searchClose) {
+            searchClose.addEventListener('click', () => {
+                searchContainer.classList.remove('active');
+                searchInput.value = '';
+                filterMobileTerms('');
+            });
+        }
+        
+        searchInput.addEventListener('input', (e) => {
+            filterMobileTerms(e.target.value);
+        });
+    }
+    
+    // Filter and sort menu handlers
+    setupFilterAndSortMenus(actionsSheet);
+    
+    // Back button opens debug menu
+    const backBtn = document.querySelector('.mobile-back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            openImportModal();
+        });
+    }
+    
+    // Play button opens study mode
+    const playBtn = document.getElementById('mobile-play-btn');
+    if (playBtn) {
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openStudyModeScreen();
+        });
+    }
+    
+    // Study mode card clicks
+    const studyModeCards = document.querySelectorAll('.mobile-study-mode-card');
+    studyModeCards.forEach(card => {
+        card.addEventListener('click', () => {
+            openStudyModeScreen();
+        });
+    });
+    
+    console.log('[DEBUG] ===== initMobileInlineLayout completed successfully =====');
+}
+
+/**
+ * Setup filter and sort menus
+ */
+function setupFilterAndSortMenus(actionsSheet) {
+    const filterBtn = document.getElementById('mobile-filter-btn');
+    const filterMenu = document.getElementById('mobile-filter-menu');
+    const filterClose = document.getElementById('mobile-filter-close');
+    const filterOptions = document.querySelectorAll('.mobile-filter-option');
+    
+    if (filterBtn && filterMenu) {
+        filterBtn.addEventListener('click', () => {
+            filterMenu.classList.toggle('active');
+            const sortMenu = document.getElementById('mobile-sort-menu');
+            if (sortMenu) sortMenu.classList.remove('active');
+        });
+        
+        if (filterClose) {
+            filterClose.addEventListener('click', () => {
+                filterMenu.classList.remove('active');
+            });
+        }
+        
+        filterOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const filter = option.dataset.filter;
+                filterOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                applyMobileFilter(filter);
+                filterMenu.classList.remove('active');
+            });
+        });
+    }
+    
+    const termsDropdown = document.getElementById('mobile-terms-dropdown');
+    const sortMenu = document.getElementById('mobile-sort-menu');
+    const sortClose = document.getElementById('mobile-sort-close');
+    const sortOptions = document.querySelectorAll('.mobile-sort-option');
+    
+    if (termsDropdown && sortMenu) {
+        termsDropdown.addEventListener('click', () => {
+            sortMenu.classList.toggle('active');
+            if (filterMenu) filterMenu.classList.remove('active');
+        });
+        
+        if (sortClose) {
+            sortClose.addEventListener('click', () => {
+                sortMenu.classList.remove('active');
+            });
+        }
+        
+        sortOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const sortType = option.dataset.sort;
+                sortOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                applyMobileSort(sortType);
+                sortMenu.classList.remove('active');
+            });
+        });
+    }
 }
 
 /**
@@ -9309,13 +9849,26 @@ function updateMobileSetInfo() {
     const authorEl = document.getElementById('mobile-author-name');
     const progressEl = document.getElementById('mobile-mode-progress');
     
+    // Get current content from localStorage
+    const saved = localStorage.getItem('flashcardContent');
+    let currentTitle = 'Study Set';
+    let testerName = 'Anonymous';
+    
+    if (saved) {
+        try {
+            const content = JSON.parse(saved);
+            currentTitle = content.title || 'Study Set';
+            testerName = content.testerName || 'Anonymous';
+        } catch (e) {
+            console.error('Error parsing flashcard content:', e);
+        }
+    }
+    
     if (titleEl) {
-        const currentTitle = localStorage.getItem('currentTitle') || 'Study Set';
         titleEl.textContent = currentTitle;
     }
     
     if (authorEl) {
-        const testerName = localStorage.getItem('currentTesterName') || 'Anonymous';
         authorEl.textContent = `By ${testerName}`;
     }
     
@@ -9324,6 +9877,119 @@ function updateMobileSetInfo() {
         const totalCards = flashcards.length;
         progressEl.textContent = `${knownCount} of ${totalCards} cards completed`;
     }
+    
+    const optionCProgress = document.getElementById('mobile-option-c-mode-progress');
+    if (optionCProgress) {
+        const knownCount = Array.from(state.knownCards).length;
+        const totalCards = flashcards.length;
+        optionCProgress.textContent = `${knownCount} of ${totalCards} completed`;
+    }
+}
+
+/**
+ * Keep Option C hero card in sync with the main flashcard index
+ */
+function syncMobileOptionCHeroTerm() {
+    if (!document.body.classList.contains('option-c-bottom-sheet')) return;
+    const termEl = document.getElementById('option-c-fc-term');
+    const card = flashcards[state.currentIndex];
+    if (termEl && card) termEl.textContent = card.term;
+}
+
+/**
+ * Populate all dynamic content in the Option C scrollable page
+ */
+function updateOptionCPage() {
+    if (!document.body.classList.contains('option-c-bottom-sheet')) return;
+
+    // Set title + author
+    const saved = localStorage.getItem('flashcardContent');
+    let title = 'Study Set';
+    let testerName = 'Anonymous';
+    if (saved) {
+        try {
+            const content = JSON.parse(saved);
+            title = content.title || title;
+            testerName = content.testerName || testerName;
+        } catch (e) { /* ignore */ }
+    }
+
+    const titleEl = document.getElementById('option-c-title');
+    if (titleEl) titleEl.textContent = title;
+
+    const authorEl = document.getElementById('option-c-author-name');
+    if (authorEl) authorEl.textContent = testerName;
+
+    // Progress
+    const knownCount = Array.from(state.knownCards).length;
+    const total = flashcards.length;
+    const progressEl = document.getElementById('option-c-fc-progress');
+    if (progressEl) progressEl.textContent = `${knownCount} of ${total} completed`;
+
+    // Hero term
+    syncMobileOptionCHeroTerm();
+
+    // Terms count in both bars
+    const countEl = document.getElementById('option-c-terms-count');
+    if (countEl) countEl.textContent = `${total} terms`;
+    const fullCountEl = document.getElementById('option-c-sheet-full-count');
+    if (fullCountEl) fullCountEl.textContent = `${total} terms`;
+
+    // Populate terms list in the sheet
+    const termsList = document.getElementById('option-c-terms-list');
+    if (termsList) {
+        termsList.innerHTML = '';
+        flashcards.forEach((card, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'mobile-term-card';
+            cardEl.dataset.index = index;
+
+            const content = document.createElement('div');
+            content.className = 'mobile-term-content';
+
+            const termTitle = document.createElement('div');
+            termTitle.className = 'mobile-term-title';
+            termTitle.textContent = card.term;
+
+            const termDef = document.createElement('div');
+            termDef.className = 'mobile-term-definition';
+            termDef.textContent = card.definition;
+
+            content.appendChild(termTitle);
+            content.appendChild(termDef);
+
+            const actions = document.createElement('div');
+            actions.className = 'mobile-term-actions';
+
+            const volBtn = document.createElement('button');
+            volBtn.className = 'mobile-term-action-btn';
+            volBtn.innerHTML = '<span class="material-symbols-rounded">volume_up</span>';
+
+            const starBtn = document.createElement('button');
+            starBtn.className = 'mobile-term-action-btn';
+            starBtn.innerHTML = '<span class="material-symbols-rounded">star</span>';
+
+            actions.appendChild(volBtn);
+            actions.appendChild(starBtn);
+
+            cardEl.appendChild(content);
+            cardEl.appendChild(actions);
+            termsList.appendChild(cardEl);
+        });
+    }
+}
+
+/**
+ * Filter Option C terms list by search query
+ */
+function filterOptionCTerms(query) {
+    const cards = document.querySelectorAll('#option-c-terms-list .mobile-term-card');
+    const lower = query.toLowerCase().trim();
+    cards.forEach(card => {
+        const term = card.querySelector('.mobile-term-title')?.textContent.toLowerCase() || '';
+        const def  = card.querySelector('.mobile-term-definition')?.textContent.toLowerCase() || '';
+        card.style.display = (!lower || term.includes(lower) || def.includes(lower)) ? 'flex' : 'none';
+    });
 }
 
 // ============================================

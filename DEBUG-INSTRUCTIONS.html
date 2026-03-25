@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Instructions</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f8f9fa;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #3498db;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        .log-example {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .warning { color: #f39c12; }
+        .info { color: #3498db; }
+        .button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #2980b9;
+        }
+        .button.secondary {
+            background: #95a5a6;
+        }
+        .button.secondary:hover {
+            background: #7f8c8d;
+        }
+        .important {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Sheets Layout Debug Instructions</h1>
+    
+    <div class="important">
+        <strong>⚠️ Important:</strong> I've added comprehensive debug logging to your code. Follow the steps below to identify why the mobile sheets layout isn't showing UI.
+    </div>
+
+    <h2>Quick Actions</h2>
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="index.html" class="button">Open Main Page (index.html)</a>
+        <a href="test-mobile.html" class="button secondary">Open Test Tool</a>
+    </div>
+
+    <h2>Step-by-Step Debugging</h2>
+
+    <div class="step">
+        <span class="step-number">1</span>
+        <strong>Open index.html in your browser</strong>
+        <p>Simply open <code>index.html</code> - the main page of your application.</p>
+    </div>
+
+    <div class="step">
+        <span class="step-number">2</span>
+        <strong>Open the Browser Console</strong>
+        <ul>
+            <li><strong>Chrome/Edge:</strong> Press <code>F12</code> or <code>Cmd+Option+J</code> (Mac) / <code>Ctrl+Shift+J</code> (Windows)</li>
+            <li><strong>Firefox:</strong> Press <code>F12</code> or <code>Cmd+Option+K</code> (Mac) / <code>Ctrl+Shift+K</code> (Windows)</li>
+            <li><strong>Safari:</strong> Press <code>Cmd+Option+C</code> (enable Developer menu first in Preferences)</li>
+        </ul>
+        <p>Click on the <strong>"Console"</strong> tab if it's not already selected.</p>
+    </div>
+
+    <div class="step">
+        <span class="step-number">3</span>
+        <strong>Look for Debug Messages</strong>
+        <p>You should see messages starting with <code>[DEBUG]</code>. Here's what to look for:</p>
+        
+        <h3>✅ If everything is working, you should see:</h3>
+        <div class="log-example">
+<span class="info">[DEBUG] Current variant on init: option-a-sheets</span>
+<span class="info">[DEBUG] Flashcards count: 37</span>
+<span class="info">[DEBUG] Initializing mobile sheets layout...</span>
+<span class="info">[DEBUG] ===== initMobileSheetsLayout called =====</span>
+<span class="info">[DEBUG] termsSheet: &lt;div id="mobile-terms-sheet"...&gt;</span>
+<span class="info">[DEBUG] actionsSheet: &lt;div id="mobile-actions-sheet"...&gt;</span>
+<span class="info">[DEBUG] planSheet: &lt;div id="mobile-plan-sheet"...&gt;</span>
+<span class="info">[DEBUG] updateMobileTermsList called</span>
+<span class="info">[DEBUG] termsList element: &lt;div id="mobile-terms-list"...&gt;</span>
+<span class="info">[DEBUG] flashcards.length: 37</span>
+<span class="success">[DEBUG] Added 37 term cards to mobile-terms-list</span>
+<span class="success">[DEBUG] termsList now has 37 children</span>
+<span class="success">[DEBUG] ===== initMobileSheetsLayout completed successfully =====</span>
+<span class="success">[DEBUG] Mobile sheets layout initialized</span>
+        </div>
+
+        <h3>❌ Common Issues and What They Mean:</h3>
+        
+        <p><strong>Issue 1: Wrong variant</strong></p>
+        <div class="log-example">
+<span class="warning">[DEBUG] Current variant on init: option-d</span>
+<span class="error">// No mobile sheets initialization happens</span>
+        </div>
+        <p><strong>Solution:</strong> The variant is not set to "option-a-sheets". Use the menu button (hamburger icon) in the top-left and select the "Mobile Sheets" variant.</p>
+
+        <p><strong>Issue 2: No flashcards</strong></p>
+        <div class="log-example">
+<span class="info">[DEBUG] Current variant on init: option-a-sheets</span>
+<span class="error">[DEBUG] Flashcards count: 0</span>
+        </div>
+        <p><strong>Solution:</strong> No flashcards are loaded. The default set should load automatically, but if it doesn't, click the menu button and import some content.</p>
+
+        <p><strong>Issue 3: Elements not found</strong></p>
+        <div class="log-example">
+<span class="info">[DEBUG] ===== initMobileSheetsLayout called =====</span>
+<span class="error">[DEBUG] termsSheet: null</span>
+<span class="error">[DEBUG] termsSheet not found! Cannot initialize mobile sheets layout</span>
+        </div>
+        <p><strong>Solution:</strong> The HTML structure is missing or corrupted. This is a serious error - the mobile-sheets-layout HTML elements are not in the DOM.</p>
+
+        <p><strong>Issue 4: Terms list not found</strong></p>
+        <div class="log-example">
+<span class="info">[DEBUG] updateMobileTermsList called</span>
+<span class="error">[DEBUG] termsList element: null</span>
+<span class="error">[DEBUG] termsList element not found!</span>
+        </div>
+        <p><strong>Solution:</strong> The mobile-terms-list element is missing from the HTML.</p>
+    </div>
+
+    <div class="step">
+        <span class="step-number">4</span>
+        <strong>Check the Visual Output</strong>
+        <p>After reviewing the console logs, look at the actual page. You should see:</p>
+        <ul>
+            <li>A header with back button, "Free trial" button, and icons</li>
+            <li>Set title "BIO 110, Exam 1" (or your custom title)</li>
+            <li>Set author and stats</li>
+            <li>Two bottom sheets: "Terms" and "Study plan"</li>
+            <li>A list of flashcard terms when you tap on the Terms sheet</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <span class="step-number">5</span>
+        <strong>Report Your Findings</strong>
+        <p>Copy the debug output from your console and share it. Include:</p>
+        <ul>
+            <li>All lines that start with <code>[DEBUG]</code></li>
+            <li>Any error messages (shown in red)</li>
+            <li>A description of what you see (or don't see) on the page</li>
+        </ul>
+    </div>
+
+    <h2>Quick Checks</h2>
+
+    <div class="step">
+        <strong>Check 1: Is the correct variant active?</strong>
+        <p>In the console, type:</p>
+        <div class="log-example">
+localStorage.getItem('designVariant')
+        </div>
+        <p>Expected result: <code>"option-a-sheets"</code></p>
+        <p>If not, type this to set it:</p>
+        <div class="log-example">
+localStorage.setItem('designVariant', 'option-a-sheets');
+location.reload();
+        </div>
+    </div>
+
+    <div class="step">
+        <strong>Check 2: Are there flashcards?</strong>
+        <p>In the console, type:</p>
+        <div class="log-example">
+flashcards.length
+        </div>
+        <p>Expected result: A number greater than 0 (like 37)</p>
+    </div>
+
+    <div class="step">
+        <strong>Check 3: Does the mobile layout exist?</strong>
+        <p>In the console, type:</p>
+        <div class="log-example">
+document.getElementById('mobile-sheets-layout')
+        </div>
+        <p>Expected result: Should show an HTML element (not <code>null</code>)</p>
+    </div>
+
+    <div class="step">
+        <strong>Check 4: Are the terms populated?</strong>
+        <p>In the console, type:</p>
+        <div class="log-example">
+document.getElementById('mobile-terms-list').children.length
+        </div>
+        <p>Expected result: A number matching your flashcard count</p>
+    </div>
+
+    <h2>Force Refresh</h2>
+
+    <div class="step">
+        <strong>If all else fails, try a hard refresh:</strong>
+        <ul>
+            <li><strong>Chrome/Edge/Firefox:</strong> <code>Ctrl+F5</code> or <code>Cmd+Shift+R</code></li>
+            <li><strong>Safari:</strong> <code>Cmd+Option+R</code></li>
+        </ul>
+        <p>This clears the cache and reloads everything fresh.</p>
+    </div>
+
+    <hr style="margin: 40px 0;">
+    
+    <p style="text-align: center; color: #7f8c8d;">
+        <strong>Still having issues?</strong> Copy all the <code>[DEBUG]</code> messages from your console and share them for further analysis.
+    </p>
+</body>
+</html>

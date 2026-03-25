@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Sheets Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4a9eff;
+        }
+        .pass { color: #4ade80; }
+        .fail { color: #f87171; }
+        .warn { color: #fbbf24; }
+        button {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #3b82f6;
+        }
+        #iframe-container {
+            margin-top: 20px;
+            border: 2px solid #4a9eff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .stat {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #3a3a3a;
+            border-radius: 4px;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Sheets Layout Debugger</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Setup</h2>
+        <button onclick="setupVariant()">Setup Mobile Sheets Variant</button>
+        <button onclick="loadTestPage()">Load Test Page in iframe</button>
+        <div id="setup-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Run Diagnostics</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="inspectDOM()">Inspect DOM Structure</button>
+        <button onclick="checkCSS()">Check CSS Properties</button>
+        <div id="test-results"></div>
+    </div>
+    
+    <div id="iframe-container">
+        <iframe id="test-frame" src="about:blank"></iframe>
+    </div>
+    
+    <script>
+        let iframe = null;
+        
+        function log(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+        
+        function setupVariant() {
+            localStorage.setItem('designVariant', 'option-a-sheets');
+            document.getElementById('setup-status').innerHTML = 
+                '<div class="pass">✓ Set designVariant to "option-a-sheets"</div>' +
+                '<div class="warn">⚠ Now click "Load Test Page in iframe"</div>';
+            log('Variant set to option-a-sheets', 'success');
+        }
+        
+        function loadTestPage() {
+            iframe = document.getElementById('test-frame');
+            iframe.src = 'index.html?' + Date.now(); // Add cache buster
+            
+            iframe.onload = function() {
+                document.getElementById('setup-status').innerHTML = 
+                    '<div class="pass">✓ Page loaded</div>' +
+                    '<div class="warn">⚠ Now click "Run All Tests"</div>';
+                log('Page loaded successfully', 'success');
+            };
+        }
+        
+        function runAllTests() {
+            if (!iframe || !iframe.contentWindow) {
+                alert('Please load the test page first!');
+                return;
+            }
+            
+            const win = iframe.contentWindow;
+            const doc = win.document;
+            const results = [];
+            
+            try {
+                // Test 1: Check body class
+                const hasClass = doc.body.classList.contains('option-a-sheets');
+                results.push({
+                    test: 'Body has "option-a-sheets" class',
+                    pass: hasClass,
+                    value: Array.from(doc.body.classList).join(', ')
+                });
+                
+                // Test 2: Check localStorage
+                const variant = win.localStorage.getItem('designVariant');
+                results.push({
+                    test: 'LocalStorage designVariant',
+                    pass: variant === 'option-a-sheets',
+                    value: variant || 'null'
+                });
+                
+                // Test 3: Check flashcards
+                const flashcards = win.flashcards || [];
+                results.push({
+                    test: 'Flashcards loaded',
+                    pass: flashcards.length > 0,
+                    value: `${flashcards.length} cards`
+                });
+                
+                // Test 4: Check mobile-sheets-layout
+                const layout = doc.getElementById('mobile-sheets-layout');
+                const layoutStyle = win.getComputedStyle(layout);
+                results.push({
+                    test: 'Mobile sheets layout exists',
+                    pass: !!layout,
+                    value: layout ? 'Found' : 'Not found'
+                });
+                
+                results.push({
+                    test: 'Mobile sheets layout display',
+                    pass: layoutStyle.display === 'flex',
+                    value: layoutStyle.display
+                });
+                
+                // Test 5: Check mobile-header
+                const header = doc.querySelector('.mobile-header');
+                const headerStyle = header ? win.getComputedStyle(header) : null;
+                results.push({
+                    test: 'Mobile header exists',
+                    pass: !!header,
+                    value: header ? 'Found' : 'Not found'
+                });
+                
+                if (header) {
+                    results.push({
+                        test: 'Mobile header display',
+                        pass: headerStyle.display !== 'none',
+                        value: headerStyle.display
+                    });
+                }
+                
+                // Test 6: Check mobile-set-info
+                const setInfo = doc.querySelector('.mobile-set-info');
+                results.push({
+                    test: 'Mobile set info exists',
+                    pass: !!setInfo,
+                    value: setInfo ? 'Found' : 'Not found'
+                });
+                
+                // Test 7: Check mobile-terms-list
+                const termsList = doc.getElementById('mobile-terms-list');
+                const termsCount = termsList ? termsList.children.length : 0;
+                results.push({
+                    test: 'Mobile terms list populated',
+                    pass: termsCount > 0,
+                    value: `${termsCount} terms`
+                });
+                
+                // Test 8: Check mobile-modules-container
+                const modulesContainer = doc.querySelector('.mobile-modules-container');
+                const modulesStyle = modulesContainer ? win.getComputedStyle(modulesContainer) : null;
+                results.push({
+                    test: 'Modules container exists',
+                    pass: !!modulesContainer,
+                    value: modulesContainer ? 'Found' : 'Not found'
+                });
+                
+                if (modulesContainer) {
+                    results.push({
+                        test: 'Modules container display',
+                        pass: modulesStyle.display === 'flex',
+                        value: modulesStyle.display
+                    });
+                }
+                
+                // Test 9: Check if init functions were called
+                const initCalled = win.initMobileSheetsLayout !== undefined;
+                results.push({
+                    test: 'initMobileSheetsLayout function exists',
+                    pass: initCalled,
+                    value: initCalled ? 'Defined' : 'Undefined'
+                });
+                
+                // Display results
+                let html = '<h3>Test Results:</h3>';
+                results.forEach(result => {
+                    const status = result.pass ? 'pass' : 'fail';
+                    const icon = result.pass ? '✓' : '✗';
+                    html += `<div class="${status}">${icon} ${result.test}: <span class="stat">${result.value}</span></div>`;
+                });
+                
+                document.getElementById('test-results').innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('test-results').innerHTML = 
+                    `<div class="fail">✗ Error running tests: ${error.message}</div>`;
+                console.error('Test error:', error);
+            }
+        }
+        
+        function inspectDOM() {
+            if (!iframe || !iframe.contentWindow) {
+                alert('Please load the test page first!');
+                return;
+            }
+            
+            const doc = iframe.contentWindow.document;
+            const layout = doc.getElementById('mobile-sheets-layout');
+            
+            if (!layout) {
+                document.getElementById('test-results').innerHTML = 
+                    '<div class="fail">✗ Mobile sheets layout not found in DOM</div>';
+                return;
+            }
+            
+            let html = '<h3>DOM Structure:</h3><pre>';
+            html += `mobile-sheets-layout:\n`;
+            html += `  - children count: ${layout.children.length}\n`;
+            
+            for (let i = 0; i < layout.children.length; i++) {
+                const child = layout.children[i];
+                html += `  - [${i}] ${child.tagName}.${child.className} (${child.children.length} children)\n`;
+                
+                // Show nested children
+                for (let j = 0; j < Math.min(child.children.length, 3); j++) {
+                    const grandchild = child.children[j];
+                    html += `      - ${grandchild.tagName}.${grandchild.className}\n`;
+                }
+                if (child.children.length > 3) {
+                    html += `      - ... and ${child.children.length - 3} more\n`;
+                }
+            }
+            html += '</pre>';
+            
+            document.getElementById('test-results').innerHTML = html;
+        }
+        
+        function checkCSS() {
+            if (!iframe || !iframe.contentWindow) {
+                alert('Please load the test page first!');
+                return;
+            }
+            
+            const win = iframe.contentWindow;
+            const doc = win.document;
+            const layout = doc.getElementById('mobile-sheets-layout');
+            
+            if (!layout) {
+                document.getElementById('test-results').innerHTML = 
+                    '<div class="fail">✗ Mobile sheets layout not found</div>';
+                return;
+            }
+            
+            const style = win.getComputedStyle(layout);
+            
+            let html = '<h3>Computed CSS Properties:</h3><pre>';
+            const props = ['display', 'position', 'top', 'left', 'right', 'bottom', 
+                          'width', 'height', 'background', 'zIndex', 'overflow', 'visibility'];
+            
+            props.forEach(prop => {
+                html += `${prop}: ${style[prop]}\n`;
+            });
+            
+            html += '\nBody classes:\n';
+            html += Array.from(doc.body.classList).join(', ') || 'none';
+            html += '</pre>';
+            
+            document.getElementById('test-results').innerHTML = html;
+        }
+        
+        // Auto-setup on load
+        window.addEventListener('load', () => {
+            log('Debug tool loaded');
+        });
+    </script>
+</body>
+</html>

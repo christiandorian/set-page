@@ -10447,7 +10447,7 @@ input:checked + .custom-checkbox::after {
         background: var(--surface-base);
         padding: 16px 20px;
         padding-bottom: max(16px, env(safe-area-inset-bottom));
-        border-top: 1px solid var(--border-primary);
+        border-top: 1px solid var(--sys-border-primary);
         z-index: 99;
     }
     
@@ -11083,8 +11083,12 @@ input:checked + .custom-checkbox::after {
     font-size: 16px;
 }
 
-/* Back Button */
+/* Back Button (only when create flow is open — fixed positioning otherwise escapes layout) */
 .create-back-btn {
+    display: none;
+}
+
+.create-set-screen.active .create-back-btn {
     position: fixed;
     top: 80px;
     left: 24px;
@@ -11103,7 +11107,7 @@ input:checked + .custom-checkbox::after {
     z-index: 10;
 }
 
-.create-back-btn:hover {
+.create-set-screen.active .create-back-btn:hover {
     background: var(--color-gray-200);
     transform: scale(1.05);
 }
@@ -11166,14 +11170,14 @@ input:checked + .custom-checkbox::after {
    Mobile Sheets Layout (Option A — Sheets)
    ============================================ */
 
-/* Hide mobile layout by default */
+/* Hide mobile prototype shell by default (must beat any stray display rules) */
 .mobile-sheets-layout {
-    display: none;
+    display: none !important;
 }
 
-/* Show mobile layout when variant is active */
+/* Show mobile layout only when a mobile prototype variant is active */
 body.option-a-sheets .mobile-sheets-layout {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     position: fixed;
     top: 0;
@@ -11323,6 +11327,11 @@ body.option-a-sheets .create-set-screen {
     line-height: var(--ref-typography-line-height-subheading-four);
 }
 
+.mobile-author-name {
+    display: flex;
+    align-items: center;
+}
+
 .mobile-author-icon {
     width: 24px;
     height: 24px;
@@ -11346,6 +11355,11 @@ body.option-a-sheets .create-set-screen {
     line-height: var(--ref-typography-line-height-subheading-four);
 }
 
+.mobile-stat > span {
+    display: flex;
+    align-items: center;
+}
+
 .mobile-stat .material-symbols-rounded {
     font-size: 24px;
     color: var(--text-secondary);
@@ -11360,16 +11374,25 @@ body.option-a-sheets .create-set-screen {
 .mobile-stat-stars {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 0;
+    height: 24px; /* Match icon height for proper alignment */
 }
 
 .mobile-star-icon {
     width: 24px;
     height: 24px;
     display: block;
+    margin-left: -1px;
+    vertical-align: middle;
+}
+
+.mobile-star-icon:first-child {
+    margin-left: 0;
 }
 
 .mobile-stat-count {
+    display: flex;
+    align-items: center;
     color: var(--sys-text-secondary);
     font-size: var(--ref-typography-size-subheading-four);
     font-weight: var(--ref-typography-weight-subheader);
@@ -11405,7 +11428,7 @@ body.option-a-sheets * {
 .mobile-sheet {
     background: var(--surface-base);
     border-radius: 32px;
-    border: 2px solid var(--border-primary);
+    border: 2px solid var(--sys-border-primary);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
     display: flex;
     flex-direction: column;
@@ -11741,7 +11764,7 @@ body.option-a-sheets * {
     left: 0;
     right: 0;
     background: var(--surface-base);
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--sys-border-primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-100%);
     opacity: 0;
@@ -11761,7 +11784,7 @@ body.option-a-sheets * {
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--sys-border-primary);
 }
 
 .mobile-filter-title {
@@ -11860,7 +11883,7 @@ body.option-a-sheets * {
     left: 0;
     right: 0;
     background: var(--surface-base);
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--sys-border-primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-100%);
     opacity: 0;
@@ -11880,7 +11903,7 @@ body.option-a-sheets * {
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--sys-border-primary);
 }
 
 .mobile-sort-title {
@@ -11985,7 +12008,7 @@ body.option-a-sheets * {
     flex-direction: column;
     gap: 12px;
     padding: 12px 20px 20px;
-    border: 1px solid var(--border-primary);
+    border: 1px solid var(--sys-border-primary);
     border-radius: 24px;
 }
 
@@ -11998,7 +12021,7 @@ body.option-a-sheets * {
 
 .mobile-term-card {
     background: white;
-    border: 2px solid var(--border-primary);
+    border: 2px solid var(--sys-border-primary);
     border-radius: 12px;
     padding: 16px;
     display: flex;
@@ -12138,7 +12161,7 @@ body.option-a-sheets * {
 .mobile-actions-sheet {
     background: var(--surface-base);
     border-radius: 32px;
-    border: 2px solid var(--border-primary);
+    border: 2px solid var(--sys-border-primary);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -12146,7 +12169,7 @@ body.option-a-sheets * {
 .mobile-terms-sheet {
     background: var(--surface-base);
     border-radius: 32px;
-    border: 2px solid var(--border-primary);
+    border: 2px solid var(--sys-border-primary);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -12353,7 +12376,18 @@ body.option-a-sheets * {
 
 /* Hide other elements when any module is fullscreen */
 body.option-a-sheets.sheet-fullscreen .mobile-header,
-body.option-a-sheets.sheet-fullscreen .mobile-set-info {
+body.option-a-sheets.sheet-fullscreen .mobile-scrollable-header {
+    display: none;
+}
+
+body.option-b-inline.sheet-fullscreen .mobile-header,
+body.option-b-inline.sheet-fullscreen .mobile-scrollable-header {
+    display: none;
+}
+
+body.option-c-bottom-sheet.sheet-fullscreen .mobile-header,
+body.option-c-bottom-sheet.sheet-fullscreen .mobile-scrollable-header,
+body.option-c-bottom-sheet.sheet-fullscreen .mobile-option-c-hero {
     display: none;
 }
 
@@ -12693,6 +12727,153 @@ body.option-a-sheets.sheet-fullscreen .mobile-sheet:not([data-state="fullscreen"
     padding: 0 20px 20px;
 }
 
+/* ============================================
+   Mobile Inline Layout (Option B — Inline)
+   ============================================ */
+
+/* Show mobile layout for option-b-inline */
+body.option-b-inline .mobile-sheets-layout {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface);
+    overflow: visible;
+    width: 100vw;
+    height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide other layouts for option-b-inline */
+body.option-b-inline .top-nav,
+body.option-b-inline .main-content,
+body.option-b-inline .three-panel-layout,
+body.option-b-inline .journey-layout,
+body.option-b-inline .table-layout,
+body.option-b-inline .create-set-screen {
+    display: none;
+}
+
+/* Hide terms sheet in option-b-inline */
+body.option-b-inline .mobile-terms-sheet {
+    display: none;
+}
+
+/* Hide mode info and action buttons in actions sheet */
+body.option-b-inline .mobile-actions-peek {
+    display: none;
+}
+
+/* Scrollable header wrapper - default styling for option-a-sheets */
+.mobile-scrollable-header {
+    display: contents; /* Acts as if wrapper doesn't exist for option-a-sheets */
+}
+
+/* Inline timeline container - hidden by default */
+.mobile-inline-timeline-container {
+    display: none;
+}
+
+/* For option-b-inline, make scrollable header a real scrollable container */
+body.option-b-inline .mobile-scrollable-header {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    max-height: 50vh;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Set info styling in inline variant */
+body.option-b-inline .mobile-set-info {
+    flex-shrink: 0;
+    padding-bottom: 0;
+}
+
+/* Show inline timeline container in option-b-inline */
+body.option-b-inline .mobile-inline-timeline-container {
+    display: block;
+    flex-shrink: 0;
+    padding-bottom: 16px;
+}
+
+/* Adjust timeline padding when inline */
+body.option-b-inline .mobile-inline-timeline-container .mobile-study-plan-timeline {
+    padding: 16px 16px 24px 28px;
+}
+
+/* Actions sheet becomes terms list container */
+body.option-b-inline .mobile-actions-sheet {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+}
+
+/* Always show header in actions sheet for this variant */
+body.option-b-inline .mobile-actions-sheet[data-state="peek"] .mobile-sheet-header {
+    display: flex;
+    justify-content: center;
+}
+
+/* Hide original study plan title and filter in inline variant */
+body.option-b-inline .mobile-actions-title,
+body.option-b-inline .mobile-actions-filter-btn,
+body.option-b-inline .mobile-actions-fullscreen-close {
+    display: none !important;
+}
+
+/* Show terms dropdown and actions for inline variant */
+body.option-b-inline .mobile-inline-terms-dropdown {
+    display: flex !important;
+}
+
+body.option-b-inline .mobile-inline-sheet-actions {
+    display: flex !important;
+    position: absolute;
+    right: 16px;
+}
+
+/* Hide peek actions, show terms content */
+body.option-b-inline .mobile-actions-peek {
+    display: none !important;
+}
+
+body.option-b-inline .mobile-actions-expanded {
+    display: none !important;
+}
+
+/* Use actions content area for terms list */
+body.option-b-inline .mobile-actions-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Terms list styling in inline variant */
+body.option-b-inline #mobile-terms-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Modules container layout for inline variant */
+body.option-b-inline .mobile-modules-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 /* Responsive adjustments for different phone sizes */
 @media (max-width: 414px) {
     .mobile-set-title {
@@ -12716,3 +12897,781 @@ body.option-a-sheets.sheet-fullscreen .mobile-sheet:not([data-state="fullscreen"
 }
 
 /* Mobile layout is always full width */
+
+/* ============================================
+   Option C — Bottom sheet (mobile prototype)
+   ============================================ */
+
+/* Kept for other variants — only show download btn in Option C */
+.mobile-download-btn { display: none; }
+
+/* Old hero hidden by default (kept in DOM for non-C variants in case they reference it) */
+.mobile-option-c-hero { display: none; }
+
+/* Sort icons / edit btn / more icons: hidden by default, toggled per variant */
+.mobile-terms-sort-icons {
+    display: none;
+    align-items: center;
+    gap: 2px;
+    margin-left: 2px;
+}
+.mobile-terms-sort-icons .material-symbols-rounded { font-size: 16px; opacity: 0.55; }
+.mobile-terms-edit-btn { display: none; }
+.mobile-more-icon--option-c { display: none; }
+.mobile-header-btn .mobile-more-icon--default,
+.mobile-header-btn .mobile-more-icon--option-c { line-height: 1; }
+
+/* New Option C page + sheet: hidden by default */
+.option-c-page { display: none; }
+.option-c-terms-sheet { display: none; }
+
+/* ---- Active for option-c-bottom-sheet ---- */
+
+/* Show mobile shell */
+body.option-c-bottom-sheet .mobile-sheets-layout {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    width: 100vw;
+    height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+}
+
+/* Hide desktop layouts */
+body.option-c-bottom-sheet .top-nav,
+body.option-c-bottom-sheet .main-content,
+body.option-c-bottom-sheet .three-panel-layout,
+body.option-c-bottom-sheet .journey-layout,
+body.option-c-bottom-sheet .table-layout,
+body.option-c-bottom-sheet .create-set-screen { display: none; }
+
+/* Hide old mobile components not used in this layout */
+body.option-c-bottom-sheet .mobile-scrollable-header,
+body.option-c-bottom-sheet .mobile-option-c-hero,
+body.option-c-bottom-sheet .mobile-background,
+body.option-c-bottom-sheet .mobile-modules-container,
+body.option-c-bottom-sheet .mobile-plan-sheet { display: none !important; }
+
+/* Show download btn + new more icon */
+body.option-c-bottom-sheet .mobile-download-btn { display: flex; }
+body.option-c-bottom-sheet .mobile-header-btn {
+    background: transparent;
+    border-radius: 8px;
+}
+body.option-c-bottom-sheet .mobile-header-btn:hover { background: var(--color-gray-100, #f3f4f6); }
+body.option-c-bottom-sheet .mobile-header-btn:active { background: transparent; }
+body.option-c-bottom-sheet .mobile-more-icon--default { display: none; }
+body.option-c-bottom-sheet .mobile-more-icon--option-c { display: inline-flex; }
+
+/* Scrollable page */
+body.option-c-bottom-sheet .option-c-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 16px calc(50vh + env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+/* Fixed terms bottom sheet */
+body.option-c-bottom-sheet .option-c-terms-sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--surface-base, #fff);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.10);
+    border-top: 1.5px solid var(--sys-border-primary);
+    height: 50vh;
+    overflow: hidden;
+    transition: height 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Collapsed state - just handle visible */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="collapsed"] {
+    height: 60px;
+}
+
+/* Peek bar is no longer used — the full sheet header shows in all states */
+body.option-c-bottom-sheet .option-c-peek-bar { display: none; }
+
+/* Hide content in collapsed state */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="collapsed"] .option-c-terms-list,
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="collapsed"] .option-c-sheet-header,
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="collapsed"] .option-c-sheet-footer {
+    display: none;
+}
+
+/* Prevent scrolling in collapsed and peek states - make sheet draggable instead */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="collapsed"] .option-c-terms-list,
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="peek"] .option-c-terms-list {
+    overflow-y: hidden;
+    pointer-events: none;
+    touch-action: none;
+}
+
+/* Make entire sheet draggable in peek/collapsed */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="collapsed"],
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="peek"] {
+    touch-action: pan-y;
+}
+
+/* Allow scrolling only in fullscreen */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] .option-c-terms-list {
+    overflow-y: auto;
+    pointer-events: auto;
+    touch-action: pan-y;
+}
+
+/* Collapse chevron, action buttons, and footer only visible in fullscreen */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="peek"] .option-c-collapse-btn,
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="peek"] .option-c-sheet-actions-row,
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="peek"] .option-c-sheet-footer { display: none; }
+
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] {
+    height: calc(100vh - env(safe-area-inset-top, 0px));
+    border-radius: 0;
+}
+
+/* Hide drag handle in fullscreen */
+body.option-c-bottom-sheet .option-c-terms-sheet[data-state="fullscreen"] .option-c-sheet-handle {
+    display: none;
+}
+
+/* ---- Option C page element styles ---- */
+
+.option-c-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--sys-text-primary);
+    margin: 8px 0 4px;
+    line-height: 1.25;
+}
+
+.option-c-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.option-c-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sys-text-secondary);
+}
+
+.option-c-trending-icon {
+    font-size: 20px;
+    color: #ef4444;
+}
+
+.option-c-stars {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.option-c-star {
+    width: 18px;
+    height: 18px;
+    display: block;
+    margin-left: -1px;
+}
+.option-c-star:first-child { margin-left: 0; }
+
+.option-c-rating {
+    margin-left: 4px;
+    color: var(--sys-text-secondary);
+    font-size: 14px;
+}
+
+/* ---- Activities timeline ---- */
+.option-c-activities {
+    margin-bottom: 16px;
+}
+
+.option-c-step {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.option-c-step-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.option-c-step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #818CF8;
+    background: var(--surface-base, #fff);
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.option-c-step-dot--filled {
+    width: 14px;
+    height: 14px;
+    background: #4F46E5;
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.option-c-step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 8px;
+    background: #C7D2FE;
+}
+
+/* Flashcard step: align dot to centre of fc-header */
+.option-c-step--fc .option-c-step-rail {
+    padding-top: 14px;
+}
+
+.option-c-step--fc .option-c-step-body {
+    flex: 1;
+    min-width: 0;
+    padding-bottom: 10px;
+}
+
+/* Mode steps */
+.option-c-step--mode .option-c-step-body {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 0;
+}
+
+/* Flashcard header row */
+.option-c-fc-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.option-c-fc-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: #4F46E5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.30);
+}
+
+.option-c-fc-icon-img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.option-c-fc-text { flex: 1; min-width: 0; }
+
+.option-c-fc-mode-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sys-text-primary);
+    line-height: 1.2;
+}
+
+.option-c-fc-progress {
+    font-size: 12px;
+    color: var(--sys-text-secondary);
+    margin-top: 2px;
+}
+
+.option-c-fc-start-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 14px;
+    height: 34px;
+    border: none;
+    border-radius: 17px;
+    background: #4F46E5;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.option-c-fc-start-btn .material-symbols-rounded { font-size: 18px; }
+.option-c-fc-start-btn:active { transform: scale(0.97); }
+
+/* Flashcard preview card */
+.option-c-fc-card {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--surface-base, #fff);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.option-c-fc-term {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--sys-text-primary);
+    text-align: center;
+    line-height: 1.35;
+}
+
+/* Mode pill rows */
+.option-c-mode-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #EEF2FF;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s ease;
+}
+.option-c-mode-pill:active { background: #E0E7FF; }
+
+.option-c-mode-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.option-c-mode-icon-wrap .material-symbols-rounded { font-size: 20px; }
+
+.option-c-mode--learn  { background: rgba(99,102,241,0.10); color: #6366F1; }
+.option-c-mode--blocks { background: rgba(59,130,246,0.10); color: #3B82F6; }
+.option-c-mode--blast  { background: rgba(245,158,11,0.12); color: #D97706; }
+.option-c-mode--match  { background: rgba(20,184,166,0.10); color: #0D9488; }
+.option-c-mode--test   { background: rgba(99,102,241,0.10); color: #6366F1; }
+
+.option-c-mode-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--sys-text-primary);
+    flex: 1;
+}
+
+/* Description */
+.option-c-desc-section {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--surface-base, #fff);
+    border-radius: 16px;
+    border: 1.5px solid var(--sys-border-primary);
+}
+
+.option-c-desc-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--sys-text-secondary);
+    margin: 0;
+}
+
+/* Author section */
+.option-c-author {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--surface-base, #fff);
+    border-radius: 16px;
+    border: 1.5px solid var(--sys-border-primary);
+}
+
+.option-c-author-avatar-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.option-c-author-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.option-c-author-info { flex: 1; min-width: 0; }
+
+.option-c-author-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sys-text-primary);
+    margin-bottom: 6px;
+}
+
+.option-c-author-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.option-c-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.option-c-badge .material-symbols-rounded { font-size: 15px; }
+
+.option-c-badge--verified {
+    background: rgba(16,185,129,0.10);
+    color: #059669;
+}
+.option-c-badge--creator {
+    background: rgba(245,158,11,0.12);
+    color: #D97706;
+}
+
+/* Related sets */
+.option-c-related-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--sys-text-primary);
+    margin: 0 0 14px;
+}
+
+.option-c-related-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.option-c-related-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--sys-border-primary);
+    -webkit-tap-highlight-color: transparent;
+}
+.option-c-related-card:last-child { border-bottom: none; }
+
+.option-c-related-thumb {
+    width: 52px;
+    height: 52px;
+    background: var(--color-gray-200, #f3f4f6);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--sys-text-secondary);
+}
+.option-c-related-thumb .material-symbols-rounded { font-size: 26px; }
+
+.option-c-related-info { flex: 1; min-width: 0; }
+
+.option-c-related-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    color: var(--sys-text-secondary);
+    margin-bottom: 4px;
+}
+.option-c-related-badge .material-symbols-rounded {
+    font-size: 14px;
+    color: #ef4444;
+}
+
+.option-c-related-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sys-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+}
+
+.option-c-related-meta {
+    font-size: 12px;
+    color: var(--sys-text-secondary);
+}
+
+.option-c-related-more {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--sys-text-secondary);
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.option-c-related-more .material-symbols-rounded { font-size: 20px; }
+
+.option-c-bottom-spacer { height: 12px; flex-shrink: 0; }
+
+/* ---- Option C terms sheet internals ---- */
+
+.option-c-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--color-gray-400, #9ca3af);
+    border-radius: 2px;
+    margin: 10px auto 6px;
+    flex-shrink: 0;
+}
+
+.option-c-peek-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 10px;
+    flex-shrink: 0;
+}
+
+.option-c-peek-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.option-c-terms-count {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sys-text-primary);
+}
+
+.option-c-sort-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    opacity: 0.45;
+}
+.option-c-sort-icons .material-symbols-rounded { font-size: 14px; }
+
+.option-c-find-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--color-gray-200, #f3f4f6);
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sys-text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s ease;
+}
+.option-c-find-btn .material-symbols-rounded { font-size: 18px; }
+.option-c-find-btn:active { background: var(--color-gray-300, #e5e7eb); }
+
+/* Sheet body (fills sheet when expanded) */
+.option-c-sheet-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Fullscreen header row */
+.option-c-sheet-full-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px 10px;
+    border-bottom: 1px solid var(--sys-border-primary);
+    flex-shrink: 0;
+}
+
+/* Chevron-down collapse button */
+.option-c-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid var(--sys-border-primary);
+    border-radius: 50%;
+    background: var(--surface-base, #fff);
+    cursor: pointer;
+    color: var(--sys-text-primary);
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    transition: background 0.12s ease;
+}
+.option-c-collapse-btn .material-symbols-rounded { font-size: 22px; }
+.option-c-collapse-btn:active { background: var(--color-gray-200, #f3f4f6); }
+
+.option-c-sheet-full-count {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--sys-text-primary);
+}
+
+/* Row of icon action buttons on the right */
+.option-c-sheet-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.option-c-sheet-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sys-text-secondary);
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    transition: background 0.12s ease;
+}
+.option-c-sheet-action-btn .material-symbols-rounded { font-size: 22px; }
+.option-c-sheet-action-btn:active { background: var(--color-gray-200, #f3f4f6); }
+
+.option-c-search-wrap {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--sys-border-primary);
+    background: var(--color-gray-100, #f9fafb);
+    flex-shrink: 0;
+}
+.option-c-search-wrap.active { display: flex; }
+
+.option-c-search-icon { font-size: 20px; color: var(--sys-text-secondary); }
+
+.option-c-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    color: var(--sys-text-primary);
+    font-family: inherit;
+    outline: none;
+}
+
+.option-c-search-clear {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--sys-text-secondary);
+    padding: 4px;
+    font-family: inherit;
+}
+.option-c-search-clear.visible { display: block; }
+.option-c-search-clear .material-symbols-rounded { font-size: 18px; }
+
+.option-c-terms-list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Sticky bottom bar inside the fullscreen sheet */
+.option-c-sheet-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--sys-border-primary);
+    background: var(--surface-base, #fff);
+    flex-shrink: 0;
+}
+
+.option-c-add-cards-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 48px;
+    border: none;
+    border-radius: 24px;
+    background: #EEF2FF;
+    color: #4F46E5;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s ease;
+}
+.option-c-add-cards-btn .material-symbols-rounded { font-size: 20px; }
+.option-c-add-cards-btn:active { background: #E0E7FF; }
+
+.option-c-start-btn-footer {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 48px;
+    border: none;
+    border-radius: 24px;
+    background: #4F46E5;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s ease, transform 0.12s ease;
+}
+.option-c-start-btn-footer .material-symbols-rounded { font-size: 20px; }
+.option-c-start-btn-footer:active { background: #4338CA; transform: scale(0.98); }

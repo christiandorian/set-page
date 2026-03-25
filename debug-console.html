@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Sheets Console Debug</title>
+    <style>
+        body {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+        }
+        h1 {
+            color: #4ec9b0;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .debug-section {
+            background: #252526;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            border-left: 3px solid #007acc;
+        }
+        .debug-section h2 {
+            margin-top: 0;
+            color: #569cd6;
+            font-size: 16px;
+        }
+        .command {
+            background: #1e1e1e;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 3px;
+            font-family: inherit;
+            border: 1px solid #3c3c3c;
+        }
+        .command-label {
+            color: #858585;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .result {
+            color: #ce9178;
+            margin-left: 20px;
+        }
+        .success {
+            color: #4ec9b0;
+        }
+        .error {
+            color: #f48771;
+        }
+        .warning {
+            color: #dcdcaa;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            border: 1px solid #3c3c3c;
+            margin: 8px 0;
+        }
+        .screenshot-frame {
+            margin-top: 20px;
+            border: 2px solid #3c3c3c;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Sheets Layout Console Debugger</h1>
+    
+    <div class="debug-section">
+        <h2>Quick Actions</h2>
+        <button onclick="activateVariant()">1. Activate Mobile Sheets Variant</button>
+        <button onclick="runAllChecks()">2. Run All Checks</button>
+        <button onclick="openInNewTab()">3. Open Main Page in New Tab</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Console Checks</h2>
+        <div id="checks-output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Live Preview</h2>
+        <p style="color: #858585;">This iframe loads index.html to test in real-time:</p>
+        <div class="screenshot-frame">
+            <iframe id="preview-frame" src=""></iframe>
+        </div>
+    </div>
+    
+    <script>
+        function log(label, value, status = 'result') {
+            const output = document.getElementById('checks-output');
+            const div = document.createElement('div');
+            div.className = 'command';
+            div.innerHTML = `
+                <div class="command-label">${label}</div>
+                <pre class="${status}">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</pre>
+            `;
+            output.appendChild(div);
+        }
+        
+        function clearOutput() {
+            document.getElementById('checks-output').innerHTML = '';
+        }
+        
+        function activateVariant() {
+            localStorage.setItem('designVariant', 'option-a-sheets');
+            clearOutput();
+            log('✅ Action', 'Set designVariant to "option-a-sheets"', 'success');
+            log('Next Step', 'Click "Run All Checks" or reload the iframe', 'warning');
+            
+            // Reload iframe
+            const iframe = document.getElementById('preview-frame');
+            iframe.src = iframe.src;
+        }
+        
+        function runAllChecks() {
+            clearOutput();
+            
+            const iframe = document.getElementById('preview-frame');
+            const iframeWindow = iframe.contentWindow;
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            
+            try {
+                // Check 1: JavaScript Errors
+                log('1️⃣ Checking for JavaScript errors...', 'Check browser console for any red errors', 'warning');
+                
+                // Check 2: Body classList
+                const bodyClasses = Array.from(iframeDoc.body.classList);
+                const hasSheets = bodyClasses.includes('option-a-sheets');
+                log('2️⃣ document.body.classList', bodyClasses.join(', ') || '(empty)', hasSheets ? 'success' : 'error');
+                log('   Has "option-a-sheets"?', hasSheets ? '✅ YES' : '❌ NO', hasSheets ? 'success' : 'error');
+                
+                // Check 3: localStorage
+                const variant = localStorage.getItem('designVariant');
+                log('3️⃣ localStorage.getItem("designVariant")', variant || '(null)', variant === 'option-a-sheets' ? 'success' : 'warning');
+                
+                // Check 4: Flashcards length
+                const flashcardsLength = iframeWindow.flashcards ? iframeWindow.flashcards.length : 'undefined';
+                log('4️⃣ flashcards.length', flashcardsLength, flashcardsLength > 0 ? 'success' : 'error');
+                
+                // Check 5: Mobile terms list children
+                const termsList = iframeDoc.getElementById('mobile-terms-list');
+                if (termsList) {
+                    const childrenCount = termsList.children.length;
+                    log('5️⃣ document.getElementById("mobile-terms-list").children.length', childrenCount, childrenCount > 0 ? 'success' : 'error');
+                    log('   Terms list innerHTML length', termsList.innerHTML.length + ' characters', childrenCount > 0 ? 'success' : 'warning');
+                } else {
+                    log('5️⃣ document.getElementById("mobile-terms-list")', 'null - element not found', 'error');
+                }
+                
+                // Check 6: Mobile sheets layout children
+                const sheetsLayout = iframeDoc.querySelector('.mobile-sheets-layout');
+                if (sheetsLayout) {
+                    const children = Array.from(sheetsLayout.children).map(child => ({
+                        tag: child.tagName,
+                        class: child.className,
+                        id: child.id
+                    }));
+                    log('6️⃣ document.querySelector(".mobile-sheets-layout").children', children);
+                } else {
+                    log('6️⃣ document.querySelector(".mobile-sheets-layout")', 'null - element not found', 'error');
+                }
+                
+                // Check 7: Computed CSS for mobile-sheets-layout
+                if (sheetsLayout) {
+                    const computedStyle = iframeWindow.getComputedStyle(sheetsLayout);
+                    const display = computedStyle.display;
+                    const position = computedStyle.position;
+                    const zIndex = computedStyle.zIndex;
+                    log('7️⃣ Computed CSS for .mobile-sheets-layout', {
+                        display: display,
+                        position: position,
+                        zIndex: zIndex,
+                        width: computedStyle.width,
+                        height: computedStyle.height,
+                        visibility: computedStyle.visibility
+                    }, display === 'flex' ? 'success' : 'error');
+                }
+                
+                // Additional checks
+                log('📊 Additional Info', '---', 'warning');
+                
+                // Check if init was called
+                log('   Window loaded?', iframeDoc.readyState, 'result');
+                
+                // Check for mobile sheets specific elements
+                const mobileHeader = iframeDoc.querySelector('.mobile-header');
+                log('   .mobile-header exists?', mobileHeader ? '✅ YES' : '❌ NO', mobileHeader ? 'success' : 'error');
+                
+                const termsSheet = iframeDoc.getElementById('mobile-terms-sheet');
+                log('   #mobile-terms-sheet exists?', termsSheet ? '✅ YES' : '❌ NO', termsSheet ? 'success' : 'error');
+                
+                // Check viewport
+                log('   Viewport size', `${iframeWindow.innerWidth}x${iframeWindow.innerHeight}`, 'result');
+                
+            } catch (error) {
+                log('❌ Error running checks', error.message, 'error');
+                log('Stack trace', error.stack, 'error');
+            }
+        }
+        
+        function openInNewTab() {
+            window.open('index.html', '_blank');
+        }
+        
+        // Auto-load iframe and run checks
+        window.addEventListener('DOMContentLoaded', () => {
+            const iframe = document.getElementById('preview-frame');
+            iframe.src = 'index.html';
+            
+            iframe.addEventListener('load', () => {
+                setTimeout(() => {
+                    clearOutput();
+                    log('ℹ️ Info', 'Iframe loaded. Click "Run All Checks" to debug.', 'warning');
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variant Detection Test</title>
+    <style>
+        body {
+            font-family: system-ui;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-result {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .pass {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 6px;
+            border: 1px solid #007bff;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Variant Detection Test</h1>
+    
+    <h2>Set Variant</h2>
+    <button onclick="setVariant('option-a-sheets')">Set to Option A (Sheets)</button>
+    <button onclick="setVariant('option-b-inline')">Set to Option B (Inline)</button>
+    <button onclick="clearVariant()">Clear Variant</button>
+    
+    <h2>Test Results</h2>
+    <div id="results"></div>
+    
+    <h2>Actions</h2>
+    <button onclick="runTests()">Run Tests</button>
+    <button onclick="openMainPage()">Open Main Page</button>
+    
+    <script>
+        function setVariant(variant) {
+            localStorage.setItem('designVariant', variant);
+            alert(`Variant set to: ${variant}`);
+            runTests();
+        }
+        
+        function clearVariant() {
+            localStorage.removeItem('designVariant');
+            alert('Variant cleared');
+            runTests();
+        }
+        
+        function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            // Test 1: Check current variant
+            const currentVariant = localStorage.getItem('designVariant');
+            addResult(
+                'Current variant in localStorage',
+                currentVariant || '(not set)',
+                currentVariant ? 'info' : 'fail'
+            );
+            
+            // Test 2: Check if variant is valid
+            const validVariants = [
+                'option-a', 'option-b', 'option-c', 'option-d', 'option-e',
+                'option-a-sheets', 'option-b-inline',
+                'option-a-archived', 'option-b-archived', 'option-c-archived',
+                'option-a-archived-v2', 'option-b-archived-v2'
+            ];
+            const isValid = validVariants.includes(currentVariant);
+            addResult(
+                'Variant is valid',
+                isValid ? 'Yes' : 'No (will default to option-d)',
+                isValid ? 'pass' : 'fail'
+            );
+            
+            // Test 3: Expected behavior
+            if (currentVariant === 'option-a-sheets') {
+                addResult(
+                    'Expected behavior',
+                    'Actions sheet should show peek UI (mode name, icon, progress, buttons)',
+                    'info'
+                );
+            } else if (currentVariant === 'option-b-inline') {
+                addResult(
+                    'Expected behavior',
+                    'Actions sheet should show terms list',
+                    'info'
+                );
+            }
+        }
+        
+        function addResult(label, value, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${label}:</strong> ${value}`;
+            results.appendChild(div);
+        }
+        
+        function openMainPage() {
+            window.open('index.html', '_blank');
+        }
+        
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+</html>

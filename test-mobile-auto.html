@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Sheets Auto Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #58a6ff;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .panel {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .panel h2 {
+            color: #58a6ff;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+        }
+        .test-item {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            background: #0d1117;
+            border-left: 3px solid #30363d;
+            font-size: 13px;
+        }
+        .test-item.pass {
+            border-left-color: #3fb950;
+            background: rgba(63, 185, 80, 0.1);
+        }
+        .test-item.fail {
+            border-left-color: #f85149;
+            background: rgba(248, 81, 73, 0.1);
+        }
+        .test-item.warn {
+            border-left-color: #d29922;
+            background: rgba(210, 153, 34, 0.1);
+        }
+        .test-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .test-value {
+            color: #8b949e;
+            font-size: 12px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .status-badge.pass {
+            background: #238636;
+            color: #fff;
+        }
+        .status-badge.fail {
+            background: #da3633;
+            color: #fff;
+        }
+        .status-badge.warn {
+            background: #9e6a03;
+            color: #fff;
+        }
+        pre {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            border: 1px solid #30363d;
+        }
+        .iframe-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 700px;
+            border: 2px solid #30363d;
+            border-radius: 4px;
+            background: white;
+        }
+        .summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+        }
+        .summary-item {
+            flex: 1;
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .summary-value.pass { color: #3fb950; }
+        .summary-value.fail { color: #f85149; }
+        .summary-value.warn { color: #d29922; }
+        .summary-label {
+            color: #8b949e;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #58a6ff;
+        }
+        .spinner {
+            border: 3px solid #30363d;
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2ea043;
+        }
+        button.secondary {
+            background: #21262d;
+            border: 1px solid #30363d;
+        }
+        button.secondary:hover {
+            background: #30363d;
+        }
+        .actions {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Mobile Sheets Layout - Automated Diagnostic</h1>
+        
+        <div class="actions">
+            <button onclick="runFullDiagnostic()">🔄 Re-run All Tests</button>
+            <button class="secondary" onclick="clearCache()">🗑️ Clear Cache & Reload</button>
+            <button class="secondary" onclick="window.location.href='index.html'">📱 Open Main Page</button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Running automated diagnostics...</p>
+        </div>
+        
+        <div id="results" style="display: none;">
+            <div class="summary" id="summary"></div>
+            
+            <div class="grid">
+                <div class="panel">
+                    <h2>📋 Core Tests</h2>
+                    <div id="core-tests"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🎨 CSS Properties</h2>
+                    <div id="css-tests"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🏗️ DOM Structure</h2>
+                    <div id="dom-tests"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🔧 Function Checks</h2>
+                    <div id="function-tests"></div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>📊 Detailed Analysis</h2>
+                <pre id="detailed-analysis"></pre>
+            </div>
+        </div>
+        
+        <div class="iframe-container">
+            <h2 style="color: #58a6ff; margin-bottom: 15px;">📱 Live Preview (index.html)</h2>
+            <iframe id="test-frame" src=""></iframe>
+        </div>
+    </div>
+    
+    <script>
+        let iframe = null;
+        let testResults = {
+            passed: 0,
+            failed: 0,
+            warnings: 0,
+            tests: []
+        };
+        
+        function addTest(name, passed, value, category = 'core') {
+            const status = passed ? 'pass' : (value.includes('⚠') ? 'warn' : 'fail');
+            testResults.tests.push({ name, passed, value, category, status });
+            
+            if (status === 'pass') testResults.passed++;
+            else if (status === 'fail') testResults.failed++;
+            else testResults.warnings++;
+        }
+        
+        function displayResults() {
+            // Summary
+            document.getElementById('summary').innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-value pass">${testResults.passed}</div>
+                    <div class="summary-label">Passed</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value fail">${testResults.failed}</div>
+                    <div class="summary-label">Failed</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value warn">${testResults.warnings}</div>
+                    <div class="summary-label">Warnings</div>
+                </div>
+            `;
+            
+            // Group tests by category
+            const categories = {
+                core: 'core-tests',
+                css: 'css-tests',
+                dom: 'dom-tests',
+                function: 'function-tests'
+            };
+            
+            Object.keys(categories).forEach(cat => {
+                const tests = testResults.tests.filter(t => t.category === cat);
+                const html = tests.map(test => `
+                    <div class="test-item ${test.status}">
+                        <div class="test-name">
+                            <span class="status-badge ${test.status}">${test.status === 'pass' ? '✓' : test.status === 'warn' ? '⚠' : '✗'}</span>
+                            ${test.name}
+                        </div>
+                        <div class="test-value">${test.value}</div>
+                    </div>
+                `).join('');
+                document.getElementById(categories[cat]).innerHTML = html || '<p style="color: #8b949e;">No tests in this category</p>';
+            });
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        function runFullDiagnostic() {
+            // Reset
+            testResults = { passed: 0, failed: 0, warnings: 0, tests: [] };
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            // Setup variant
+            localStorage.setItem('designVariant', 'option-a-sheets');
+            
+            // Load iframe
+            iframe = document.getElementById('test-frame');
+            iframe.src = 'index.html?' + Date.now();
+            
+            iframe.onload = function() {
+                setTimeout(runAllTests, 1000); // Wait 1s for init to complete
+            };
+        }
+        
+        function runAllTests() {
+            const win = iframe.contentWindow;
+            const doc = win.document;
+            
+            try {
+                // Core Tests
+                const hasClass = doc.body.classList.contains('option-a-sheets');
+                addTest('Body has "option-a-sheets" class', hasClass, 
+                    hasClass ? 'Class applied correctly' : 'Class is missing!', 'core');
+                
+                const variant = win.localStorage.getItem('designVariant');
+                addTest('LocalStorage designVariant', variant === 'option-a-sheets',
+                    `Current value: "${variant || 'null'}"`, 'core');
+                
+                const flashcards = win.flashcards || [];
+                addTest('Flashcards array loaded', flashcards.length > 0,
+                    `${flashcards.length} flashcards found`, 'core');
+                
+                // DOM Tests
+                const layout = doc.getElementById('mobile-sheets-layout');
+                addTest('mobile-sheets-layout element exists', !!layout,
+                    layout ? 'Element found in DOM' : 'Element not found!', 'dom');
+                
+                const header = doc.querySelector('.mobile-header');
+                addTest('mobile-header element exists', !!header,
+                    header ? 'Element found' : 'Element not found', 'dom');
+                
+                const setInfo = doc.querySelector('.mobile-set-info');
+                addTest('mobile-set-info element exists', !!setInfo,
+                    setInfo ? 'Element found' : 'Element not found', 'dom');
+                
+                const termsList = doc.getElementById('mobile-terms-list');
+                const termsCount = termsList ? termsList.children.length : 0;
+                addTest('mobile-terms-list populated', termsCount > 0,
+                    termsCount > 0 ? `${termsCount} term cards rendered` : '⚠ No term cards found! List is empty.', 'dom');
+                
+                const modulesContainer = doc.querySelector('.mobile-modules-container');
+                addTest('mobile-modules-container exists', !!modulesContainer,
+                    modulesContainer ? 'Element found' : 'Element not found', 'dom');
+                
+                // CSS Tests
+                if (layout) {
+                    const layoutStyle = win.getComputedStyle(layout);
+                    addTest('Layout display property', layoutStyle.display === 'flex',
+                        `display: ${layoutStyle.display}`, 'css');
+                    
+                    addTest('Layout position property', layoutStyle.position === 'fixed',
+                        `position: ${layoutStyle.position}`, 'css');
+                    
+                    addTest('Layout visibility', layoutStyle.visibility === 'visible',
+                        `visibility: ${layoutStyle.visibility}`, 'css');
+                    
+                    addTest('Layout z-index', layoutStyle.zIndex !== 'auto',
+                        `z-index: ${layoutStyle.zIndex}`, 'css');
+                }
+                
+                if (header) {
+                    const headerStyle = win.getComputedStyle(header);
+                    addTest('Header display property', headerStyle.display !== 'none',
+                        `display: ${headerStyle.display}`, 'css');
+                }
+                
+                if (modulesContainer) {
+                    const modStyle = win.getComputedStyle(modulesContainer);
+                    addTest('Modules container display', modStyle.display === 'flex',
+                        `display: ${modStyle.display}`, 'css');
+                }
+                
+                // Function Tests
+                addTest('initMobileSheetsLayout function exists', 
+                    typeof win.initMobileSheetsLayout === 'function',
+                    typeof win.initMobileSheetsLayout === 'function' ? 'Function is defined' : 'Function not found', 'function');
+                
+                addTest('updateMobileTermsList function exists',
+                    typeof win.updateMobileTermsList === 'function',
+                    typeof win.updateMobileTermsList === 'function' ? 'Function is defined' : 'Function not found', 'function');
+                
+                addTest('flashcards global variable exists',
+                    typeof win.flashcards !== 'undefined',
+                    typeof win.flashcards !== 'undefined' ? 'Variable is defined' : 'Variable not found', 'function');
+                
+                // Detailed Analysis
+                let analysis = '=== CONFIGURATION ===\n';
+                analysis += `Design Variant: ${variant}\n`;
+                analysis += `Body Classes: ${Array.from(doc.body.classList).join(', ')}\n\n`;
+                
+                analysis += '=== FLASHCARDS ===\n';
+                analysis += `Total: ${flashcards.length}\n`;
+                if (flashcards.length > 0) {
+                    analysis += `Sample: "${flashcards[0].term}" - "${flashcards[0].definition.substring(0, 50)}..."\n\n`;
+                }
+                
+                analysis += '=== DOM STRUCTURE ===\n';
+                if (layout) {
+                    analysis += `mobile-sheets-layout:\n`;
+                    analysis += `  - Direct children: ${layout.children.length}\n`;
+                    for (let i = 0; i < Math.min(layout.children.length, 5); i++) {
+                        const child = layout.children[i];
+                        analysis += `  - [${i}] <${child.tagName.toLowerCase()}${child.className ? ' class="' + child.className + '"' : ''}${child.id ? ' id="' + child.id + '"' : ''}>\n`;
+                    }
+                }
+                
+                if (termsList) {
+                    analysis += `\nmobile-terms-list:\n`;
+                    analysis += `  - Term cards: ${termsList.children.length}\n`;
+                    analysis += `  - innerHTML length: ${termsList.innerHTML.length} chars\n`;
+                }
+                
+                analysis += '\n=== CSS COMPUTED STYLES ===\n';
+                if (layout) {
+                    const s = win.getComputedStyle(layout);
+                    analysis += `mobile-sheets-layout:\n`;
+                    analysis += `  - display: ${s.display}\n`;
+                    analysis += `  - position: ${s.position}\n`;
+                    analysis += `  - top: ${s.top}\n`;
+                    analysis += `  - left: ${s.left}\n`;
+                    analysis += `  - width: ${s.width}\n`;
+                    analysis += `  - height: ${s.height}\n`;
+                    analysis += `  - z-index: ${s.zIndex}\n`;
+                    analysis += `  - visibility: ${s.visibility}\n`;
+                    analysis += `  - overflow: ${s.overflow}\n`;
+                }
+                
+                analysis += '\n=== VIEWPORT ===\n';
+                analysis += `Window: ${win.innerWidth}x${win.innerHeight}\n`;
+                analysis += `Document: ${doc.documentElement.clientWidth}x${doc.documentElement.clientHeight}\n`;
+                
+                document.getElementById('detailed-analysis').textContent = analysis;
+                
+                displayResults();
+                
+                // Log summary to console
+                console.log('%c=== MOBILE SHEETS DIAGNOSTIC COMPLETE ===', 'color: #58a6ff; font-size: 16px; font-weight: bold;');
+                console.log(`✓ Passed: ${testResults.passed}`);
+                console.log(`✗ Failed: ${testResults.failed}`);
+                console.log(`⚠ Warnings: ${testResults.warnings}`);
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('Error running tests: ' + error.message);
+                console.error('Test error:', error);
+            }
+        }
+        
+        function clearCache() {
+            localStorage.clear();
+            location.reload();
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(runFullDiagnostic, 500);
+        });
+    </script>
+</body>
+</html>
